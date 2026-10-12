@@ -14,15 +14,27 @@ import {
   PhoneCall,
   Calendar,
   Building2,
-  FileCheck2
+  FileCheck2,
+  Copy,
+  Check,
+  Briefcase,
+  Send,
+  Star,
+  ExternalLink,
+  AlertCircle,
+  HelpCircle,
+  Phone
 } from 'lucide-react';
-import { Worker, Industry, Contractor } from '../types';
+import { Worker, Industry, Contractor, WorkerAgencyConnection } from '../types';
 
 interface SecurityGuardDashboardProps {
   guardName?: string;
   workers: Worker[];
   industries: Industry[];
   contractors: Contractor[];
+  currentWorker?: Worker;
+  workerConnections?: WorkerAgencyConnection[];
+  onConnectAgency?: (contractorId: string) => void;
   showNotice: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }
 
@@ -44,10 +56,54 @@ export const SecurityGuardDashboard: React.FC<SecurityGuardDashboardProps> = ({
   workers,
   industries,
   contractors,
+  currentWorker,
+  workerConnections = [],
+  onConnectAgency = (_contractorId: string) => {},
   showNotice
 }) => {
-  const [activeTab, setActiveTab] = useState<'gate_entry' | 'worker_scan' | 'material_pass' | 'incident_log'>('gate_entry');
+  const [activeTab, setActiveTab] = useState<'guard_id_card' | 'gate_entry' | 'worker_scan' | 'material_pass' | 'incident_log'>('guard_id_card');
   const [searchQuery, setSearchQuery] = useState('');
+  const [copiedGuardId, setCopiedGuardId] = useState(false);
+  const [searchAgencyQuery, setSearchAgencyQuery] = useState('');
+  const [agencyTypeFilter, setAgencyTypeFilter] = useState<'All' | 'Security Agency' | 'Labour Contractor'>('All');
+
+  // Find or construct the guard worker entity
+  const effectiveGuard: Worker = currentWorker || workers.find(w => 
+    w.workerType === 'Security-Guard' || 
+    w.workerType === 'Security-Supervisor' || 
+    w.name.toLowerCase().includes('guard') || 
+    w.name.toLowerCase().includes(guardName.toLowerCase().split(' ')[0])
+  ) || {
+    id: 'guard-default',
+    platformId: 'SL-GRD-2015',
+    name: guardName,
+    aadhaarHash: 'XXXX-XXXX-9942',
+    phone: '9864012348',
+    contractorId: 'direct',
+    skillType: 'Unskilled',
+    workerType: 'Security-Guard',
+    sectionOrTrade: 'Main Gate Sentry & Access Control',
+    dailyWageRate: 580,
+    status: 'Available',
+    onboardingVerified: true,
+    onboardingDate: '2026-08-01'
+  };
+
+  const guardPlatformId = effectiveGuard.platformId || `SL-GRD-${effectiveGuard.id.replace(/\D/g, '') || '2015'}`;
+  const assignedAgency = contractors.find(c => c.id === effectiveGuard.contractorId);
+  const isIndependentGuard = effectiveGuard.contractorId === 'direct' || !effectiveGuard.contractorId || effectiveGuard.contractorId === 'unassigned';
+
+  const myPendingRequests = workerConnections.filter(c => 
+    (c.workerId === effectiveGuard.id || c.workerPlatformId === guardPlatformId) && c.status === 'Pending'
+  );
+  const pendingAgencyIds = new Set(myPendingRequests.map(c => c.contractorId));
+
+  const handleCopyPlatformId = () => {
+    navigator.clipboard.writeText(guardPlatformId);
+    setCopiedGuardId(true);
+    showNotice(`প্লেটফৰ্ম আইডি কপীকৰা হ'ল: ${guardPlatformId}`, 'success');
+    setTimeout(() => setCopiedGuardId(false), 2000);
+  };
   
   // Gate entries state
   const [gateEntries, setGateEntries] = useState<GateEntry[]>([
@@ -237,6 +293,7 @@ export const SecurityGuardDashboard: React.FC<SecurityGuardDashboardProps> = ({
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
         {[
+          { id: 'guard_id_card', label: '🪪 মোৰ ডিজিটেল পৰিচয় পত্ৰ ও এজেন্সী সংযোগ (My ID Card & Agency)', icon: ShieldCheck },
           { id: 'gate_entry', label: '📋 গেট এন্ট্ৰি আৰু এক্সিট ৰেজিষ্টাৰ (Gate Log)', icon: FileCheck2 },
           { id: 'worker_scan', label: '📷 শ্ৰমিক Aadhaar QR স্কেন (Worker Scan)', icon: QrCode },
           { id: 'material_pass', label: '🚛 সামগ্ৰী ইনৱাৰ্ড চালান (Material Pass)', icon: Truck },
@@ -260,6 +317,236 @@ export const SecurityGuardDashboard: React.FC<SecurityGuardDashboardProps> = ({
           );
         })}
       </div>
+
+      {/* Tab 0: Guard ID Card & Agency Connection Portal */}
+      {activeTab === 'guard_id_card' && (
+        <div className="space-y-6 animate-fadeIn">
+          {/* 1. DIGITAL SMART IDENTITY CARD */}
+          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-2 border-indigo-500/50 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              {/* Left Details */}
+              <div className="flex items-center gap-5 w-full md:w-auto">
+                <div className="relative">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-slate-800 border-2 border-indigo-400 p-1 flex items-center justify-center text-4xl shadow-lg">
+                    👮
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1 rounded-full shadow-md" title="PSARA Security Verified">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                      PSARA Guard Verified ID
+                    </span>
+                    <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
+                      <Check className="w-3 h-3" /> UIDAI সক্ৰিয়
+                    </span>
+                  </div>
+
+                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    {effectiveGuard.name}
+                  </h2>
+
+                  <div className="text-xs text-slate-300 flex items-center gap-3 flex-wrap">
+                    <span>পদবী: <strong className="text-white">{effectiveGuard.workerType === 'Security-Supervisor' ? 'Security Supervisor' : 'Security Guard (Unarmed)'}</strong></span>
+                    <span>ফোন: <strong className="font-mono text-white">{effectiveGuard.phone}</strong></span>
+                  </div>
+
+                  {/* Agency Status */}
+                  <div className="pt-1">
+                    {assignedAgency ? (
+                      <span className="text-xs font-bold text-emerald-300 bg-emerald-950/80 px-3 py-1 rounded-lg border border-emerald-500/40 inline-flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+                        সংযুক্ত নিৰাপত্তা সংস্থা: {assignedAgency.name} ({assignedAgency.contractorType || 'Security Agency'})
+                      </span>
+                    ) : (
+                      <span className="text-xs font-bold text-amber-300 bg-amber-950/80 px-3 py-1 rounded-lg border border-amber-500/40 inline-flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+                        মুক্ত নিৰাপত্তাৰক্ষী (কোনো সংস্থাত অন্তৰ্ভুক্ত হোৱা নাই)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Unique Platform ID Box */}
+              <div className="bg-slate-900/90 border-2 border-indigo-400/60 rounded-2xl p-4 sm:p-5 text-center flex flex-col items-center justify-center shrink-0 w-full sm:w-auto shadow-md">
+                <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block mb-1">
+                  ইউনিক প্লেটফৰ্ম আইডি (Platform ID)
+                </span>
+                
+                <div className="flex items-center gap-2 bg-indigo-950 px-4 py-2 rounded-xl border border-indigo-500/50 my-1">
+                  <span className="text-xl sm:text-2xl font-black font-mono tracking-wider text-amber-400 select-all">
+                    {guardPlatformId}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopyPlatformId}
+                    title="কপীকৰক (Copy ID)"
+                    className="p-1.5 bg-indigo-800 hover:bg-indigo-700 text-white rounded-lg transition-colors cursor-pointer"
+                  >
+                    {copiedGuardId ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-300 mt-2">
+                  <QrCode className="w-4 h-4 text-emerald-400" />
+                  <span>ছিকিউৰিটি এজেন্সীক এই আইডি দেখুৱাওক</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Explanation Box */}
+          <div className="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-4 text-xs text-indigo-900 flex items-start gap-3">
+            <HelpCircle className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <h4 className="font-bold text-slate-900 text-xs">
+                নিৰাপত্তা সংস্থা বা ঠিকাদাৰৰ লগত কেনেকৈ সংযোগ হ’ব? (How to connect with Security Agency)
+              </h4>
+              <p className="text-slate-600 leading-relaxed">
+                আপুনি নিজৰ নাম আৰু ফোন নম্বৰ দি পঞ্জীয়ন কৰাৰ পিছত এই ইউনিক প্লেটফৰ্ম আইডি <strong>({guardPlatformId})</strong> লাভ কৰিছে। তলৰ তালিকাৰ পৰা যিকোনো PSARA অনুমোদিত নিৰাপত্তা সংস্থা বা শ্ৰমিক ঠিকাদাৰলৈ <strong>"সংযোগৰ আবেদন (Connect Request)"</strong> পঠিয়াওক, অথবা সংস্থাক আপোনাৰ প্লেটফৰ্ম আইডিটো কওক যাতে তেওঁলোকে আপোনাক নিজৰ এজেন্সীত লৈ বিভিন্ন কাৰখানা বা এপাৰ্টমেণ্টত পোষ্টিং দিব পাৰে।
+              </p>
+            </div>
+          </div>
+
+          {/* 2. BROWSE & CONNECT AGENCIES */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-7 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="font-black text-slate-900 text-base sm:text-lg flex items-center gap-2">
+                  <span>🛡️ নিৰাপত্তা সংস্থা বা ঠিকাদাৰ বিচাৰক ও সংযোগ হওক (Find Agency to Connect)</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  তলৰ পঞ্জীভুক্ত সংস্থাসমূহৰ লগত এটা ক্লিকতে সংযোগ হওক অথবা ফোন কৰি যোগাযোগ কৰক:
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1.5 text-xs">
+                {['All', 'Security Agency', 'Labour Contractor'].map(type => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setAgencyTypeFilter(type as any)}
+                    className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                      agencyTypeFilter === type
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    {type === 'All' ? 'সকলো' : type === 'Security Agency' ? '🛡️ নিৰাপত্তা সংস্থা' : '👷 শ্ৰমিক ঠিকাদাৰ'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Search Box */}
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+              <input
+                type="text"
+                placeholder="সংস্থাৰ নাম, অনুজ্ঞাপত্ৰ নং (PSARA/CLRA), বা ফোন নম্বৰ সন্ধান কৰক..."
+                value={searchAgencyQuery}
+                onChange={(e) => setSearchAgencyQuery(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:border-indigo-500"
+              />
+            </div>
+
+            {/* Contractors / Agencies Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {contractors
+                .filter(c => {
+                  const matchesType = agencyTypeFilter === 'All' || c.contractorType === agencyTypeFilter;
+                  const matchesSearch = !searchAgencyQuery || 
+                    c.name.toLowerCase().includes(searchAgencyQuery.toLowerCase()) || 
+                    c.contactNo.includes(searchAgencyQuery) || 
+                    c.licenseNo.toLowerCase().includes(searchAgencyQuery.toLowerCase());
+                  return matchesType && matchesSearch;
+                })
+                .map(contractor => {
+                  const isCurrentAssigned = effectiveGuard.contractorId === contractor.id;
+                  const isPending = pendingAgencyIds.has(contractor.id);
+
+                  return (
+                    <div
+                      key={contractor.id}
+                      className={`border rounded-2xl p-4.5 space-y-3 transition-all ${
+                        isCurrentAssigned
+                          ? 'border-emerald-500 bg-emerald-50/30 ring-2 ring-emerald-500/20'
+                          : 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-xs'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md inline-block mb-1.5 ${
+                            contractor.contractorType === 'Security Agency'
+                              ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                              : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                          }`}>
+                            {contractor.contractorType || 'Labour Contractor'}
+                          </span>
+                          <h4 className="font-extrabold text-slate-900 text-sm">
+                            {contractor.name}
+                          </h4>
+                        </div>
+                        <span className="text-[11px] font-bold text-amber-500 flex items-center gap-0.5">
+                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          {contractor.rating || 4.9}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-slate-400 uppercase">License:</span>
+                          <span className="font-mono font-bold text-slate-800 text-[11px]">{contractor.licenseNo}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-slate-400 uppercase">LIN:</span>
+                          <span className="font-mono text-slate-700 text-[11px]">{contractor.lin}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-slate-400 uppercase">Contact:</span>
+                          <a href={`tel:${contractor.contactNo}`} className="font-bold text-indigo-600 hover:underline flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            {contractor.contactNo}
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Action Button */}
+                      <div className="pt-1">
+                        {isCurrentAssigned ? (
+                          <div className="w-full bg-emerald-600 text-white font-bold text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-1.5">
+                            <Check className="w-4 h-4" />
+                            বৰ্তমান সংযুক্ত সংস্থা (Connected)
+                          </div>
+                        ) : isPending ? (
+                          <div className="w-full bg-amber-50 border border-amber-300 text-amber-800 font-bold text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-1.5">
+                            <Clock className="w-4 h-4 text-amber-600" />
+                            আবেদন দাখিল হৈছে (Pending Approval)
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onConnectAgency(contractor.id)}
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            সংযোগৰ আবেদন কৰক (Connect)
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tab 1: Gate Log */}
       {activeTab === 'gate_entry' && (

@@ -10,7 +10,9 @@ import {
   AadhaarVerificationLog, 
   GovernmentAuditLog, 
   RevenueLog,
-  GovernmentLaborInspector 
+  GovernmentLaborInspector,
+  IndustryContractorConnection,
+  WorkerAgencyConnection
 } from './types';
 
 export const initialIndustries: Industry[] = [
@@ -161,18 +163,21 @@ export const initialContractors: Contractor[] = [
 ];
 
 export const initialWorkers: Worker[] = [
-  { id: 'wrk-1', name: 'Rakesh Kumar Yadav', aadhaarHash: 'XXXX-XXXX-8920', phone: '9876543210', contractorId: 'con-1', skillType: 'Unskilled', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-01-10' },
-  { id: 'wrk-2', name: 'Vikram Singh Shekhawat', aadhaarHash: 'XXXX-XXXX-4531', phone: '9823456789', contractorId: 'con-1', skillType: 'Unskilled', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-01-12' },
-  { id: 'wrk-3', name: 'Anil S. Patil', aadhaarHash: 'XXXX-XXXX-1029', phone: '9422019283', contractorId: 'con-1', skillType: 'Unskilled', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-02-15' },
-  { id: 'wrk-4', name: 'Sunita Devi', aadhaarHash: 'XXXX-XXXX-9382', phone: '9112233445', contractorId: 'con-1', skillType: 'Unskilled', dailyWageRate: 480, status: 'Available', onboardingVerified: true, onboardingDate: '2026-03-01' },
-  { id: 'wrk-5', name: 'Ramesh Sawant', aadhaarHash: 'XXXX-XXXX-7721', phone: '9552103948', contractorId: 'con-1', skillType: 'Unskilled', dailyWageRate: 480, status: 'Available', onboardingVerified: true, onboardingDate: '2026-03-20' },
+  { id: 'wrk-1', platformId: 'SL-WRK-1001', name: 'Rakesh Kumar Yadav', aadhaarHash: 'XXXX-XXXX-8920', phone: '9876543210', contractorId: 'con-1', skillType: 'Unskilled', workerType: 'Unskilled-Laborer', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-01-10' },
+  { id: 'wrk-2', platformId: 'SL-WRK-1002', name: 'Vikram Singh Shekhawat', aadhaarHash: 'XXXX-XXXX-4531', phone: '9823456789', contractorId: 'con-1', skillType: 'Unskilled', workerType: 'Unskilled-Laborer', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-01-12' },
+  { id: 'wrk-3', platformId: 'SL-WRK-1003', name: 'Anil S. Patil', aadhaarHash: 'XXXX-XXXX-1029', phone: '9422019283', contractorId: 'con-1', skillType: 'Unskilled', workerType: 'Unskilled-Laborer', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-02-15' },
+  { id: 'wrk-4', platformId: 'SL-WRK-1004', name: 'Sunita Devi', aadhaarHash: 'XXXX-XXXX-9382', phone: '9112233445', contractorId: 'direct', skillType: 'Unskilled', workerType: 'Unskilled-Laborer', dailyWageRate: 480, status: 'Available', onboardingVerified: true, onboardingDate: '2026-03-01' },
+  { id: 'wrk-5', platformId: 'SL-WRK-1005', name: 'Ramesh Sawant', aadhaarHash: 'XXXX-XXXX-7721', phone: '9552103948', contractorId: 'direct', skillType: 'Unskilled', workerType: 'Unskilled-Laborer', dailyWageRate: 480, status: 'Available', onboardingVerified: true, onboardingDate: '2026-03-20' },
   
-  { id: 'wrk-6', name: 'Pappu Yadav', aadhaarHash: 'XXXX-XXXX-3829', phone: '9890210293', contractorId: 'con-2', skillType: 'Unskilled', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-02-10' },
-  { id: 'wrk-7', name: 'Sandeep Gite', aadhaarHash: 'XXXX-XXXX-4491', phone: '9158302192', contractorId: 'con-2', skillType: 'Unskilled', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-04-05' },
-  { id: 'wrk-8', name: 'Laxmi Shinde', aadhaarHash: 'XXXX-XXXX-9012', phone: '9822453102', contractorId: 'con-2', skillType: 'Unskilled', dailyWageRate: 480, status: 'Available', onboardingVerified: true, onboardingDate: '2026-04-12' },
+  { id: 'wrk-6', platformId: 'SL-WRK-1006', name: 'Pappu Yadav', aadhaarHash: 'XXXX-XXXX-3829', phone: '9890210293', contractorId: 'con-2', skillType: 'Unskilled', workerType: 'Security-Guard', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-02-10' },
+  { id: 'wrk-7', platformId: 'SL-WRK-1007', name: 'Sandeep Gite', aadhaarHash: 'XXXX-XXXX-4491', phone: '9158302192', contractorId: 'con-2', skillType: 'Unskilled', workerType: 'Security-Guard', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-04-05' },
+  { id: 'wrk-8', platformId: 'SL-WRK-1008', name: 'Laxmi Shinde', aadhaarHash: 'XXXX-XXXX-9012', phone: '9822453102', contractorId: 'direct', skillType: 'Unskilled', workerType: 'Unskilled-Laborer', dailyWageRate: 480, status: 'Available', onboardingVerified: true, onboardingDate: '2026-04-12' },
   
-  { id: 'wrk-9', name: 'Arjun Pujari', aadhaarHash: 'XXXX-XXXX-8822', phone: '9049281293', contractorId: 'con-3', skillType: 'Unskilled', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-05-01' },
-  { id: 'wrk-10', name: 'Shiva Ramanna', aadhaarHash: 'XXXX-XXXX-1144', phone: '9130491029', contractorId: 'con-3', skillType: 'Unskilled', dailyWageRate: 480, status: 'Available', onboardingVerified: false, onboardingDate: '2026-09-01' }
+  { id: 'wrk-9', platformId: 'SL-WRK-1009', name: 'Arjun Pujari', aadhaarHash: 'XXXX-XXXX-8822', phone: '9049281293', contractorId: 'con-3', skillType: 'Unskilled', workerType: 'Unskilled-Laborer', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-05-01' },
+  { id: 'wrk-10', platformId: 'SL-WRK-1010', name: 'Shiva Ramanna', aadhaarHash: 'XXXX-XXXX-1144', phone: '9130491029', contractorId: 'direct', skillType: 'Unskilled', workerType: 'Security-Guard', dailyWageRate: 480, status: 'Available', onboardingVerified: false, onboardingDate: '2026-09-01' },
+  { id: 'wrk-11', platformId: 'SL-GRD-2001', name: 'Rupen Das', aadhaarHash: 'XXXX-XXXX-5512', phone: '9876543218', contractorId: 'con-2', skillType: 'Unskilled', workerType: 'Security-Guard', dailyWageRate: 520, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-01-05' },
+  { id: 'wrk-12', platformId: 'SL-GRD-2002', name: 'Bikash Barman', aadhaarHash: 'XXXX-XXXX-7734', phone: '9864019284', contractorId: 'direct', skillType: 'Unskilled', workerType: 'Security-Guard', dailyWageRate: 500, status: 'Available', onboardingVerified: true, onboardingDate: '2026-02-12' },
+  { id: 'wrk-13', platformId: 'SL-WRK-1013', name: 'Gopal Kumar', aadhaarHash: 'XXXX-XXXX-4412', phone: '9876543212', contractorId: 'con-1', skillType: 'Unskilled', workerType: 'Unskilled-Laborer', dailyWageRate: 480, status: 'Deployed', onboardingVerified: true, onboardingDate: '2026-01-15' }
 ];
 
 export const initialAssignments: MultiIndustryAssignment[] = [
@@ -367,5 +372,107 @@ export const initialInspectors: GovernmentLaborInspector[] = [
     registeredAt: '2026-03-01',
     officeAddress: 'Labour Welfare Centre, Graham Bazar, Dibrugarh, Assam - 786001',
     officeHours: 'Mon - Fri: 09:30 AM - 04:30 PM'
+  }
+];
+
+export const initialIndustryContractorConnections: IndustryContractorConnection[] = [
+  {
+    id: 'conn-1',
+    industryId: 'ind-1',
+    industryName: 'Tata Motors Pune Plant',
+    industryCategory: 'Industry HR',
+    contractorId: 'con-1',
+    contractorName: 'Apex Industrial Manpower Solutions',
+    contractorType: 'Labour Contractor',
+    initiatedBy: 'contractor',
+    status: 'Connected',
+    requestedAt: '2026-08-01',
+    respondedAt: '2026-08-02',
+    notes: 'Authorized under CLRA Form IV to deploy up to 50 workmen for assembly.'
+  },
+  {
+    id: 'conn-2',
+    industryId: 'ind-1',
+    industryName: 'Tata Motors Pune Plant',
+    industryCategory: 'Industry HR',
+    contractorId: 'con-2',
+    contractorName: 'Jai Hind Security & Protection Agency',
+    contractorType: 'Security Agency',
+    initiatedBy: 'industry',
+    status: 'Connected',
+    requestedAt: '2026-08-05',
+    respondedAt: '2026-08-05',
+    notes: 'Authorized for 24/7 Gate security & perimeter sentry duty.'
+  },
+  {
+    id: 'conn-3',
+    industryId: 'ind-apt-1',
+    industryName: 'Greenwood Heights Residential Society',
+    industryCategory: 'Apartment Owner',
+    contractorId: 'con-2',
+    contractorName: 'Jai Hind Security & Protection Agency',
+    contractorType: 'Security Agency',
+    initiatedBy: 'industry',
+    status: 'Connected',
+    requestedAt: '2026-08-10',
+    respondedAt: '2026-08-10',
+    notes: 'Residential perimeter guards & visitor pass tracking active.'
+  },
+  {
+    id: 'conn-4',
+    industryId: 'ind-shop-1',
+    industryName: 'Mega Mart Supermarket & Retail Hub',
+    industryCategory: 'Shop Owner',
+    contractorId: 'con-5',
+    contractorName: 'Garuda Vigilance & Security Services',
+    contractorType: 'Security Agency',
+    initiatedBy: 'contractor',
+    status: 'Pending',
+    requestedAt: '2026-10-10',
+    notes: 'Applied to supply retail loss prevention guards and CCTV surveillance.'
+  },
+  {
+    id: 'conn-5',
+    industryId: 'ind-off-1',
+    industryName: 'Zenith Infotech Corporate Office',
+    industryCategory: 'Office',
+    contractorId: 'con-4',
+    contractorName: 'Brahmaputra Manpower & Labour Supply',
+    contractorType: 'Labour Contractor',
+    initiatedBy: 'contractor',
+    status: 'Pending',
+    requestedAt: '2026-10-11',
+    notes: 'Applied to supply office pantry & housekeeping manpower pool.'
+  }
+];
+
+export const initialWorkerAgencyConnections: WorkerAgencyConnection[] = [
+  {
+    id: 'wconn-1',
+    workerId: 'wrk-4',
+    workerPlatformId: 'SL-WRK-1004',
+    workerName: 'Sunita Devi',
+    workerPhone: '9112233445',
+    workerRole: 'Unskilled Worker',
+    contractorId: 'con-1',
+    contractorName: 'Apex Industrial Manpower Solutions',
+    contractorType: 'Labour Contractor',
+    initiatedBy: 'worker',
+    status: 'Pending',
+    requestedAt: '2026-10-09'
+  },
+  {
+    id: 'wconn-2',
+    workerId: 'wrk-12',
+    workerPlatformId: 'SL-GRD-2002',
+    workerName: 'Bikash Barman',
+    workerPhone: '9864019284',
+    workerRole: 'Security Guard',
+    contractorId: 'con-2',
+    contractorName: 'Jai Hind Security & Protection Agency',
+    contractorType: 'Security Agency',
+    initiatedBy: 'worker',
+    status: 'Pending',
+    requestedAt: '2026-10-11'
   }
 ];

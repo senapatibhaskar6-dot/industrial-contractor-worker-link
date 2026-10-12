@@ -78,7 +78,9 @@ import {
   initialVerificationLogs, 
   initialAuditLogs, 
   initialRevenueLogs,
-  initialInspectors
+  initialInspectors,
+  initialIndustryContractorConnections,
+  initialWorkerAgencyConnections
 } from '../mockData';
 import { auth, googleAuthProvider } from '../lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
@@ -102,10 +104,16 @@ import GovernmentInspectorJurisdictionPanel from './GovernmentInspectorJurisdict
 import IndustryProjectComplianceSystem from './IndustryProjectComplianceSystem';
 import { SecurityGuardDashboard } from './SecurityGuardDashboard';
 import PlatformAdminPanel from './PlatformAdminPanel';
+import OwnerContractorConnectionManager from './OwnerContractorConnectionManager';
+import ContractorIndustryConnectionManager from './ContractorIndustryConnectionManager';
+import ContractorPlatformWorkerPool from './ContractorPlatformWorkerPool';
+import WorkerPlatformCardAndConnection from './WorkerPlatformCardAndConnection';
 import { 
   ContractorApplication, 
   DirectJobOpening, 
-  DirectWorkerApplication 
+  DirectWorkerApplication,
+  IndustryContractorConnection,
+  WorkerAgencyConnection 
 } from '../types';
 
 interface SaaSAppProps {
@@ -175,6 +183,35 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [selectedInspectorId, setSelectedInspectorId] = useState<string>(() => {
     return localStorage.getItem('s_selected_inspector_id') || initialInspectors[0]?.id || 'insp-1';
   });
+
+  // ==================== INTER-STAKEHOLDER CONNECTIONS ====================
+  const [industryContractorConnections, setIndustryContractorConnections] = useState<IndustryContractorConnection[]>(() => {
+    try {
+      const saved = localStorage.getItem('s_industry_contractor_connections');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return initialIndustryContractorConnections;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('s_industry_contractor_connections', JSON.stringify(industryContractorConnections));
+    } catch (e) {}
+  }, [industryContractorConnections]);
+
+  const [workerAgencyConnections, setWorkerAgencyConnections] = useState<WorkerAgencyConnection[]>(() => {
+    try {
+      const saved = localStorage.getItem('s_worker_agency_connections');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return initialWorkerAgencyConnections;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('s_worker_agency_connections', JSON.stringify(workerAgencyConnections));
+    } catch (e) {}
+  }, [workerAgencyConnections]);
 
   useEffect(() => {
     try {
@@ -341,16 +378,29 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     } catch (e) {}
   }, [directApplications]);
 
-  const [workerTab, setWorkerTab] = useState<'direct_jobs' | 'attendance'>('direct_jobs');
+  const [workerTab, setWorkerTab] = useState<'id_card' | 'direct_jobs' | 'attendance'>('id_card');
 
   // Contractor Workforce & Supply Handlers
   const handleAddWorkerByContractor = (newWorkerData: Omit<Worker, 'id'>) => {
+    const isGuard = newWorkerData.workerType === 'Security-Guard' || newWorkerData.name.toLowerCase().includes('guard');
+    const isSup = newWorkerData.workerType === 'Security-Supervisor';
+    const prefix = isSup ? 'SL-SUP' : isGuard ? 'SL-GRD' : 'SL-WKR';
+    const numCode = Math.floor(1000 + Math.random() * 9000);
+    const platformId = newWorkerData.platformId || `${prefix}-${numCode}`;
+
     const newWorker: Worker = {
       ...newWorkerData,
-      id: `wrk-${Date.now()}`
+      id: `wrk-${Date.now()}`,
+      platformId
     };
-    setWorkers(prev => [newWorker, ...prev]);
-    showNotice(`শ্ৰমিক ${newWorker.name} সফলতাৰে পঞ্জীভুক্ত হ'ল! (Worker registered!)`, 'success');
+    setWorkers(prev => {
+      const updated = [newWorker, ...prev];
+      try {
+        localStorage.setItem('s_workers_list', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    showNotice(`কৰ্মী ${newWorker.name} (ID: ${platformId}) সফলতাৰে পঞ্জীভুক্ত হ'ল! (Worker registered!)`, 'success');
   };
 
   const handleUpdateWorkerByContractor = (workerId: string, updates: Partial<Worker>) => {
@@ -462,6 +512,164 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     };
     setDirectApplications(prev => [newDirectApp, ...prev]);
     showNotice(`কাৰখানাত পোনপটীয়া আবেদন সফলতাৰে দাখিল হ'ল! কাৰখানা কৰ্তৃপক্ষই পোনপটীয়াকৈ ফোন/হোৱাটছএপত যোগাযোগ কৰিব।`, 'success');
+  };
+
+  // ==================== INTER-STAKEHOLDER CONNECTION HANDLERS ====================
+  const handleApproveContractorConnection = (connectionId: string) => {
+    setIndustryContractorConnections(prev => prev.map(c => {
+      if (c.id === connectionId) {
+        return {
+          ...c,
+          status: 'Connected',
+          respondedAt: new Date().toISOString().split('T')[0]
+        };
+      }
+      return c;
+    }));
+    showNotice('ঠিকাদাৰ/সংস্থাক সফলতাৰে অনুমোদন ও সংযোগ কৰা হ’ল! এতিয়া সিহঁতে শ্ৰমিক যোগান ধৰিব পাৰিব।', 'success');
+  };
+
+  const handleRejectContractorConnection = (connectionId: string) => {
+    setIndustryContractorConnections(prev => prev.map(c => {
+      if (c.id === connectionId) {
+        return {
+          ...c,
+          status: 'Rejected',
+          respondedAt: new Date().toISOString().split('T')[0]
+        };
+      }
+      return c;
+    }));
+    showNotice('ঠিকাদাৰৰ সংযোগ আবেদন নাকচ কৰা হ’ল।', 'info');
+  };
+
+  const handleInviteContractor = (contractorId: string, notes?: string) => {
+    const contractor = contractors.find(c => c.id === contractorId);
+    const activeInd = industries.find(i => i.id === selectedIndustryId) || industries[0];
+    if (!contractor || !activeInd) return;
+
+    // Check if connection already exists
+    const existing = industryContractorConnections.find(c => c.industryId === activeInd.id && c.contractorId === contractor.id);
+    if (existing) {
+      if (existing.status === 'Connected') {
+        showNotice('এই সংস্থা ইতিমধ্যে আপোনাৰ প্ৰতিষ্ঠানৰ লগত সংযুক্ত!', 'info');
+        return;
+      }
+      setIndustryContractorConnections(prev => prev.map(c => c.id === existing.id ? { ...c, status: 'Connected', notes: notes || c.notes } : c));
+      showNotice(`${contractor.name}ক সফলতাৰে পুনৰ সংযোগ ও অনুমোদন দিয়া হ’ল!`, 'success');
+      return;
+    }
+
+    const newConn: IndustryContractorConnection = {
+      id: `conn-${Date.now()}`,
+      industryId: activeInd.id,
+      industryName: activeInd.name,
+      industryCategory: activeInd.category,
+      contractorId: contractor.id,
+      contractorName: contractor.name,
+      contractorType: contractor.contractorType,
+      initiatedBy: 'industry',
+      status: 'Connected',
+      requestedAt: new Date().toISOString().split('T')[0],
+      respondedAt: new Date().toISOString().split('T')[0],
+      notes: notes || `${activeInd.name} কৰ্তৃপক্ষই শ্ৰমিক যোগানৰ অনুমোদন প্ৰদান কৰিলে।`
+    };
+
+    setIndustryContractorConnections(prev => [newConn, ...prev]);
+    showNotice(`${contractor.name}ক সফলতাৰে অনুমোদন ও সংযোগ কৰা হ’ল!`, 'success');
+  };
+
+  const handleApplyToIndustry = (industryId: string, notes?: string) => {
+    const activeCon = contractors.find(c => c.id === selectedContractorId) || contractors[0];
+    const ind = industries.find(i => i.id === industryId);
+    if (!activeCon || !ind) return;
+
+    const existing = industryContractorConnections.find(c => c.industryId === ind.id && c.contractorId === activeCon.id);
+    if (existing) {
+      if (existing.status === 'Connected') {
+        showNotice('আপুনি ইতিমধ্যে এই প্ৰতিষ্ঠানৰ সৈতে সংযুক্ত!', 'info');
+        return;
+      }
+      showNotice('আপোনাৰ আবেদন ইতিমধ্যে দাখিল হৈছে, প্ৰতিষ্ঠানৰ অনুমোদনৰ বাবে অপেক্ষা কৰক।', 'info');
+      return;
+    }
+
+    const newConn: IndustryContractorConnection = {
+      id: `conn-${Date.now()}`,
+      industryId: ind.id,
+      industryName: ind.name,
+      industryCategory: ind.category,
+      contractorId: activeCon.id,
+      contractorName: activeCon.name,
+      contractorType: activeCon.contractorType,
+      initiatedBy: 'contractor',
+      status: 'Pending',
+      requestedAt: new Date().toISOString().split('T')[0],
+      notes: notes || `${activeCon.name} দ্বাৰা শ্ৰমিক যোগানৰ বাবে আবেদন কৰা হৈছে।`
+    };
+
+    setIndustryContractorConnections(prev => [newConn, ...prev]);
+    showNotice(`${ind.name}লৈ শ্ৰমিক যোগানৰ আবেদন প্ৰেৰণ কৰা হ’ল! প্ৰতিষ্ঠানে অনুমোদন কৰিলে সংযোগ হ’ব।`, 'success');
+  };
+
+  const handleDisconnectContractor = (connectionId: string) => {
+    setIndustryContractorConnections(prev => prev.filter(c => c.id !== connectionId));
+    showNotice('ঠিকাদাৰৰ সৈতে সংযোগ সফলতাৰে অপসাৰণ কৰা হ’ল।', 'info');
+  };
+
+  // Claim independent platform worker into contractor's agency pool
+  const handleClaimPlatformWorker = (workerId: string) => {
+    const activeCon = contractors.find(c => c.id === selectedContractorId) || contractors[0];
+    setWorkers(prev => prev.map(w => {
+      if (w.id === workerId) {
+        return {
+          ...w,
+          contractorId: activeCon.id
+        };
+      }
+      return w;
+    }));
+    showNotice('শ্ৰমিকক আপোনাৰ এজেন্সীৰ কৰ্মীদলত সফলতাৰে অন্তৰ্ভুক্ত কৰা হ’ল!', 'success');
+  };
+
+  // Accept worker connection request
+  const handleAcceptWorkerRequest = (connectionId: string, workerId: string) => {
+    const activeCon = contractors.find(c => c.id === selectedContractorId) || contractors[0];
+    setWorkerAgencyConnections(prev => prev.map(c => c.id === connectionId ? { ...c, status: 'Connected', respondedAt: new Date().toISOString().split('T')[0] } : c));
+    setWorkers(prev => prev.map(w => w.id === workerId ? { ...w, contractorId: activeCon.id } : w));
+    showNotice('শ্ৰমিকৰ আবেদন স্বীকাৰ কৰা হ’ল আৰু এজেন্সীৰ কৰ্মীদলত অন্তৰ্ভুক্ত হ’ল!', 'success');
+  };
+
+  const handleRejectWorkerRequest = (connectionId: string) => {
+    setWorkerAgencyConnections(prev => prev.map(c => c.id === connectionId ? { ...c, status: 'Rejected', respondedAt: new Date().toISOString().split('T')[0] } : c));
+    showNotice('শ্ৰমিকৰ আবেদন নাকচ কৰা হ’ল।', 'info');
+  };
+
+  // Worker sends request to connect with agency
+  const handleConnectAgencyFromWorker = (contractorId: string) => {
+    const currentWrk = workers.find(w => w.id === selectedWorkerId) || workers[0];
+    const targetCon = contractors.find(c => c.id === contractorId);
+    if (!currentWrk || !targetCon) return;
+
+    const pId = currentWrk.platformId || `SL-WRK-${currentWrk.id.replace(/\D/g, '') || '101'}`;
+
+    const newReq: WorkerAgencyConnection = {
+      id: `wconn-${Date.now()}`,
+      workerId: currentWrk.id,
+      workerPlatformId: pId,
+      workerName: currentWrk.name,
+      workerPhone: currentWrk.phone,
+      workerRole: currentWrk.workerType === 'Security-Guard' ? 'Security Guard' : 'Unskilled Worker',
+      contractorId: targetCon.id,
+      contractorName: targetCon.name,
+      contractorType: targetCon.contractorType,
+      initiatedBy: 'worker',
+      status: 'Pending',
+      requestedAt: new Date().toISOString().split('T')[0]
+    };
+
+    setWorkerAgencyConnections(prev => [newReq, ...prev]);
+    showNotice(`${targetCon.name}লৈ আপোনাৰ প্লেটফৰ্ম আইডি (${pId}) সৈতে আবেদন প্ৰেৰণ কৰা হ’ল!`, 'success');
   };
 
   // Auth/Session State
@@ -756,6 +964,37 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       setSelectedInspectorId(newInspector.id);
       try {
         localStorage.setItem('s_inspectors_list', JSON.stringify(updatedInspectors));
+      } catch (e) {}
+    } else if (finalRole === 'worker' || finalRole === 'security_guard') {
+      const isGuard = registerRole === 'security_guard' || registerRole === 'security_guard_unarmed';
+      const isSup = registerRole === 'security_supervisor';
+      const workerType: 'Unskilled-Laborer' | 'Security-Guard' | 'Security-Supervisor' = 
+        isSup ? 'Security-Supervisor' : isGuard ? 'Security-Guard' : 'Unskilled-Laborer';
+      const prefix = isSup ? 'SL-SUP' : isGuard ? 'SL-GRD' : 'SL-WKR';
+      const numCode = Math.floor(1000 + Math.random() * 9000);
+      const platformId = `${prefix}-${numCode}`;
+
+      const newWorker: Worker = {
+        id: `wrk-${Date.now()}`,
+        platformId,
+        name: registerName.trim(),
+        aadhaarHash: `XXXX-XXXX-${Math.floor(1000 + Math.random() * 9000)}`,
+        phone: registerEmailOrPhone.replace(/\D/g, '') || '9864012345',
+        contractorId: 'direct', // Independent on platform pool
+        skillType: 'Unskilled',
+        workerType,
+        sectionOrTrade: isSup ? 'Security Supervisor' : isGuard ? 'Security Gate Guard' : 'General Unskilled Worker',
+        dailyWageRate: isSup ? 650 : isGuard ? 550 : 480,
+        status: 'Available',
+        onboardingVerified: true,
+        onboardingDate: new Date().toISOString().split('T')[0]
+      };
+
+      const updatedWorkers = [newWorker, ...workers];
+      setWorkers(updatedWorkers);
+      setSelectedWorkerId(newWorker.id);
+      try {
+        localStorage.setItem('s_workers_list', JSON.stringify(updatedWorkers));
       } catch (e) {}
     }
 
@@ -1099,7 +1338,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   });
 
   // Dashboard navigation tabs
-  const [contractorTab, setContractorTab] = useState<'project_compliance' | 'work' | 'deployment' | 'billing' | 'requisitions' | 'supervisors_attendance' | 'workforce'>('project_compliance');
+  const [contractorTab, setContractorTab] = useState<'project_compliance' | 'client_connections' | 'platform_worker_pool' | 'work' | 'deployment' | 'billing' | 'requisitions' | 'supervisors_attendance' | 'workforce'>('project_compliance');
   const [isHrComplianceDossierOpen, setIsHrComplianceDossierOpen] = useState<boolean>(false);
   const [isContractorMonthlySheetOpen, setIsContractorMonthlySheetOpen] = useState<boolean>(false);
   const [selectedContractorMonth, setSelectedContractorMonth] = useState<string>('2026-09');
@@ -4623,6 +4862,18 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               </div>
             )}
 
+            {/* 1 NO. PANEL: PRINCIPAL EMPLOYER / OWNER AGENCY AUTHORIZATION & CONNECTION MANAGER */}
+            <OwnerContractorConnectionManager
+              activeIndustry={activeIndustry}
+              allContractors={contractors}
+              connections={industryContractorConnections}
+              onApproveConnection={handleApproveContractorConnection}
+              onRejectConnection={handleRejectContractorConnection}
+              onInviteContractor={handleInviteContractor}
+              onDisconnectContractor={handleDisconnectContractor}
+              showNotice={showNotice}
+            />
+
             {/* INDUSTRY HR MANPOWER REQUIREMENTS, APPLYING CONTRACTORS & RELIABLE DIRECTORY */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
@@ -5430,6 +5681,30 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             {/* Contractor Dashboard Horizontal Navigation Tabs */}
             <div className="flex border-b border-slate-200 gap-1 overflow-x-auto pb-px">
               <button
+                onClick={() => setContractorTab('client_connections')}
+                className={`py-3 px-5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                  contractorTab === 'client_connections' 
+                    ? 'border-indigo-600 text-indigo-600 font-extrabold bg-indigo-50/40' 
+                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                }`}
+              >
+                <Building2 className="h-4 w-4 text-purple-600" />
+                🏭 প্ৰতিষ্ঠান সংযোগ ও আবেদন (Client Authorization & Connect)
+              </button>
+
+              <button
+                onClick={() => setContractorTab('platform_worker_pool')}
+                className={`py-3 px-5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                  contractorTab === 'platform_worker_pool' 
+                    ? 'border-indigo-600 text-indigo-600 font-extrabold bg-indigo-50/40' 
+                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                }`}
+              >
+                <Users className="h-4 w-4 text-emerald-600" />
+                👥 প্লেটফৰ্ম শ্ৰমিক পুল ও দাবী (Platform Workforce Pool & Claim)
+              </button>
+
+              <button
                 onClick={() => setContractorTab('project_compliance')}
                 className={`py-3 px-5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                   contractorTab === 'project_compliance' 
@@ -5515,6 +5790,29 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             </div>
 
             {/* CONTRACTOR TAB CONTENTS */}
+            {contractorTab === 'client_connections' && (
+              <ContractorIndustryConnectionManager
+                activeContractor={activeContractor}
+                allIndustries={industries}
+                connections={industryContractorConnections}
+                onApplyToIndustry={handleApplyToIndustry}
+                showNotice={showNotice}
+              />
+            )}
+
+            {contractorTab === 'platform_worker_pool' && (
+              <ContractorPlatformWorkerPool
+                contractor={activeContractor}
+                allWorkers={workers}
+                workerConnections={workerAgencyConnections}
+                onAddNewWorker={handleAddWorkerByContractor}
+                onClaimPlatformWorker={handleClaimPlatformWorker}
+                onAcceptWorkerRequest={handleAcceptWorkerRequest}
+                onRejectWorkerRequest={handleRejectWorkerRequest}
+                showNotice={showNotice}
+              />
+            )}
+
             {contractorTab === 'project_compliance' && (
               <IndustryProjectComplianceSystem
                 contractor={activeContractor}
@@ -7905,12 +8203,24 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               </button>
             </div>
 
-            {/* Worker Section Dual Navigation Tabs */}
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 gap-1.5 shadow-2xs">
+            {/* Worker Section Navigation Tabs */}
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 gap-1.5 shadow-2xs overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setWorkerTab('id_card')}
+                className={`flex-1 py-3 px-4 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
+                  workerTab === 'id_card'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
+                }`}
+              >
+                <ShieldCheck className="h-4 w-4" />
+                🪪 মোৰ ডিজিটেল পৰিচয় পত্ৰ ও এজেন্সী সংযোগ (My ID Card & Agency)
+              </button>
               <button
                 type="button"
                 onClick={() => setWorkerTab('direct_jobs')}
-                className={`flex-1 py-3 px-4 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`flex-1 py-3 px-4 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
                   workerTab === 'direct_jobs'
                     ? 'bg-emerald-600 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
@@ -7922,7 +8232,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               <button
                 type="button"
                 onClick={() => setWorkerTab('attendance')}
-                className={`flex-1 py-3 px-4 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`flex-1 py-3 px-4 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
                   workerTab === 'attendance'
                     ? 'bg-indigo-600 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
@@ -7932,6 +8242,17 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 🕒 মোৰ উপস্থিতি & দৈনিক হাজিৰা (Attendance & Muster Slip)
               </button>
             </div>
+
+            {/* TAB 1: WORKER DIGITAL SMART IDENTITY CARD & AGENCY CONNECTION */}
+            {workerTab === 'id_card' && (
+              <WorkerPlatformCardAndConnection
+                currentWorker={activeWorker}
+                allContractors={contractors}
+                workerConnections={workerAgencyConnections}
+                onConnectAgency={handleConnectAgencyFromWorker}
+                showNotice={showNotice}
+              />
+            )}
 
             {/* DIRECT WORKERS PANEL: BROWSE JOBS, 0% COMMISSION, DIRECT CALL & WHATSAPP */}
             {workerTab === 'direct_jobs' && (
@@ -8376,6 +8697,9 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             workers={workers}
             industries={industries}
             contractors={contractors}
+            currentWorker={workers.find(w => w.id === selectedWorkerId) || workers.find(w => w.workerType === 'Security-Guard' || w.workerType === 'Security-Supervisor')}
+            workerConnections={workerAgencyConnections}
+            onConnectAgency={handleConnectAgencyFromWorker}
             showNotice={showNotice}
           />
         )}

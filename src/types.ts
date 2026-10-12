@@ -31,18 +31,50 @@ export interface Contractor {
 
 export interface Worker {
   id: string;
+  platformId?: string; // e.g. SL-WRK-1024 or SL-GRD-502
   name: string;
   aadhaarHash: string; // Masked Aadhaar
   phone: string;
-  contractorId: string; // Current assigned Contractor or 'direct' for independent
+  contractorId: string; // Current assigned Contractor or 'direct' for independent / unassigned
   skillType: 'Unskilled';
-  workerType?: 'Unskilled-Laborer';
+  workerType?: 'Unskilled-Laborer' | 'Security-Guard' | 'Security-Supervisor';
   sectionOrTrade?: string;
   dailyWageRate: number; // in INR
   status: 'Available' | 'Deployed' | 'On-Leave';
   onboardingVerified: boolean;
   onboardingDate: string;
   assignedSupervisorId?: string;
+}
+
+export interface IndustryContractorConnection {
+  id: string;
+  industryId: string;
+  industryName: string;
+  industryCategory?: IndustryCategory;
+  contractorId: string;
+  contractorName: string;
+  contractorType?: ContractorCategory;
+  initiatedBy: 'industry' | 'contractor';
+  status: 'Pending' | 'Connected' | 'Rejected';
+  requestedAt: string;
+  respondedAt?: string;
+  notes?: string;
+}
+
+export interface WorkerAgencyConnection {
+  id: string;
+  workerId: string;
+  workerPlatformId: string; // e.g. SL-WRK-1024 or SL-GRD-502
+  workerName: string;
+  workerPhone: string;
+  workerRole: 'Unskilled Worker' | 'Security Guard (Unarmed)' | 'Security Guard' | 'Security Supervisor';
+  contractorId: string;
+  contractorName: string;
+  contractorType?: ContractorCategory;
+  initiatedBy: 'worker' | 'contractor';
+  status: 'Pending' | 'Connected' | 'Rejected';
+  requestedAt: string;
+  respondedAt?: string;
 }
 
 export interface MultiIndustryAssignment {
