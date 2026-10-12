@@ -10,18 +10,21 @@ import {
   Milestone, 
   Smartphone,
   LogOut,
-  Factory
+  Factory,
+  ShieldCheck
 } from 'lucide-react';
 import SaaSApp from './components/SaaSApp';
 import ArchitectureDocs from './components/ArchitectureDocs';
 import RoadmapView from './components/RoadmapView';
 import MobileSingleView from './components/MobileSingleView';
+import PlatformAdminPanel from './components/PlatformAdminPanel';
+import { initialIndustries, initialContractors, initialWorkers } from './mockData';
 import { AppLanguage, getStoredLanguage, setStoredLanguage, TRANSLATIONS } from './i18n';
 import { LanguageSelector } from './components/LanguageSelector';
 
 export default function App() {
-  // Pure Industry / Factory Standalone Mode: 'app' (Main Console) | 'architecture' | 'roadmap'
-  const [activeTab, setActiveTab] = useState<'app' | 'architecture' | 'roadmap'>(() => {
+  // Pure Industry / Factory Standalone Mode: 'app' (Main Console) | 'admin' | 'architecture' | 'roadmap'
+  const [activeTab, setActiveTab] = useState<'app' | 'admin' | 'architecture' | 'roadmap'>(() => {
     return 'app';
   });
 
@@ -38,7 +41,7 @@ export default function App() {
     localStorage.setItem('shramiklink_mobile_mode', val ? 'true' : 'false');
   };
 
-  const handleTabChange = (tab: 'app' | 'architecture' | 'roadmap') => {
+  const handleTabChange = (tab: 'app' | 'admin' | 'architecture' | 'roadmap') => {
     setActiveTab(tab);
     localStorage.setItem('icwl_industry_tab', tab);
     localStorage.setItem('shramiklink_industry_tab', tab);
@@ -141,6 +144,22 @@ export default function App() {
             </button>
 
             <button
+              id="platform-admin-btn"
+              onClick={() => handleTabChange('admin')}
+              className={`flex items-center justify-center space-x-1.5 px-3 md:px-4 h-full transition-all relative cursor-pointer whitespace-nowrap ${
+                activeTab === 'admin'
+                  ? 'text-indigo-400 font-bold bg-indigo-950/40'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <ShieldCheck className="h-4 w-4 text-indigo-400" />
+              <span className="text-xs tracking-wide">🛡️ ছুপাৰ এডমিন পেনেল (Admin Panel)</span>
+              {activeTab === 'admin' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-400 rounded-full" />
+              )}
+            </button>
+
+            <button
               id="industry-arch-btn"
               onClick={() => handleTabChange('architecture')}
               className={`flex items-center justify-center space-x-1.5 px-3 md:px-4 h-full transition-all relative cursor-pointer whitespace-nowrap ${
@@ -235,6 +254,23 @@ export default function App() {
               <SaaSApp 
                 externalLang={currentLang} 
                 onLanguageChange={handleLanguageChange} 
+              />
+            </div>
+          )}
+
+          {activeTab === 'admin' && (
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm text-slate-900">
+              <PlatformAdminPanel
+                industries={initialIndustries}
+                contractors={initialContractors}
+                workers={initialWorkers}
+                onSelectRole={(role) => {
+                  handleTabChange('app');
+                  localStorage.setItem('s_current_role', role);
+                  sessionStorage.setItem('s_session_authenticated', 'true');
+                  localStorage.setItem('s_is_logged_in', 'true');
+                  window.dispatchEvent(new CustomEvent('shramiklink-switch-role', { detail: role }));
+                }}
               />
             </div>
           )}

@@ -101,6 +101,7 @@ import AssignedInspectorCard from './AssignedInspectorCard';
 import GovernmentInspectorJurisdictionPanel from './GovernmentInspectorJurisdictionPanel';
 import IndustryProjectComplianceSystem from './IndustryProjectComplianceSystem';
 import { SecurityGuardDashboard } from './SecurityGuardDashboard';
+import PlatformAdminPanel from './PlatformAdminPanel';
 import { 
   ContractorApplication, 
   DirectJobOpening, 
@@ -468,11 +469,12 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    // First screen of the website is the Registration / Login page
+    const sessionActive = sessionStorage.getItem('s_session_authenticated');
     const saved = localStorage.getItem('s_is_logged_in');
-    // First screen of the website is the Registration / Login page unless logged in
-    return saved === 'true';
+    return sessionActive === 'true' && saved === 'true';
   });
-  const [currentRole, setCurrentRole] = useState<'industry_admin' | 'supervisor' | 'contractor' | 'worker' | 'government_inspector' | 'security_guard'>(() => {
+  const [currentRole, setCurrentRole] = useState<'industry_admin' | 'supervisor' | 'contractor' | 'worker' | 'government_inspector' | 'security_guard' | 'admin'>(() => {
     const saved = localStorage.getItem('s_current_role');
     if (saved === 'tea_garden' || !saved) {
       localStorage.setItem('s_current_role', 'industry_admin');
@@ -483,8 +485,8 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [loginRoleInProgress, setLoginRoleInProgress] = useState<string | null>(null);
 
-  // Unified Credentials & Simulated OTP State
-  const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
+  // Unified Credentials & Simulated OTP State - default to 'register' so registration panel is directly visible
+  const [authTab, setAuthTab] = useState<'login' | 'register'>('register');
   const [loginEmailOrPhone, setLoginEmailOrPhone] = useState<string>('');
   const [loginPassword, setLoginPassword] = useState<string>('');
   
@@ -627,6 +629,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
         }
       }
       setIsLoggedIn(true);
+      sessionStorage.setItem('s_session_authenticated', 'true');
       localStorage.setItem('s_is_logged_in', 'true');
       showNotice(`লগইন সফল হৈছে! স্বাগতম, ${matched.name}!`, 'success');
       refreshData();
@@ -766,6 +769,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       }
     }
     setIsLoggedIn(true);
+    sessionStorage.setItem('s_session_authenticated', 'true');
     localStorage.setItem('s_is_logged_in', 'true');
     
     setRegisterName('');
@@ -921,11 +925,13 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
         refreshData(idToken);
       } else {
         setToken(null);
-        // Do not force logout in preview demo sandbox if user did not explicitly log out
+        // Only stay logged in if explicitly authenticated in this active browser session
+        const sessionActive = sessionStorage.getItem('s_session_authenticated');
         const savedLoggedIn = localStorage.getItem('s_is_logged_in');
-        if (savedLoggedIn !== 'false') {
+        if (sessionActive === 'true' && savedLoggedIn === 'true') {
           setIsLoggedIn(true);
-          localStorage.setItem('s_is_logged_in', 'true');
+        } else {
+          setIsLoggedIn(false);
         }
         refreshData(undefined);
       }
@@ -1001,6 +1007,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       }
     }
     setIsLoggedIn(true);
+    sessionStorage.setItem('s_session_authenticated', 'true');
     localStorage.setItem('s_is_logged_in', 'true');
     showNotice(`Sandbox Demo: Entered as ${role.replace('_', ' ').toUpperCase()}${subCategory ? ` (${subCategory})` : ''}`, 'success');
     refreshData(token || undefined);
@@ -1015,6 +1022,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       setUser(null);
       setToken(null);
       setIsLoggedIn(false);
+      sessionStorage.removeItem('s_session_authenticated');
       localStorage.setItem('s_is_logged_in', 'false');
       showNotice('Logged out of secure CLRA compliance session.', 'info');
     }
@@ -1024,11 +1032,21 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     const handleGlobalLogoutEvent = () => {
       handleLogout();
     };
+    const handleSwitchRoleEvent = (e: any) => {
+      if (e.detail) {
+        setCurrentRole(e.detail);
+        sessionStorage.setItem('s_session_authenticated', 'true');
+        localStorage.setItem('s_is_logged_in', 'true');
+        setIsLoggedIn(true);
+      }
+    };
     window.addEventListener('shramiklink-logout', handleGlobalLogoutEvent);
     window.addEventListener('icwl-logout', handleGlobalLogoutEvent);
+    window.addEventListener('shramiklink-switch-role', handleSwitchRoleEvent);
     return () => {
       window.removeEventListener('shramiklink-logout', handleGlobalLogoutEvent);
       window.removeEventListener('icwl-logout', handleGlobalLogoutEvent);
+      window.removeEventListener('shramiklink-switch-role', handleSwitchRoleEvent);
     };
   }, []);
   
@@ -3085,6 +3103,44 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               </div>
             </button>
           </div>
+
+          {/* 5. Direct Super Admin / Platform Census & Rules Card */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentRole('admin');
+                setIsLoggedIn(true);
+                sessionStorage.setItem('s_session_authenticated', 'true');
+                localStorage.setItem('s_is_logged_in', 'true');
+                localStorage.setItem('s_current_role', 'admin');
+                showNotice('ছুপাৰ এডমিন পেনেল খোলক (Super Admin Census & Guide)', 'info');
+              }}
+              className="w-full bg-slate-900 hover:bg-slate-800 border-2 border-indigo-400/80 p-4 rounded-2xl text-left shadow-md transition-all group cursor-pointer active:scale-98 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="text-2xl p-2.5 rounded-xl bg-indigo-950 border border-indigo-500/50 text-indigo-300 shrink-0">
+                  🛡️
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-black text-white text-sm group-hover:text-indigo-300 transition-colors">
+                      ছুপাৰ এডমিন পেনেল (Super Admin Platform Panel & Census)
+                    </span>
+                    <span className="text-[9px] font-bold bg-indigo-500/30 text-indigo-300 border border-indigo-500/50 px-2 py-0.5 rounded-full uppercase">
+                      Live Stats & System Guide
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">
+                    🏭 {industries.length} প্ৰতিষ্ঠান (উদ্যোগ/Apt/Shop/Office) • 🏢 {contractors.length} সংস্থা (ঠিকাদাৰ/Security) • 👤 {workers.length + 2} শ্ৰমিক ও গাৰ্ড • কাৰ্য্যপ্ৰণালী নিৰ্দেশনা
+                  </p>
+                </div>
+              </div>
+              <div className="text-xs font-black text-indigo-300 flex items-center gap-1.5 shrink-0 bg-indigo-950/80 px-3 py-1.5 rounded-xl border border-indigo-500/40 group-hover:bg-indigo-900 transition-colors">
+                <span>এডমিন পেনেল খোলক</span> &rarr;
+              </div>
+            </button>
+          </div>
         </div>
 
         <div className="space-y-6 animate-fadeIn">
@@ -4032,6 +4088,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                  currentRole === 'contractor' ? 'Agency Dashboard (Labour Contractor & Security Agency)' :
                  currentRole === 'worker' ? 'Labour Dashboard (Worker / Shramik)' :
                  currentRole === 'security_guard' ? 'Security Guard Dashboard (Gate Duty & Sentry)' :
+                 currentRole === 'admin' ? 'Super Admin Platform Panel (Census & System Guide)' :
                  currentRole === 'supervisor' ? t_supervisor :
                  t.inspector}
               </span>
@@ -4041,6 +4098,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               {currentRole === 'contractor' && 'এজেন্সী ডেশ্ববৰ্ড: Labour Contractor আৰু Security Agency অনুপালন।'}
               {currentRole === 'worker' && 'শ্ৰমিক ডেশ্ববৰ্ড: হাজিৰা, মজুৰি স্লিপ, EPFO/ESIC লিংক আৰু পোনে-পোনে কাম পোৱাৰ ব্যৱস্থা।'}
               {currentRole === 'security_guard' && 'নিৰাপত্তাৰক্ষী ডেশ্ববৰ্ড: গেট এন্ট্ৰি/এক্সিট, ভ্ৰমণকাৰী পাছ, সামগ্ৰী চালান আৰু জৰুৰীকালীন নিৰীক্ষণ।'}
+              {currentRole === 'admin' && 'কেন্দ্ৰীয় এডমিন পেনেল: উদ্যোগ, এপাৰ্টমেণ্ট, দোকান, অফিচ, ঠিকাদাৰ, ছিকিউৰিটি সংস্থা আৰু শ্ৰমিকৰ লাইভ সংখ্যা ও কাৰ্য্যপ্ৰণালী।'}
               {currentRole === 'supervisor' && t_supervisorDesc}
               {currentRole === 'government_inspector' && t.inspectorDesc}
             </p>
@@ -4099,6 +4157,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               { role: 'contractor', label: '🏢 এজেন্সী ডেশ্ববৰ্ড (Agency Dashboard: Labour Contractor & Security Agency)', short: '🏢 Agency Dashboard' },
               { role: 'worker', label: '👤 শ্ৰমিক ডেশ্ববৰ্ড (Labour Dashboard)', short: '👤 Labour' },
               { role: 'security_guard', label: '👮 নিৰাপত্তাৰক্ষী গেট ডেশ্ববৰ্ড (Security Guard Dashboard)', short: '👮 Security Guard' },
+              { role: 'admin', label: '🛡️ ছুপাৰ এডমিন পেনেল (Super Admin Panel)', short: '🛡️ Super Admin' },
               { role: 'supervisor', label: '👷 ছুপাৰভাইজাৰ পেনেল (Supervisor Desk)', short: '👷 ছুপাৰভাইজাৰ' },
               { role: 'government_inspector', label: '⚖️ চৰকাৰী পৰিদৰ্শক (Inspector)', short: '⚖️ পৰিদৰ্শক' },
             ].map((item) => {
@@ -8317,6 +8376,23 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             workers={workers}
             industries={industries}
             contractors={contractors}
+            showNotice={showNotice}
+          />
+        )}
+
+        {/* ==================== 6. SUPER ADMIN PLATFORM GOVERNANCE PANEL ==================== */}
+        {currentRole === 'admin' && (
+          <PlatformAdminPanel
+            industries={industries}
+            contractors={contractors}
+            workers={workers}
+            onSelectRole={(r) => {
+              setCurrentRole(r);
+              localStorage.setItem('s_current_role', r);
+            }}
+            onAddNewIndustry={(newInd) => setIndustries(prev => [newInd, ...prev])}
+            onAddNewContractor={(newCon) => setContractors(prev => [newCon, ...prev])}
+            onAddNewWorker={(newWrk) => setWorkers(prev => [newWrk, ...prev])}
             showNotice={showNotice}
           />
         )}
