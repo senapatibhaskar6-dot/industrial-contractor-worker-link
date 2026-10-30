@@ -40,7 +40,13 @@ export interface Worker {
   workerType?: 'Unskilled-Laborer' | 'Security-Guard' | 'Security-Supervisor';
   sectionOrTrade?: string;
   dailyWageRate: number; // in INR
-  status: 'Available' | 'Deployed' | 'On-Leave';
+  status: 'Available' | 'Deployed' | 'On-Leave' | 'Deactivated' | 'Blacklisted';
+  blacklistedReason?: string;
+  uan?: string; // EPFO Universal Account Number
+  esicNo?: string; // ESIC IP / Insurance Number
+  bankAccountNo?: string; // Masked or full bank account
+  ifscCode?: string; // Bank IFSC Code
+  bankName?: string; // Bank Name
   onboardingVerified: boolean;
   onboardingDate: string;
   assignedSupervisorId?: string;
@@ -339,4 +345,88 @@ export interface InspectionNotice {
   issuedAt: string;
   status: 'Pending' | 'Acknowledged' | 'Resolved';
 }
+
+export interface SalaryTransaction {
+  id: string;
+  workerId: string;
+  workerName: string;
+  contractorId: string;
+  contractorName?: string;
+  industryId: string;
+  industryName?: string;
+  month: string;
+  amount: number;
+  paymentDate: string;
+  paymentMode: 'NEFT' | 'RTGS' | 'IMPS' | 'UPI' | 'Direct Bank Transfer';
+  utrNumber: string;
+  accountNumberMasked: string;
+  bankName: string;
+  status: 'Successful' | 'Pending' | 'Failed';
+  pfDeducted?: number;
+  esicDeducted?: number;
+  netPaid: number;
+}
+
+export interface SupervisorComplaint {
+  id: string;
+  complaintNumber: string; // e.g. CMP-2026-081
+  supervisorId: string;
+  supervisorName: string;
+  industryId: string;
+  industryName: string;
+  contractorId: string;
+  contractorName: string;
+  workerId?: string;
+  workerName?: string;
+  category: 'Wage Default / Delay' | 'Safety Violation' | 'Absenteeism / Discipline' | 'Statutory EPF/ESIC Evasion' | 'Harassment / Welfare Issue';
+  subject: string;
+  description: string;
+  severity: 'Low' | 'Medium' | 'High' | 'Critical';
+  status: 'Open' | 'Under Investigation' | 'Resolved' | 'Action Taken';
+  ccAdmin: boolean;
+  ccContractor: boolean;
+  createdAt: string;
+  resolutionNotes?: string;
+  resolvedAt?: string;
+}
+
+export interface LeaveRecord {
+  id: string;
+  workerId: string;
+  workerName: string;
+  contractorId: string;
+  contractorName?: string;
+  industryId?: string;
+  industryName?: string;
+  leaveType: 'Earned / Annual Leave with Wages' | 'Casual Leave' | 'Sick / Medical Leave' | 'National / Festival Holiday';
+  daysCount: number;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: 'Approved' | 'Pending' | 'Rejected';
+  appliedAt: string;
+  approvedBy?: string;
+  wagePaidForLeave: boolean;
+}
+
+export interface AdminPlatformInvoice {
+  id: string;
+  invoiceNo: string; // e.g. SL-INV-2026-901
+  billedEntity: 'Industry' | 'Contractor';
+  entityId: string;
+  entityName: string;
+  month: string;
+  activeWorkersCount: number;
+  mandaysCount: number;
+  ratePerWorkerDay: number; // ₹1 per worker per day
+  subtotal: number;
+  gstAmount: number;
+  totalPayable: number;
+  status: 'Draft' | 'Generated' | 'Paid' | 'Overdue';
+  issuedDate: string;
+  dueDate: string;
+  paidAt?: string;
+  transactionRef?: string;
+}
+
 

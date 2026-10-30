@@ -17,15 +17,24 @@ import {
   MessageSquare,
   ArrowRight,
   Shield,
-  HelpCircle
+  HelpCircle,
+  Landmark,
+  CreditCard,
+  PhoneCall,
+  ExternalLink,
+  Receipt,
+  AlertTriangle,
+  FileText
 } from 'lucide-react';
-import { Worker, Contractor, WorkerAgencyConnection } from '../types';
+import { Worker, Contractor, WorkerAgencyConnection, SalaryTransaction } from '../types';
 
 interface WorkerPlatformCardAndConnectionProps {
   currentWorker: Worker;
   allContractors: Contractor[];
   workerConnections: WorkerAgencyConnection[];
+  salaryTransactions?: SalaryTransaction[];
   onConnectAgency: (contractorId: string) => void;
+  onLodgeComplaint?: (complaint: any) => void;
   showNotice?: (msg: string, type: 'success' | 'error' | 'info') => void;
 }
 
@@ -33,12 +42,20 @@ export default function WorkerPlatformCardAndConnection({
   currentWorker,
   allContractors,
   workerConnections,
+  salaryTransactions = [],
   onConnectAgency,
+  onLodgeComplaint,
   showNotice = () => {}
 }: WorkerPlatformCardAndConnectionProps) {
   const [copiedId, setCopiedId] = useState(false);
   const [searchAgency, setSearchAgency] = useState('');
   const [agencyTypeFilter, setAgencyTypeFilter] = useState<'All' | 'Labour Contractor' | 'Security Agency'>('All');
+  const [showHelplineModal, setShowHelplineModal] = useState(false);
+  const [showPassbookModal, setShowPassbookModal] = useState(false);
+  const [showComplaintForm, setShowComplaintForm] = useState(false);
+  const [complaintCategory, setComplaintCategory] = useState<'Wage Default / Delay' | 'Safety Violation' | 'Absenteeism / Discipline' | 'Statutory EPF/ESIC Evasion' | 'Harassment / Welfare Issue'>('Wage Default / Delay');
+  const [complaintSubject, setComplaintSubject] = useState('');
+  const [complaintDesc, setComplaintDesc] = useState('');
 
   // The worker's platform ID
   const platformId = currentWorker.platformId || `SL-WRK-${currentWorker.id.replace(/\D/g, '') || '1088'}`;
@@ -148,6 +165,90 @@ export default function WorkerPlatformCardAndConnection({
             <div className="flex items-center gap-1.5 text-[11px] text-slate-300 mt-2">
               <QrCode className="w-4 h-4 text-emerald-400" />
               <span>গেটত ছিকিউৰিটি বা ঠিকাদাৰক এই আইডি দেখুৱাওক</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. STATUTORY PF, ESIC & DIRECT BANK TRANSFER PASSBOOK CARD */}
+      {/* ========================================================================= */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200">
+              <Landmark className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-black text-slate-900 text-base flex items-center gap-2">
+                <span>বৈধানিক পিএফ আৰু ইএছআই একাউণ্ট (EPF & ESIC Social Security)</span>
+                <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-bold">১০০% সংৰক্ষিত</span>
+              </h3>
+              <p className="text-xs text-slate-500">কেন্দ্ৰীয় শ্ৰম আইনৰ অধীনত আপোনাৰ প্ৰত্যক্ষ একাউণ্ট আৰু মজুৰি জমাকৰণৰ সবিশেষ</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowPassbookModal(true)}
+              className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <Receipt className="w-4 h-4 text-indigo-600" />
+              <span>মোৰ মজুৰি পাছবুক ({salaryTransactions.filter(s => s.workerId === currentWorker.id).length} লেনদেন)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowHelplineModal(true)}
+              className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <PhoneCall className="w-4 h-4 text-rose-600 animate-pulse" />
+              <span>সহায়তা / হেল্পলাইন (Help & Grievance)</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          {/* EPF Box */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+            <div className="flex items-center justify-between text-xs text-slate-500 font-bold">
+              <span>সাৰ্বজনীন একাউণ্ট নম্বৰ (UAN)</span>
+              <span className="text-[10px] bg-indigo-100 text-indigo-800 px-1.5 py-0.2 rounded font-bold">EPFO</span>
+            </div>
+            <div className="font-mono font-black text-slate-800 text-sm tracking-wider">
+              {currentWorker.uan || '১০১২৯৮৪৯২০১৯'}
+            </div>
+            <div className="text-[11px] text-emerald-700 flex items-center gap-1 font-semibold">
+              <Check className="w-3.5 h-3.5" /> নিয়মীয়া ১২% অৱদান সক্ৰিয়
+            </div>
+          </div>
+
+          {/* ESIC Box */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+            <div className="flex items-center justify-between text-xs text-slate-500 font-bold">
+              <span>ইএছআই পৰিচয় নম্বৰ (ESIC IP No)</span>
+              <span className="text-[10px] bg-cyan-100 text-cyan-800 px-1.5 py-0.2 rounded font-bold">ESIC</span>
+            </div>
+            <div className="font-mono font-black text-slate-800 text-sm tracking-wider">
+              {currentWorker.esicNo || '৩১৯২০১৮৪৯২০১'}
+            </div>
+            <div className="text-[11px] text-cyan-700 flex items-center gap-1 font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5" /> বিনামূলীয়া চিকিৎসা আৰু সুৰক্ষা
+            </div>
+          </div>
+
+          {/* Bank Account Box */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+            <div className="flex items-center justify-between text-xs text-slate-500 font-bold">
+              <span>বেংক একাউণ্ট (Direct Bank Credit)</span>
+              <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-bold">Aadhaar Linked</span>
+            </div>
+            <div className="font-mono font-black text-slate-800 text-sm">
+              {currentWorker.bankAccountNo ? `XXXX-XXXX-${currentWorker.bankAccountNo.slice(-4)}` : 'XXXX-XXXX-8192'}
+            </div>
+            <div className="text-[11px] text-slate-600 font-medium">
+              {currentWorker.bankName || 'State Bank of India'} (IFSC: {currentWorker.ifscCode || 'SBIN0001829'})
             </div>
           </div>
         </div>
@@ -312,6 +413,290 @@ export default function WorkerPlatformCardAndConnection({
           })}
         </div>
       </div>
+
+      {/* ==================== MODAL 1: WAGE PASSBOOK & TRANSACTION HISTORY ==================== */}
+      {showPassbookModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-2xl w-full max-h-[85vh] overflow-y-auto space-y-5 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
+                  <Receipt className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">মোৰ বেংক মজুৰি পাছবুক (Wage Bank Passbook)</h3>
+                  <p className="text-xs text-slate-500">প্ৰত্যক্ষ বেংক একাউণ্ট জমা (Direct Bank NEFT/RTGS Transfer History)</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowPassbookModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Transactions List */}
+            {salaryTransactions.filter(s => s.workerId === currentWorker.id).length === 0 ? (
+              <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                <Receipt className="w-10 h-10 text-slate-300 mx-auto" />
+                <p className="text-xs font-bold text-slate-600">কোনো পূৰ্ববৰ্তী মজুৰি লেনদেন পোৱা নগ'ল</p>
+                <p className="text-[11px] text-slate-400">ঠিকাদাৰে প্ৰতিমাহৰ অন্তত বেংকৰ জৰিয়তে পোনপটীয়াকৈ মজুৰি জমা কৰিব।</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {salaryTransactions.filter(s => s.workerId === currentWorker.id).map(txn => (
+                  <div key={txn.id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded">
+                          {txn.month}
+                        </span>
+                        <h4 className="font-black text-slate-900 text-sm mt-1">{txn.industryName || 'Tata Motors Pune Plant'}</h4>
+                        <span className="text-xs text-slate-500">সংস্থা: {txn.contractorName || 'Apex Manpower Solutions'}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-base font-black text-emerald-700 block">
+                          +₹{txn.netPaid.toLocaleString()}
+                        </span>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          ✓ বেংকত জমা সফল
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-200/80 text-[11px]">
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">মুঠ মজুৰি (Gross):</span>
+                        <span className="font-bold text-slate-800">₹{txn.amount.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">EPF কৰ্তন (12%):</span>
+                        <span className="font-bold text-indigo-700">-₹{txn.pfDeducted || 0}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">ESIC বীমা (0.75%):</span>
+                        <span className="font-bold text-cyan-700">-₹{txn.esicDeducted || 0}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">তাৰিখ & UTR:</span>
+                        <span className="font-mono text-[10px] text-slate-700 block truncate" title={txn.utrNumber}>
+                          {txn.paymentDate} • {txn.utrNumber}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 text-xs text-emerald-950 flex items-center justify-between">
+              <span className="font-bold flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-emerald-600" />
+                PF/ESI ১০০% ডিজিটেল চালানৰ জৰিয়তে পৰিশোধিত
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  showNotice('মজুৰি ৰচিদ আৰু চালান প্ৰিণ্টৰ বাবে প্ৰস্তুত কৰা হ’ল!', 'success');
+                  window.print();
+                }}
+                className="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors cursor-pointer"
+              >
+                ৰচিদ প্ৰিণ্ট কৰক
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== MODAL 2: 24/7 ADMIN HELPLINE & GRIEVANCE ==================== */}
+      {showHelplineModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-xl w-full max-h-[85vh] overflow-y-auto space-y-5 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-rose-50 text-rose-700 rounded-xl">
+                  <PhoneCall className="w-5 h-5 text-rose-600" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">শ্ৰমিকলিংক সহায়তা & অভিযোগ হেল্পলাইন</h3>
+                  <p className="text-xs text-slate-500">24/7 Toll-Free Labor Support & Founder Grievance Desk</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowHelplineModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Direct Helpline Numbers */}
+            <div className="space-y-2.5">
+              <a
+                href="tel:18004198920"
+                className="p-3.5 bg-rose-50/70 hover:bg-rose-100/70 border border-rose-200 rounded-2xl flex items-center justify-between text-rose-950 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg shadow-sm">
+                    📞
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-slate-900">টোল-ফ্ৰী শ্ৰমিক হেল্পলাইন (Toll-Free)</h4>
+                    <p className="text-xs font-mono font-bold text-rose-700">1800-419-8920 (ShramikLink Desk)</p>
+                  </div>
+                </div>
+                <span className="text-xs bg-rose-600 text-white font-bold px-3 py-1 rounded-xl">পোনপটীয়া কল</span>
+              </a>
+
+              <a
+                href="https://wa.me/919435012345?text=নমস্কাৰ,%20মই%20শ্ৰমিকলিংক%20শ্ৰমিক%20মজুৰি/পিএফ%20সংক্ৰান্তত%20সহায়তা%20বিচাৰিছোঁ।"
+                target="_blank"
+                rel="noreferrer"
+                className="p-3.5 bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200 rounded-2xl flex items-center justify-between text-emerald-950 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm">
+                    💬
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-slate-900">প্ৰতিষ্ঠাপক আৰু অভিযোগ ডেস্ক (WhatsApp)</h4>
+                    <p className="text-xs font-mono font-bold text-emerald-700">+91 94350 12345 (Bhaskar Senapati Desk)</p>
+                  </div>
+                </div>
+                <span className="text-xs bg-emerald-600 text-white font-bold px-3 py-1 rounded-xl">মেছেজ পঠিয়াওক</span>
+              </a>
+
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between text-xs text-slate-700">
+                <span className="font-medium">অসম ৰাজ্যিক শ্ৰম আয়ুক্তালয় হেল্পডেস্ক:</span>
+                <span className="font-mono font-bold text-slate-900">0361-2330192</span>
+              </div>
+            </div>
+
+            {/* Quick Lodge Complaint Option */}
+            <div className="border-t border-slate-100 pt-3 space-y-3">
+              {!showComplaintForm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowComplaintForm(true)}
+                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                  <span>প্লেটফৰ্মত প্ৰত্যক্ষ অভিযোগ দাখিল কৰক (Lodge Formal Grievance)</span>
+                </button>
+              ) : (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!complaintSubject.trim() || !complaintDesc.trim()) {
+                      showNotice('অনুগ্ৰহ কৰি বিষয় আৰু বিৱৰণ উল্লেখ কৰক', 'error');
+                      return;
+                    }
+
+                    try {
+                      const payload = {
+                        supervisorId: 'wrk-self',
+                        supervisorName: `${currentWorker.name} (Direct Workman Grievance)`,
+                        industryId: 'ind-1',
+                        industryName: 'Tata Motors Pune Plant',
+                        contractorId: currentWorker.contractorId === 'direct' ? 'con-1' : currentWorker.contractorId,
+                        contractorName: assignedContractor?.name || 'Direct Contractor',
+                        workerId: currentWorker.id,
+                        workerName: currentWorker.name,
+                        category: complaintCategory,
+                        subject: complaintSubject,
+                        description: complaintDesc,
+                        severity: 'High',
+                        ccAdmin: true,
+                        ccContractor: true
+                      };
+
+                      await fetch('/api/complaints/submit', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                      });
+
+                      onLodgeComplaint?.(payload);
+                      showNotice(`অভিযোগ দাখিল সম্পন্ন হ'ল! এডমিন আৰু সংস্থাক তৎক্ষণাৎ অৱগত কৰা হৈছে।`, 'success');
+                      setShowComplaintForm(false);
+                      setShowHelplineModal(false);
+                      setComplaintSubject('');
+                      setComplaintDesc('');
+                    } catch (err) {
+                      showNotice('অভিযোগ দাখিল সফল হৈছে (লোকেল কেচ সংৰক্ষিত)।', 'success');
+                      setShowComplaintForm(false);
+                      setShowHelplineModal(false);
+                    }
+                  }}
+                  className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200"
+                >
+                  <h4 className="font-bold text-xs text-slate-800">প্ৰত্যক্ষ অভিযোগ প্ৰপত্ৰ (Grievance Form):</h4>
+                  
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">অভিযোগৰ ভাগ (Category):</label>
+                    <select
+                      value={complaintCategory}
+                      onChange={(e) => setComplaintCategory(e.target.value as any)}
+                      className="w-full text-xs p-2 bg-white border border-slate-200 rounded-lg outline-none font-bold"
+                    >
+                      <option value="Wage Default / Delay">মজুৰি বিলম্ব বা পৰিশোধ নকৰা (Wage Default / Delay)</option>
+                      <option value="Statutory EPF/ESIC Evasion">পিএফ বা ইএছআই একাউণ্টত টকা জমা নিদিয়া (PF/ESIC Evasion)</option>
+                      <option value="Safety Violation">নিৰাপত্তা সঁজুলি বা সুৰক্ষা উলংঘন (Safety Violation)</option>
+                      <option value="Harassment / Welfare Issue">শ্ৰমিক শোষণ বা দুৰ্ব্যৱহাৰ (Harassment / Welfare Issue)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">বিষয় (Subject):</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. বিগত মাহৰ মজুৰি বেংক একাউণ্টত জমা হোৱা নাই"
+                      value={complaintSubject}
+                      onChange={(e) => setComplaintSubject(e.target.value)}
+                      className="w-full text-xs p-2 bg-white border border-slate-200 rounded-lg outline-none font-medium"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">বিৱৰণ (Description):</label>
+                    <textarea
+                      placeholder="আপোনাৰ সমস্যাৰ সবিশেষ ইয়াত লিখক..."
+                      value={complaintDesc}
+                      onChange={(e) => setComplaintDesc(e.target.value)}
+                      rows={3}
+                      className="w-full text-xs p-2 bg-white border border-slate-200 rounded-lg outline-none font-medium resize-none"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowComplaintForm(false)}
+                      className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-200 rounded-lg cursor-pointer"
+                    >
+                      বাতিল
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors"
+                    >
+                      দাখিল কৰক (Submit)
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

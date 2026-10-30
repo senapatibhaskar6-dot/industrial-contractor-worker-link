@@ -20,9 +20,13 @@ import {
   UserPlus,
   Lock,
   Calendar,
-  Smartphone
+  Smartphone,
+  AlertTriangle,
+  Send,
+  FileCheck,
+  Check
 } from 'lucide-react';
-import { Worker, Contractor, Industry, Attendance, Supervisor, ContractorAttendanceRecord } from '../types';
+import { Worker, Contractor, Industry, Attendance, Supervisor, ContractorAttendanceRecord, SupervisorComplaint } from '../types';
 import { ContractorMonthlyAttendanceModal } from './ContractorMonthlyAttendanceModal';
 import { DirectWorkerEntryModal } from './DirectWorkerEntryModal';
 
@@ -48,6 +52,8 @@ export interface SupervisorAttendancePanelProps {
   onSaveContractorAttendance?: (records: ContractorAttendanceRecord[]) => void;
   onNavigateToFormXVI?: () => void;
   onLogout?: () => void;
+  complaints?: SupervisorComplaint[];
+  onAddComplaint?: (complaint: SupervisorComplaint) => void;
   showNotice: (msg: string, type: 'info' | 'success' | 'error') => void;
   initialDeskMode?: 'industry' | 'contractor';
 }
@@ -66,6 +72,8 @@ export const SupervisorAttendancePanel: React.FC<SupervisorAttendancePanelProps>
   onSaveContractorAttendance,
   onNavigateToFormXVI,
   onLogout,
+  complaints = [],
+  onAddComplaint,
   showNotice,
   initialDeskMode = 'contractor'
 }) => {
@@ -134,8 +142,23 @@ export const SupervisorAttendancePanel: React.FC<SupervisorAttendancePanelProps>
   const [newSupEmail, setNewSupEmail] = useState<string>('');
   const [newSupDept, setNewSupDept] = useState<string>('Site Operations & Labour Management');
   const [newSupType, setNewSupType] = useState<'contractor' | 'industry'>('contractor');
-  const [newSupContractorId, setNewSupContractorId] = useState<string>(contractors[0]?.id || 'con-1');
   const [newSupIndustryId, setNewSupIndustryId] = useState<string>(industries[0]?.id || 'ind-1');
+  const [newSupContractorId, setNewSupContractorId] = useState<string>(contractors[0]?.id || 'con-1');
+
+  // Active section: 'attendance' | 'complaints'
+  const [activeSection, setActiveSection] = useState<'attendance' | 'complaints'>('attendance');
+
+  // Supervisor Formal Complaint Modal State
+  const [isComplaintModalOpen, setIsComplaintModalOpen] = useState<boolean>(false);
+  const [cmpCategory, setCmpCategory] = useState<'Safety Violation' | 'Wage Default / Delay' | 'Absenteeism / Discipline' | 'Statutory EPF/ESIC Evasion' | 'Harassment / Welfare Issue'>('Safety Violation');
+  const [cmpSubject, setCmpSubject] = useState<string>('');
+  const [cmpDesc, setCmpDesc] = useState<string>('');
+  const [cmpSeverity, setCmpSeverity] = useState<'Low' | 'Medium' | 'High' | 'Critical'>('Medium');
+  const [cmpTargetIndustryId, setCmpTargetIndustryId] = useState<string>(industries[0]?.id || 'ind-1');
+  const [cmpTargetContractorId, setCmpTargetContractorId] = useState<string>(contractors[0]?.id || 'con-1');
+  const [cmpTargetWorkerId, setCmpTargetWorkerId] = useState<string>('');
+  const [cmpCcAdmin, setCmpCcAdmin] = useState<boolean>(true);
+  const [cmpCcContractor, setCmpCcContractor] = useState<boolean>(true);
 
   // Active Contractor Object with guaranteed fallback
   const fallbackContractor: Contractor = {
@@ -312,6 +335,53 @@ export const SupervisorAttendancePanel: React.FC<SupervisorAttendancePanelProps>
         'success'
       );
     }
+  };
+
+  const handleLodgeComplaint = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cmpSubject.trim() || !cmpDesc.trim()) {
+      showNotice('অনুগ্ৰহ কৰি অভিযোগৰ বিষয় আৰু সবিশেষ উল্লেখ কৰক!', 'error');
+      return;
+    }
+    const supObj = supervisors.find(s => s.id === selectedSupervisorId) || supervisors[0];
+    const targetInd = industries.find(i => i.id === cmpTargetIndustryId) || industries[0];
+    const targetCon = contractors.find(c => c.id === cmpTargetContractorId) || contractors[0];
+    const targetWrk = workers.find(w => w.id === cmpTargetWorkerId);
+
+    const payload: SupervisorComplaint = {
+      id: 'cmp-' + Date.now(),
+      complaintNumber: `CMP-2026-${Math.floor(100 + Math.random() * 900)}`,
+      supervisorId: selectedSupervisorId,
+      supervisorName: supObj?.name || 'Gate Supervisor',
+      industryId: targetInd.id,
+      industryName: targetInd.name,
+      contractorId: targetCon.id,
+      contractorName: targetCon.name,
+      workerId: targetWrk?.id,
+      workerName: targetWrk?.name,
+      category: cmpCategory,
+      subject: cmpSubject,
+      description: cmpDesc,
+      severity: cmpSeverity,
+      status: 'Open',
+      ccAdmin: cmpCcAdmin,
+      ccContractor: cmpCcContractor,
+      createdAt: new Date().toLocaleString()
+    };
+
+    try {
+      await fetch('/api/complaints/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {}
+
+    onAddComplaint?.(payload);
+    showNotice(`অভিযোগ ${payload.complaintNumber} সফলভাৱে দাখিল কৰা হ'ল! প্ৰশাসন আৰু ঠিকাদাৰলৈ তাৎক্ষণিক CC কপি প্ৰেৰণ কৰা হৈছে।`, 'success');
+    setIsComplaintModalOpen(false);
+    setCmpSubject('');
+    setCmpDesc('');
   };
 
   // Handle Add New Supervisor (can be contractor supervisor or industry supervisor)
@@ -538,8 +608,42 @@ export const SupervisorAttendancePanel: React.FC<SupervisorAttendancePanelProps>
         </div>
       </div>
 
-      {/* Control Desk: Selectors & Filters Bar */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+      {/* ==================== SUB-TABS: ATTENDANCE vs COMPLAINT DESK ==================== */}
+      <div className="flex items-center gap-2 p-1.5 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+        <button
+          type="button"
+          onClick={() => setActiveSection('attendance')}
+          className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            activeSection === 'attendance'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Clock className="w-4 h-4 text-emerald-400" />
+          <span>📋 দৈনিক উপস্থিতি আৰু হাজিৰা বহী (Daily Attendance Desk)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSection('complaints')}
+          className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            activeSection === 'complaints'
+              ? 'bg-rose-600 text-white shadow-xs'
+              : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50'
+          }`}
+        >
+          <AlertTriangle className="w-4 h-4 text-amber-300" />
+          <span>🚨 আনুষ্ঠানিক অভিযোগ দাখিল ও নিৰীক্ষণ (Supervisor Complaint Desk - CC Admin/Contractor)</span>
+          <span className="bg-rose-950/60 text-white text-[10px] px-2 py-0.5 rounded-full font-mono">
+            {complaints.length}
+          </span>
+        </button>
+      </div>
+
+      {activeSection === 'attendance' && (
+        <>
+          {/* Control Desk: Selectors & Filters Bar */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
@@ -1094,6 +1198,313 @@ export const SupervisorAttendancePanel: React.FC<SupervisorAttendancePanelProps>
           })}
         </div>
       </div>
+      </>
+      )}
+
+      {/* ==================== SECTION 2: FORMAL SUPERVISOR COMPLAINTS DESK ==================== */}
+      {activeSection === 'complaints' && (
+        <div className="space-y-5 animate-fadeIn">
+          {/* Top Complaints Banner */}
+          <div className="bg-gradient-to-r from-rose-950 via-slate-900 to-slate-950 border border-rose-500/30 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3 text-rose-400" />
+                  Statutory Escalation & Grievance Engine
+                </span>
+                <span className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  স্বয়ংক্ৰিয় CC: Admin + Contractor
+                </span>
+              </div>
+              <h3 className="text-xl font-black text-white">ছুপাৰভাইজাৰ আনুষ্ঠানিক অভিযোগ ডেস্ক (Supervisor Complaint Portal)</h3>
+              <p className="text-xs text-slate-300 max-w-2xl">
+                কাৰখানাৰ মজিয়া, গেট বা চাইটত সংঘটিত সুৰক্ষা উলংঘন, মজুৰি বিলম্ব, শ্ৰমিক অনুশাসনহীনতা বা EPF/ESI বঞ্চনাৰ বিৰুদ্ধে আনুষ্ঠানিক অভিযোগ দাখিল কৰক। এই অভিযোগ পোনে পোনে শ্ৰমিকলিংক প্ৰশাসন আৰু সংশ্লিষ্ট ঠিকাদাৰলৈ সংৰক্ষিত নথিসহ প্ৰেৰণ হ'ব।
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsComplaintModalOpen(true)}
+              className="px-5 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl font-black text-xs shadow-lg flex items-center gap-2 cursor-pointer transition-all active:scale-95 shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>দাখিল কৰক নতুন অভিযোগ (Raise Complaint)</span>
+            </button>
+          </div>
+
+          {/* Complaints Table & Cards */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                <span>দাখিল কৰা অভিযোগৰ খতিয়ান (Lodged Complaints Log)</span>
+                <span className="bg-slate-100 text-slate-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
+                  {complaints.length}
+                </span>
+              </h4>
+              <span className="text-xs text-slate-400">শ্ৰমিকলিংক কেন্দ্ৰীয় অডিট ক্লাউডৰ দ্বাৰা সুৰক্ষিত</span>
+            </div>
+
+            {complaints.length === 0 ? (
+              <div className="text-center py-12 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto" />
+                <h5 className="font-bold text-slate-800 text-sm">কোনো অমীমাংসিত অভিযোগ নাই (No Open Complaints)</h5>
+                <p className="text-xs text-slate-500">সকলো চাইট আৰু ঠিকাদাৰ দল নিয়ম অনুসৰি চলি আছে।</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {complaints.map(cmp => {
+                  const isCritical = cmp.severity === 'Critical' || cmp.severity === 'High';
+                  return (
+                    <div 
+                      key={cmp.id}
+                      className={`p-4 sm:p-5 rounded-2xl border transition-all space-y-3 ${
+                        isCritical ? 'border-rose-200 bg-rose-50/20' : 'border-slate-200 bg-white'
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-xs font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded">
+                              {cmp.complaintNumber}
+                            </span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                              cmp.severity === 'Critical' ? 'bg-red-600 text-white border-red-700' :
+                              cmp.severity === 'High' ? 'bg-rose-100 text-rose-800 border-rose-300' :
+                              cmp.severity === 'Medium' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                              'bg-slate-100 text-slate-700 border-slate-300'
+                            }`}>
+                              গম্ভীৰতা: {cmp.severity}
+                            </span>
+                            <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold">
+                              ভাগ: {cmp.category}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {cmp.createdAt}
+                            </span>
+                          </div>
+
+                          <h4 className="font-black text-slate-900 text-base">{cmp.subject}</h4>
+                        </div>
+
+                        <div>
+                          <span className={`text-xs font-black px-3 py-1 rounded-full border inline-flex items-center gap-1 ${
+                            cmp.status === 'Resolved' || cmp.status === 'Action Taken'
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                              : cmp.status === 'Under Investigation'
+                              ? 'bg-amber-100 text-amber-800 border-amber-300'
+                              : 'bg-rose-100 text-rose-800 border-rose-300'
+                          }`}>
+                            ● {cmp.status === 'Resolved' ? 'মীমাংসিত (Resolved)' :
+                               cmp.status === 'Action Taken' ? 'পদক্ষেপ গ্ৰহণ কৰা হ’ল' :
+                               cmp.status === 'Under Investigation' ? 'তদন্ত চলি আছে' : 'খোলা আছে (Open)'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed font-medium">
+                        {cmp.description}
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1 border-t border-slate-100">
+                        <div>
+                          <span className="text-slate-400 block text-[10px]">লক্ষ্য কাৰখানা:</span>
+                          <span className="font-bold text-slate-800 truncate block">{cmp.industryName}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[10px]">লক্ষ্য ঠিকাদাৰ/সংস্থা:</span>
+                          <span className="font-bold text-slate-800 truncate block">{cmp.contractorName}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[10px]">দাখিলকাৰী ছুপাৰভাইজাৰ:</span>
+                          <span className="font-bold text-indigo-700 truncate block">{cmp.supervisorName}</span>
+                        </div>
+                      </div>
+
+                      {/* CC notification badges */}
+                      <div className="flex items-center justify-between text-[11px] pt-1">
+                        <div className="flex items-center gap-2">
+                          <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded font-bold flex items-center gap-1">
+                            ✓ CC: Platform Admin (প্ৰশাসনলৈ প্ৰতিলিপি প্ৰেৰিত)
+                          </span>
+                          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-bold flex items-center gap-1">
+                            ✓ CC: Contractor Agency (ঠিকাদাৰলৈ সতৰ্কবাৰ্তা প্ৰেৰিত)
+                          </span>
+                        </div>
+
+                        {cmp.resolutionNotes && (
+                          <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            নিস্পত্তি টোকা: {cmp.resolutionNotes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ==================== MODAL: LODGE NEW COMPLAINT ==================== */}
+      {isComplaintModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-4 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-bold border border-rose-200">
+                  🚨
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">আনুষ্ঠানিক অভিযোগ দাখিল কৰক</h3>
+                  <p className="text-xs text-slate-500">Auto-CC Copy to ShramikLink Admin & Target Contractor</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsComplaintModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleLodgeComplaint} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">কাৰখানা প্লাণ্ট (Target Plant) *</label>
+                  <select
+                    value={cmpTargetIndustryId}
+                    onChange={(e) => setCmpTargetIndustryId(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800 outline-none focus:border-rose-500"
+                    required
+                  >
+                    {industries.map(ind => (
+                      <option key={ind.id} value={ind.id}>{ind.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">ঠিকাদাৰ সংস্থা (Target Contractor) *</label>
+                  <select
+                    value={cmpTargetContractorId}
+                    onChange={(e) => setCmpTargetContractorId(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800 outline-none focus:border-rose-500"
+                    required
+                  >
+                    {contractors.map(con => (
+                      <option key={con.id} value={con.id}>{con.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">অভিযোগৰ বিভাগ (Category) *</label>
+                  <select
+                    value={cmpCategory}
+                    onChange={(e) => setCmpCategory(e.target.value as any)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800 outline-none focus:border-rose-500"
+                    required
+                  >
+                    <option value="Safety Violation">নিৰাপত্তা সঁজুলি বা সুৰক্ষা উলংঘন (Safety Violation)</option>
+                    <option value="Wage Default / Delay">মজুৰি বিলম্ব বা কৰ্তন সমস্যা (Wage Default / Delay)</option>
+                    <option value="Absenteeism / Discipline">অনুপস্থিতি বা অনুশাসন উলংঘন (Absenteeism / Discipline)</option>
+                    <option value="Statutory EPF/ESIC Evasion">পিএফ/ইএছআই অৱদান ফাঁকি (Statutory Evasion)</option>
+                    <option value="Harassment / Welfare Issue">শ্ৰমিক কল্যাণ সমস্যা (Harassment / Welfare Issue)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">গম্ভীৰতাৰ মাত্ৰা (Severity Level) *</label>
+                  <select
+                    value={cmpSeverity}
+                    onChange={(e) => setCmpSeverity(e.target.value as any)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800 outline-none focus:border-rose-500"
+                    required
+                  >
+                    <option value="Low">Low (সাধাৰণ সতৰ্কবাৰ্তা)</option>
+                    <option value="Medium">Medium (মজলীয়া বিচ্যুতি)</option>
+                    <option value="High">High (উচ্চ বিপদজনক)</option>
+                    <option value="Critical">Critical (তাত্ক্ষণিক কাম বন্ধ / জৰুৰী)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">অভিযোগৰ বিষয় (Subject) *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. ছুপাৰভাইজাৰৰ নিৰ্দেশ সত্ত্বেও হেলমেট আৰু ছেফটি জোতা নিপিন্ধা"
+                  value={cmpSubject}
+                  onChange={(e) => setCmpSubject(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800 outline-none focus:border-rose-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">সবিশেষ বিৱৰণ (Detailed Description) *</label>
+                <textarea
+                  placeholder="চাইটৰ অৱস্থান, ঘটনাৰ সময়, আৰু উলংঘনৰ বিতং তথ্য উল্লেখ কৰক..."
+                  value={cmpDesc}
+                  onChange={(e) => setCmpDesc(e.target.value)}
+                  rows={4}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-medium text-slate-800 outline-none focus:border-rose-500 resize-none"
+                  required
+                />
+              </div>
+
+              {/* Automatic CC notice */}
+              <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-2xl space-y-1.5 text-xs text-indigo-950">
+                <span className="font-black flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-indigo-600" />
+                  স্বয়ংক্ৰিয় ডিজিটেল প্ৰতিলিপি বিতৰণ (Mandatory Auto-CC):
+                </span>
+                <div className="flex items-center gap-4 text-[11px] font-bold text-slate-700">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cmpCcAdmin}
+                      onChange={(e) => setCmpCcAdmin(e.target.checked)}
+                      className="accent-indigo-600 rounded"
+                    />
+                    <span>CC: শ্ৰমিকলিংক এডমিন পেনেল (Admin Dashboard)</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cmpCcContractor}
+                      onChange={(e) => setCmpCcContractor(e.target.checked)}
+                      className="accent-indigo-600 rounded"
+                    />
+                    <span>CC: লেবাৰ কণ্ট্ৰেক্টৰ সংস্থা (Contractor Firm)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsComplaintModalOpen(false)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl transition-colors cursor-pointer"
+                >
+                  বাতিল (Cancel)
+                </button>
+                <button
+                  type="submit"
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2 rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>দাখিল আৰু প্ৰেৰণ কৰক (Submit & Send CC)</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal: Direct Worker Entry for Non-Smartphone Workers */}
       <DirectWorkerEntryModal

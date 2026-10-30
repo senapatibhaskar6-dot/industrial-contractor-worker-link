@@ -10,7 +10,11 @@ import {
   bills,
   verificationLogs,
   auditLogs,
-  revenueLogs
+  revenueLogs,
+  complaints,
+  salaryTransactions,
+  leaveRecords,
+  adminPlatformInvoices
 } from './schema.ts';
 
 import {
@@ -24,7 +28,11 @@ import {
   initialBills,
   initialVerificationLogs,
   initialAuditLogs,
-  initialRevenueLogs
+  initialRevenueLogs,
+  initialComplaints,
+  initialSalaryTransactions,
+  initialLeaveRecords,
+  initialPlatformInvoices
 } from '../mockData.ts';
 
 export async function seedDatabase() {
@@ -151,6 +159,38 @@ export async function seedDatabase() {
     if (revCount.length === 0) {
       for (const log of initialRevenueLogs) {
         await db.insert(revenueLogs).values(log).onConflictDoNothing();
+      }
+    }
+
+    // 12. Seed Complaints if empty
+    const cmpCount = await db.select().from(complaints).limit(1);
+    if (cmpCount.length === 0) {
+      for (const cmp of initialComplaints) {
+        await db.insert(complaints).values(cmp).onConflictDoNothing();
+      }
+    }
+
+    // 13. Seed SalaryTransactions if empty
+    const salCount = await db.select().from(salaryTransactions).limit(1);
+    if (salCount.length === 0) {
+      for (const sal of initialSalaryTransactions) {
+        await db.insert(salaryTransactions).values(sal).onConflictDoNothing();
+      }
+    }
+
+    // 14. Seed LeaveRecords if empty
+    const lvrCount = await db.select().from(leaveRecords).limit(1);
+    if (lvrCount.length === 0) {
+      for (const lvr of initialLeaveRecords) {
+        await db.insert(leaveRecords).values(lvr).onConflictDoNothing();
+      }
+    }
+
+    // 15. Seed Platform Invoices if empty
+    const pinvCount = await db.select().from(adminPlatformInvoices).limit(1);
+    if (pinvCount.length === 0) {
+      for (const pinv of initialPlatformInvoices) {
+        await db.insert(adminPlatformInvoices).values(pinv).onConflictDoNothing();
       }
     }
 

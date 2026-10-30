@@ -64,7 +64,11 @@ import {
   AppFeedback,
   ContractorAttendanceRecord,
   GovernmentLaborInspector,
-  InspectionNotice
+  InspectionNotice,
+  SalaryTransaction,
+  SupervisorComplaint,
+  LeaveRecord,
+  AdminPlatformInvoice
 } from '../types';
 import { 
   initialIndustries, 
@@ -80,7 +84,11 @@ import {
   initialRevenueLogs,
   initialInspectors,
   initialIndustryContractorConnections,
-  initialWorkerAgencyConnections
+  initialWorkerAgencyConnections,
+  initialSalaryTransactions,
+  initialComplaints,
+  initialLeaveRecords,
+  initialPlatformInvoices
 } from '../mockData';
 import { auth, googleAuthProvider } from '../lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
@@ -219,6 +227,129 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     } catch (e) {}
   }, [selectedInspectorId]);
   const [revenueLogs, setRevenueLogs] = useState<RevenueLog[]>(initialRevenueLogs);
+
+  // ==================== STATUTORY & COMPLIANCE EXTENSION STATES ====================
+  const [salaryTransactions, setSalaryTransactions] = useState<SalaryTransaction[]>(() => {
+    try {
+      const saved = localStorage.getItem('s_salary_transactions');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return initialSalaryTransactions;
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('s_salary_transactions', JSON.stringify(salaryTransactions));
+    } catch (e) {}
+  }, [salaryTransactions]);
+
+  const [complaints, setComplaints] = useState<SupervisorComplaint[]>(() => {
+    try {
+      const saved = localStorage.getItem('s_supervisor_complaints');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return initialComplaints;
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('s_supervisor_complaints', JSON.stringify(complaints));
+    } catch (e) {}
+  }, [complaints]);
+
+  const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('s_leave_records');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return initialLeaveRecords;
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('s_leave_records', JSON.stringify(leaveRecords));
+    } catch (e) {}
+  }, [leaveRecords]);
+
+  const [platformInvoices, setPlatformInvoices] = useState<AdminPlatformInvoice[]>(() => {
+    try {
+      const saved = localStorage.getItem('s_platform_invoices');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return initialPlatformInvoices;
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('s_platform_invoices', JSON.stringify(platformInvoices));
+    } catch (e) {}
+  }, [platformInvoices]);
+
+  const handleAddComplaint = (c: SupervisorComplaint) => {
+    setComplaints(prev => [c, ...prev]);
+  };
+
+  const handleAddLeaveRecord = (rec: LeaveRecord) => {
+    setLeaveRecords(prev => [rec, ...prev]);
+  };
+
+  const handleReleaseWorkerToPool = (workerId: string) => {
+    setWorkers(prev => prev.map(w => {
+      if (w.id === workerId) {
+        return {
+          ...w,
+          contractorId: 'direct',
+          status: 'Available'
+        };
+      }
+      return w;
+    }));
+    showNotice('শ্ৰমিকক মুক্ত শ্ৰমিক পুললৈ (Open Workforce Pool) সফলভাৱে স্থানান্তৰ কৰা হ’ল।', 'info');
+  };
+
+  const handleUpdateWorkerStatus = (workerId: string, status: Worker['status'], reason?: string) => {
+    setWorkers(prev => prev.map(w => {
+      if (w.id === workerId) {
+        return {
+          ...w,
+          status,
+          blacklistedReason: reason || w.blacklistedReason
+        };
+      }
+      return w;
+    }));
+  };
+
+  const handleUpdateWorkerPF = (workerId: string, updates: Partial<Worker>) => {
+    setWorkers(prev => prev.map(w => {
+      if (w.id === workerId) {
+        return {
+          ...w,
+          ...updates
+        };
+      }
+      return w;
+    }));
+  };
+
+  const handleDisburseSalary = (txn: SalaryTransaction) => {
+    setSalaryTransactions(prev => [txn, ...prev]);
+  };
+
+  const handleGenerateInvoice = (inv: AdminPlatformInvoice) => {
+    setPlatformInvoices(prev => [inv, ...prev]);
+  };
+
+  const handleUpdateInvoiceStatus = (invId: string, status: AdminPlatformInvoice['status'], txnRef?: string) => {
+    setPlatformInvoices(prev => prev.map(inv => {
+      if (inv.id === invId) {
+        return {
+          ...inv,
+          status,
+          paidDate: status === 'Paid' ? new Date().toISOString() : inv.paidDate,
+          paymentReference: txnRef || inv.paymentReference
+        };
+      }
+      return inv;
+    }));
+  };
+
   const [workerRemarks, setWorkerRemarks] = useState<Record<string, string>>(() => {
     try {
       const saved = localStorage.getItem('s_worker_remarks');
@@ -1144,6 +1275,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
         if (data.verificationLogs && data.verificationLogs.length > 0) setVerificationLogs(data.verificationLogs);
         if (data.auditLogs && data.auditLogs.length > 0) setAuditLogs(data.auditLogs);
         if (data.revenueLogs && data.revenueLogs.length > 0) setRevenueLogs(data.revenueLogs);
+        if (data.salaryTransactions && data.salaryTransactions.length > 0) setSalaryTransactions(data.salaryTransactions);
+        if (data.complaints && data.complaints.length > 0) setComplaints(data.complaints);
+        if (data.leaveRecords && data.leaveRecords.length > 0) setLeaveRecords(data.leaveRecords);
+        if (data.platformInvoices && data.platformInvoices.length > 0) setPlatformInvoices(data.platformInvoices);
       } else {
         console.error('Failed to load database from full-stack API');
       }
@@ -5297,6 +5432,8 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               }}
               showNotice={showNotice}
               initialDeskMode="industry"
+              complaints={complaints}
+              onAddComplaint={handleAddComplaint}
             />
 
             {/* Daily Shift Attendance & Overtime Tracker */}
@@ -5508,6 +5645,8 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 showNotice('CLRA Form XVI (Muster Roll) লৈ লৈ যোৱা হৈছে।', 'info');
               }}
               showNotice={showNotice}
+              complaints={complaints}
+              onAddComplaint={handleAddComplaint}
             />
           </div>
         )}
@@ -6092,6 +6231,9 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 onAddSupervisor={handleAddSupervisorByContractor}
                 onUpdateSupervisor={handleUpdateSupervisorByContractor}
                 onDeleteSupervisor={handleDeleteSupervisorByContractor}
+                leaveRecords={leaveRecords}
+                onAddLeaveRecord={handleAddLeaveRecord}
+                onReleaseWorkerToPool={handleReleaseWorkerToPool}
               />
             )}
 
@@ -8249,6 +8391,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 currentWorker={activeWorker}
                 allContractors={contractors}
                 workerConnections={workerAgencyConnections}
+                salaryTransactions={salaryTransactions}
                 onConnectAgency={handleConnectAgencyFromWorker}
                 showNotice={showNotice}
               />
@@ -8710,6 +8853,11 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             industries={industries}
             contractors={contractors}
             workers={workers}
+            salaryTransactions={salaryTransactions}
+            platformInvoices={platformInvoices}
+            complaints={complaints}
+            verificationLogs={verificationLogs}
+            auditLogs={auditLogs}
             onSelectRole={(r) => {
               setCurrentRole(r);
               localStorage.setItem('s_current_role', r);
@@ -8717,6 +8865,11 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             onAddNewIndustry={(newInd) => setIndustries(prev => [newInd, ...prev])}
             onAddNewContractor={(newCon) => setContractors(prev => [newCon, ...prev])}
             onAddNewWorker={(newWrk) => setWorkers(prev => [newWrk, ...prev])}
+            onUpdateWorkerStatus={handleUpdateWorkerStatus}
+            onUpdateWorkerPF={handleUpdateWorkerPF}
+            onDisburseSalary={handleDisburseSalary}
+            onGenerateInvoice={handleGenerateInvoice}
+            onUpdateInvoiceStatus={handleUpdateInvoiceStatus}
             showNotice={showNotice}
           />
         )}

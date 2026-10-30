@@ -29,18 +29,47 @@ import {
   Phone,
   Mail,
   Calendar,
-  X
+  X,
+  Receipt,
+  Landmark,
+  AlertTriangle,
+  Send,
+  Activity,
+  UserX,
+  RefreshCw,
+  Edit,
+  DollarSign,
+  Check
 } from 'lucide-react';
-import { Industry, Contractor, Worker } from '../types';
+import { 
+  Industry, 
+  Contractor, 
+  Worker, 
+  SalaryTransaction, 
+  AdminPlatformInvoice, 
+  SupervisorComplaint,
+  AadhaarVerificationLog,
+  GovernmentAuditLog
+} from '../types';
 
 interface PlatformAdminPanelProps {
   industries: Industry[];
   contractors: Contractor[];
   workers: Worker[];
+  salaryTransactions?: SalaryTransaction[];
+  platformInvoices?: AdminPlatformInvoice[];
+  complaints?: SupervisorComplaint[];
+  verificationLogs?: AadhaarVerificationLog[];
+  auditLogs?: GovernmentAuditLog[];
   onSelectRole?: (role: 'industry_admin' | 'contractor' | 'worker' | 'security_guard' | 'supervisor' | 'government_inspector') => void;
   onAddNewIndustry?: (industry: Industry) => void;
   onAddNewContractor?: (contractor: Contractor) => void;
   onAddNewWorker?: (worker: Worker) => void;
+  onUpdateWorkerStatus?: (workerId: string, status: Worker['status'], reason?: string) => void;
+  onUpdateWorkerPF?: (workerId: string, updates: Partial<Worker>) => void;
+  onDisburseSalary?: (txn: SalaryTransaction) => void;
+  onGenerateInvoice?: (invoice: AdminPlatformInvoice) => void;
+  onUpdateInvoiceStatus?: (invoiceId: string, status: AdminPlatformInvoice['status'], txnRef?: string) => void;
   showNotice?: (msg: string, type: 'success' | 'error' | 'info') => void;
 }
 
@@ -48,18 +77,55 @@ export default function PlatformAdminPanel({
   industries,
   contractors,
   workers,
+  salaryTransactions = [],
+  platformInvoices = [],
+  complaints = [],
+  verificationLogs = [],
+  auditLogs = [],
   onSelectRole,
   onAddNewIndustry,
   onAddNewContractor,
   onAddNewWorker,
+  onUpdateWorkerStatus,
+  onUpdateWorkerPF,
+  onDisburseSalary,
+  onGenerateInvoice,
+  onUpdateInvoiceStatus,
   showNotice = () => {}
 }: PlatformAdminPanelProps) {
   // Navigation tabs inside Admin Panel
-  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'establishments' | 'agencies' | 'workforce' | 'how_it_works'>('overview');
+  const [activeAdminTab, setActiveAdminTab] = useState<
+    'overview' | 'establishments' | 'agencies' | 'workforce' | 'salary_transfer' | 'billing_invoices' | 'activity_logs' | 'how_it_works'
+  >('overview');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [establishmentFilter, setEstablishmentFilter] = useState<string>('All');
   const [agencyFilter, setAgencyFilter] = useState<string>('All');
   const [workforceFilter, setWorkforceFilter] = useState<string>('All');
+
+  // Modals inside Admin Panel
+  const [showBlacklistModal, setShowBlacklistModal] = useState<boolean>(false);
+  const [selectedWorkerForBlacklist, setSelectedWorkerForBlacklist] = useState<Worker | null>(null);
+  const [blacklistReason, setBlacklistReason] = useState<string>('Disciplinary violation / proxy attendance');
+
+  const [showPFModal, setShowPFModal] = useState<boolean>(false);
+  const [selectedWorkerForPF, setSelectedWorkerForPF] = useState<Worker | null>(null);
+  const [editUAN, setEditUAN] = useState<string>('');
+  const [editESIC, setEditESIC] = useState<string>('');
+  const [editBankAcc, setEditBankAcc] = useState<string>('');
+  const [editIFSC, setEditIFSC] = useState<string>('');
+  const [editBankName, setEditBankName] = useState<string>('');
+
+  const [showDisburseModal, setShowDisburseModal] = useState<boolean>(false);
+  const [disburseWorkerId, setDisburseWorkerId] = useState<string>('');
+  const [disburseMonth, setDisburseMonth] = useState<string>('September 2026');
+  const [disburseAmount, setDisburseAmount] = useState<number>(14400);
+  const [disburseMode, setDisburseMode] = useState<SalaryTransaction['paymentMode']>('Direct Bank Transfer');
+
+  const [showInvoiceModal, setShowInvoiceModal] = useState<boolean>(false);
+  const [invBilledEntity, setInvBilledEntity] = useState<'Industry' | 'Contractor'>('Industry');
+  const [invEntityId, setInvEntityId] = useState<string>(industries[0]?.id || '');
+  const [invMonth, setInvMonth] = useState<string>('September 2026');
+  const [invWorkersCount, setInvWorkersCount] = useState<number>(25);
   
   // Quick Registration Modal
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
@@ -284,6 +350,9 @@ export default function PlatformAdminPanel({
             { id: 'establishments', label: `🏭 উদ্যোগ ও মালিক (${totalEstablishments})`, icon: Building2 },
             { id: 'agencies', label: `🏢 সংস্থা ও ঠিকাদাৰ (${totalAgencies})`, icon: Briefcase },
             { id: 'workforce', label: `👤 শ্ৰমিক ও গাৰ্ড (${totalWorkforce})`, icon: Users },
+            { id: 'salary_transfer', label: `💸 মজুৰি বেংক ট্ৰান্সফাৰ (${salaryTransactions.length})`, icon: Landmark },
+            { id: 'billing_invoices', label: `🧾 প্লেটফৰ্ম বিলিং ₹1/দিন (${platformInvoices.length})`, icon: Receipt },
+            { id: 'activity_logs', label: `⚡ লাইভ এক্টিভিটি (${verificationLogs.length + auditLogs.length})`, icon: Activity },
             { id: 'how_it_works', label: '📘 চিষ্টেমৰ কাৰ্য্যপ্ৰণালী ও নিৰ্দেশনা (How it Works)', icon: HelpCircle, highlight: true }
           ].map(tab => {
             const Icon = tab.icon;
@@ -829,26 +898,37 @@ export default function PlatformAdminPanel({
                   <tr>
                     <th className="p-3.5">শ্ৰমিক / গাৰ্ডৰ নাম</th>
                     <th className="p-3.5">পদবী (Role)</th>
-                    <th className="p-3.5">মাস্কড আধাৰ নং</th>
-                    <th className="p-3.5">ফোন নম্বৰ</th>
+                    <th className="p-3.5">আধাৰ & ফোন</th>
+                    <th className="p-3.5">EPFO UAN / ESIC</th>
                     <th className="p-3.5">দৈনিক মজুৰি</th>
                     <th className="p-3.5">সংযোজিত সংস্থা</th>
-                    <th className="p-3.5">অৱস্থা</th>
+                    <th className="p-3.5">স্থিতি (Status)</th>
+                    <th className="p-3.5 text-right">প্ৰশাসনিক ব্যৱস্থা (Admin Actions)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-800">
                   {filteredWorkers.map(wrk => {
                     const isGuard = wrk.name.toLowerCase().includes('guard') || wrk.name.toLowerCase().includes('security');
-                    const assignedAgency = contractors.find(c => c.id === wrk.contractorId)?.name || 'Apex Solutions';
+                    const assignedAgency = contractors.find(c => c.id === wrk.contractorId)?.name || 'Direct / Unassigned';
+                    const isBlacklisted = wrk.status === 'Blacklisted';
+                    const isDeactivated = wrk.status === 'Deactivated';
+
                     return (
-                      <tr key={wrk.id} className="hover:bg-slate-50/80 transition-colors">
+                      <tr key={wrk.id} className={`hover:bg-slate-50/80 transition-colors ${
+                        isBlacklisted ? 'bg-red-50/40' : isDeactivated ? 'bg-slate-100/60 opacity-75' : ''
+                      }`}>
                         <td className="p-3.5 font-bold flex items-center gap-2">
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0 ${
                             isGuard ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800'
                           }`}>
                             {isGuard ? '👮' : '👤'}
                           </div>
-                          <span>{wrk.name}</span>
+                          <div>
+                            <span className="block text-slate-900">{wrk.name}</span>
+                            <span className="text-[10px] font-mono text-slate-400">
+                              {wrk.platformId || `SL-WRK-${wrk.id.slice(-4)}`}
+                            </span>
+                          </div>
                         </td>
                         <td className="p-3.5">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -857,14 +937,121 @@ export default function PlatformAdminPanel({
                             {isGuard ? 'Security Guard' : 'Unskilled Worker'}
                           </span>
                         </td>
-                        <td className="p-3.5 font-mono text-slate-600">{wrk.aadhaarHash}</td>
-                        <td className="p-3.5 font-mono">{wrk.phone}</td>
-                        <td className="p-3.5 font-bold text-emerald-700">₹{wrk.dailyWageRate} / দিন</td>
-                        <td className="p-3.5 text-slate-600">{assignedAgency}</td>
                         <td className="p-3.5">
-                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[10px] font-bold">
-                            UIDAI Verified
-                          </span>
+                          <div className="font-mono text-slate-600 text-[11px]">{wrk.aadhaarHash}</div>
+                          <div className="font-mono text-slate-500 text-[10px]">{wrk.phone}</div>
+                        </td>
+                        <td className="p-3.5">
+                          <div className="font-mono text-indigo-700 font-bold text-[11px]">
+                            {wrk.uan ? `UAN: ${wrk.uan}` : 'UAN: ১০১২৯৮৪৯২০১৯'}
+                          </div>
+                          <div className="font-mono text-cyan-700 text-[10px]">
+                            {wrk.esicNo ? `ESIC: ${wrk.esicNo}` : 'ESIC: ৩১৯২০১৮৪৯২০১'}
+                          </div>
+                        </td>
+                        <td className="p-3.5 font-bold text-emerald-700">₹{wrk.dailyWageRate} / দিন</td>
+                        <td className="p-3.5 text-slate-600 truncate max-w-[120px]" title={assignedAgency}>
+                          {assignedAgency}
+                        </td>
+                        <td className="p-3.5">
+                          {isBlacklisted ? (
+                            <span className="px-2 py-0.5 bg-red-100 text-red-800 border border-red-300 rounded text-[10px] font-black block text-center" title={wrk.blacklistedReason}>
+                              ⛔ Blacklisted
+                            </span>
+                          ) : isDeactivated ? (
+                            <span className="px-2 py-0.5 bg-slate-200 text-slate-700 border border-slate-300 rounded text-[10px] font-bold block text-center">
+                              ⚪ Deactivated
+                            </span>
+                          ) : wrk.status === 'Deployed' ? (
+                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-[10px] font-bold block text-center">
+                              🔵 Deployed
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[10px] font-bold block text-center">
+                              🟢 Available
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3.5 text-right">
+                          <div className="inline-flex items-center gap-1.5 flex-wrap justify-end">
+                            {/* Activate Button */}
+                            {(isDeactivated || isBlacklisted) && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await fetch('/api/workers/update-status', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ workerId: wrk.id, status: 'Available' })
+                                    });
+                                  } catch (e) {}
+                                  onUpdateWorkerStatus?.(wrk.id, 'Available');
+                                  showNotice(`${wrk.name} ক পুনৰ সক্ৰিয় (Activate) কৰা হ'ল!`, 'success');
+                                }}
+                                className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded text-[10px] font-bold cursor-pointer"
+                                title="সক্ৰিয় কৰক"
+                              >
+                                Activate
+                              </button>
+                            )}
+
+                            {/* Deactivate Button */}
+                            {!isDeactivated && !isBlacklisted && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await fetch('/api/workers/update-status', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ workerId: wrk.id, status: 'Deactivated' })
+                                    });
+                                  } catch (e) {}
+                                  onUpdateWorkerStatus?.(wrk.id, 'Deactivated');
+                                  showNotice(`${wrk.name} ক সাময়িকভাৱে নিষ্ক্ৰিয় কৰা হ'ল।`, 'info');
+                                }}
+                                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded text-[10px] font-bold cursor-pointer"
+                                title="নিষ্ক্ৰিয় কৰক"
+                              >
+                                Deactivate
+                              </button>
+                            )}
+
+                            {/* Blacklist Button */}
+                            {!isBlacklisted && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedWorkerForBlacklist(wrk);
+                                  setShowBlacklistModal(true);
+                                }}
+                                className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded text-[10px] font-bold cursor-pointer"
+                                title="ক’লা তালিকাভুক্ত কৰক"
+                              >
+                                Blacklist
+                              </button>
+                            )}
+
+                            {/* Edit PF & Bank Button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedWorkerForPF(wrk);
+                                setEditUAN(wrk.uan || '101298492019');
+                                setEditESIC(wrk.esicNo || '319201849201');
+                                setEditBankAcc(wrk.bankAccountNo || '918204928192');
+                                setEditIFSC(wrk.ifscCode || 'SBIN0001829');
+                                setEditBankName(wrk.bankName || 'State Bank of India');
+                                setShowPFModal(true);
+                              }}
+                              className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded text-[10px] font-bold cursor-pointer flex items-center gap-1"
+                              title="পিএফ আৰু বেংক সম্পাদনা"
+                            >
+                              <Edit className="w-2.5 h-2.5" />
+                              <span>PF/বেংক</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -877,7 +1064,329 @@ export default function PlatformAdminPanel({
       )}
 
       {/* ========================================================================= */}
-      {/* 7. TAB CONTENT: DETAILED SYSTEM FUNCTIONALITY GUIDE (চিষ্টেমৰ কাৰ্য্যপ্ৰণালী) */}
+      {/* 7. TAB CONTENT: SALARY BANK TRANSFER & WAGE DISBURSAL LEDGER */}
+      {/* ========================================================================= */}
+      {activeAdminTab === 'salary_transfer' && (
+        <div className="space-y-5 animate-fadeIn">
+          {/* Top Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
+              <span className="text-slate-400 text-[10px] font-bold uppercase block">সৰ্বমুঠ পৰিশোধিত মজুৰি (Total Disbursed)</span>
+              <span className="text-2xl font-black text-slate-900 mt-1 block">
+                ₹{salaryTransactions.reduce((acc, s) => acc + s.netPaid, 0).toLocaleString()}
+              </span>
+              <span className="text-emerald-700 font-bold text-[10px] flex items-center gap-1 mt-0.5">
+                <Check className="w-3 h-3" /> {salaryTransactions.length} টা সফল ট্ৰান্সফাৰ
+              </span>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
+              <span className="text-slate-400 text-[10px] font-bold uppercase block">EPF অৱদান (12% Remitted)</span>
+              <span className="text-2xl font-black text-indigo-700 mt-1 block">
+                ₹{salaryTransactions.reduce((acc, s) => acc + (s.pfDeducted || 0), 0).toLocaleString()}
+              </span>
+              <span className="text-indigo-600 text-[10px] font-bold mt-0.5 block">EPFO ECR চালানেৰে লিংকড</span>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
+              <span className="text-slate-400 text-[10px] font-bold uppercase block">ESIC বীমা অৱদান (0.75%)</span>
+              <span className="text-2xl font-black text-cyan-700 mt-1 block">
+                ₹{salaryTransactions.reduce((acc, s) => acc + (s.esicDeducted || 0), 0).toLocaleString()}
+              </span>
+              <span className="text-cyan-600 text-[10px] font-bold mt-0.5 block">ESIC Portal Verified</span>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex flex-col justify-between">
+              <span className="text-slate-400 text-[10px] font-bold uppercase block">প্ৰত্যক্ষ বেংক স্থানান্তৰ</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setDisburseWorkerId(workers[0]?.id || '');
+                  setShowDisburseModal(true);
+                }}
+                className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ মজুৰি প্ৰেৰণ কৰক</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Transactions Table */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h4 className="font-black text-slate-900 text-sm">শ্ৰমিক বেংক মজুৰি বিতৰণ খতিয়ান (Salary Disbursement Ledger)</h4>
+                <p className="text-xs text-slate-500">100% Aadhaar-Linked Direct Benefit Transfer (DBT) via Bank NEFT/RTGS</p>
+              </div>
+              <span className="text-xs font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg font-bold">
+                Zero Cash Leakage Active
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="p-3.5">শ্ৰমিকৰ নাম</th>
+                    <th className="p-3.5">কাৰখানা & ঠিকাদাৰ</th>
+                    <th className="p-3.5">মাহ (Month)</th>
+                    <th className="p-3.5">মুঠ মজুৰি</th>
+                    <th className="p-3.5">EPF (12%)</th>
+                    <th className="p-3.5">ESIC (0.75%)</th>
+                    <th className="p-3.5">প্ৰদেয় মজুৰি (Net Paid)</th>
+                    <th className="p-3.5">UTR / বেংক বিৱৰণ</th>
+                    <th className="p-3.5 text-right">স্থিতি</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-800">
+                  {salaryTransactions.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="p-8 text-center text-slate-400">
+                        কোনো লেনদেন পোৱা নগ'ল। নতুন মজুৰি ট্ৰান্সফাৰ প্ৰেৰণ কৰিবলৈ ওপৰৰ বুটাম ব্যৱহাৰ কৰক।
+                      </td>
+                    </tr>
+                  ) : (
+                    salaryTransactions.map(txn => (
+                      <tr key={txn.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="p-3.5 font-bold text-slate-900">
+                          {txn.workerName}
+                        </td>
+                        <td className="p-3.5 text-slate-600">
+                          <span className="font-medium text-slate-800 block">{txn.industryName || 'Tata Motors'}</span>
+                          <span className="text-[10px] text-slate-400">{txn.contractorName || 'Apex Manpower'}</span>
+                        </td>
+                        <td className="p-3.5">
+                          <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold text-[10px]">
+                            {txn.month}
+                          </span>
+                        </td>
+                        <td className="p-3.5 font-bold text-slate-800">₹{txn.amount.toLocaleString()}</td>
+                        <td className="p-3.5 font-mono text-indigo-700 font-bold">-₹{txn.pfDeducted || 0}</td>
+                        <td className="p-3.5 font-mono text-cyan-700 font-bold">-₹{txn.esicDeducted || 0}</td>
+                        <td className="p-3.5 font-mono font-black text-emerald-700 text-sm">
+                          ₹{txn.netPaid.toLocaleString()}
+                        </td>
+                        <td className="p-3.5">
+                          <div className="font-mono text-[10px] text-slate-700 font-bold">{txn.utrNumber}</div>
+                          <div className="text-[10px] text-slate-500">{txn.bankName} ({txn.accountNumberMasked})</div>
+                        </td>
+                        <td className="p-3.5 text-right">
+                          <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded text-[10px] font-bold">
+                            ✓ {txn.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 8. TAB CONTENT: MONTHLY PLATFORM BILLING (₹1 PER WORKER PER DAY) */}
+      {/* ========================================================================= */}
+      {activeAdminTab === 'billing_invoices' && (
+        <div className="space-y-5 animate-fadeIn">
+          {/* Revenue Explanation Card */}
+          <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950 border border-emerald-500/30 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
+                  ShramikLink Indigenous SaaS Revenue Model
+                </span>
+                <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  ₹১ প্ৰতি শ্ৰমিক / প্ৰতি দিন
+                </span>
+              </div>
+              <h3 className="text-xl font-black text-white">মাহেকীয়া প্লেটফৰ্ম মাচুল বিলিং (Monthly Platform Invoicing)</h3>
+              <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                উচ্চ আয়তন, কম ঘৰ্ষণৰ মাইক্ৰ'-SaaS মডেলত প্ৰতিজন কৰ্মৰত শ্ৰমিকৰ বিপৰীতে দিনে মাত্ৰ ₹১ মাচুল ধাৰ্য্য কৰা হয়। ই কাৰখানা আৰু ঠিকাদাৰ উভয়কে লাখ টকাৰ আইনী জৰিমনা আৰু ভুৱা হাজিৰাৰ লোকচানৰ পৰা ৰক্ষা কৰে।
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setInvBilledEntity('Industry');
+                setInvEntityId(industries[0]?.id || '');
+                setShowInvoiceModal(true);
+              }}
+              className="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-xs shadow-lg flex items-center gap-2 cursor-pointer transition-all shrink-0"
+            >
+              <Receipt className="w-4 h-4" />
+              <span>+ নতুন চালান জেনেৰেট কৰক (Generate Invoice)</span>
+            </button>
+          </div>
+
+          {/* Invoices List */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h4 className="font-black text-slate-900 text-sm">জাৰি কৰা প্লেটফৰ্ম মাচুল ইনভইচ (Issued Platform Invoices)</h4>
+                <p className="text-xs text-slate-500">₹1/worker/day SaaS subscription billing with statutory GST invoice</p>
+              </div>
+              <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
+                মুঠ বিল: {platformInvoices.length}
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="p-3.5">ইনভইচ নং</th>
+                    <th className="p-3.5">প্ৰতিষ্ঠান / সংস্থা (Billed Entity)</th>
+                    <th className="p-3.5">মাহ (Billing Month)</th>
+                    <th className="p-3.5">সক্ৰিয় শ্ৰমিক</th>
+                    <th className="p-3.5">মুঠ কৰ্মদিন (Mandays)</th>
+                    <th className="p-3.5">ধাৰ্য্য (₹1/দিন)</th>
+                    <th className="p-3.5">GST (18%)</th>
+                    <th className="p-3.5">সৰ্বমুঠ প্ৰদেয়</th>
+                    <th className="p-3.5">স্থিতি</th>
+                    <th className="p-3.5 text-right">ব্যৱস্থা</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-800">
+                  {platformInvoices.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="p-8 text-center text-slate-400">
+                        কোনো ইনভইচ জাৰি কৰা হোৱা নাই। ওপৰৰ বুটামত ক্লিক কৰি ₹১/শ্ৰমিক/দিন মডেলৰ বিল জাৰি কৰক।
+                      </td>
+                    </tr>
+                  ) : (
+                    platformInvoices.map(inv => (
+                      <tr key={inv.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="p-3.5 font-mono font-bold text-indigo-700">
+                          {inv.invoiceNo}
+                        </td>
+                        <td className="p-3.5">
+                          <span className="font-bold text-slate-900 block">{inv.entityName}</span>
+                          <span className="text-[10px] text-slate-400">{inv.billedEntity}</span>
+                        </td>
+                        <td className="p-3.5 font-medium">{inv.month}</td>
+                        <td className="p-3.5 font-bold text-slate-800">{inv.activeWorkersCount} জন</td>
+                        <td className="p-3.5 font-mono">{inv.mandaysCount} দিন</td>
+                        <td className="p-3.5 font-bold">₹{inv.subtotal.toLocaleString()}</td>
+                        <td className="p-3.5 text-slate-500 font-mono">₹{inv.gstAmount.toFixed(2)}</td>
+                        <td className="p-3.5 font-mono font-black text-slate-900 text-sm">
+                          ₹{inv.totalPayable.toLocaleString()}
+                        </td>
+                        <td className="p-3.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            inv.status === 'Paid'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                              : inv.status === 'Overdue'
+                              ? 'bg-red-50 text-red-800 border-red-300'
+                              : 'bg-amber-50 text-amber-800 border-amber-300'
+                          }`}>
+                            ● {inv.status}
+                          </span>
+                        </td>
+                        <td className="p-3.5 text-right">
+                          {inv.status !== 'Paid' ? (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await fetch('/api/invoices/update-status', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ invoiceId: inv.id, status: 'Paid', transactionRef: `TXN${Date.now()}` })
+                                  });
+                                } catch (e) {}
+                                onUpdateInvoiceStatus?.(inv.id, 'Paid', `UPI-${Date.now().toString().slice(-6)}`);
+                                showNotice(`ইনভইচ ${inv.invoiceNo} পৰিশোধিত (Paid) হিচাপে চিহ্নিত কৰা হ'ল!`, 'success');
+                              }}
+                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold cursor-pointer"
+                            >
+                              পৰিশোধিত কৰক
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-emerald-700 font-bold font-mono">
+                              Paid {inv.paidAt || 'Recent'}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 9. TAB CONTENT: REAL-TIME ACTIVITY & AUDIT TRACKING STREAM */}
+      {/* ========================================================================= */}
+      {activeAdminTab === 'activity_logs' && (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-indigo-600" />
+                  <span>লাইভ চিষ্টেম এক্টিভিটি আৰু পৰিদৰ্শন খতিয়ান (Live Platform Activity Stream)</span>
+                </h4>
+                <p className="text-xs text-slate-500">বায়'মেট্ৰিক পৰীক্ষা, ষ্টেটাছ আপডেট, আৰু শ্ৰম পৰিদৰ্শকৰ আইনী জাননীৰ একত্ৰিত সূচী</p>
+              </div>
+              <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono font-bold px-2.5 py-1 rounded-lg">
+                {verificationLogs.length + auditLogs.length} কাৰ্য্যকলাপ নথিভুক্ত
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {/* Combine audit notices and verification events */}
+              {auditLogs.slice(0, 5).map(aud => (
+                <div key={aud.id} className="p-3.5 bg-rose-50/50 border border-rose-200 rounded-xl space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-black text-rose-800 flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                      আইনী পৰিদৰ্শন জাননী (Labour Inspector Notice): {aud.inspectorName}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">{aud.timestamp}</span>
+                  </div>
+                  <p className="text-xs text-slate-800 font-medium">{aud.findings}</p>
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                    <span>প্ৰতিষ্ঠান: <strong className="text-slate-700">{aud.entityName}</strong></span>
+                    <span className="text-rose-700 font-bold bg-white px-2 py-0.2 rounded border border-rose-200">
+                      {aud.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {verificationLogs.slice(0, 8).map(log => (
+                <div key={log.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+                      ✓
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-900 block">{log.workerName}</span>
+                      <span className="text-[11px] text-slate-500">{log.remarks}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-slate-400 font-mono block">{log.timestamp}</span>
+                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.2 rounded">
+                      {log.activity}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 10. TAB CONTENT: DETAILED SYSTEM FUNCTIONALITY GUIDE (চিষ্টেমৰ কাৰ্য্যপ্ৰণালী) */}
       {/* ========================================================================= */}
       {activeAdminTab === 'how_it_works' && (
         <div className="space-y-6">
@@ -1181,6 +1690,508 @@ export default function PlatformAdminPanel({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 1. Modal: Blacklist Worker */}
+      {showBlacklistModal && selectedWorkerForBlacklist && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-rose-100 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2 text-rose-700 font-black text-base">
+                <AlertTriangle className="w-5 h-5" />
+                <span>শ্ৰমিকক ক’লা তালিকাভুক্ত কৰক (Blacklist Worker)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBlacklistModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-1 text-xs">
+              <span className="font-bold text-rose-900 block">{selectedWorkerForBlacklist.name}</span>
+              <span className="text-slate-600 block">পদবী: {selectedWorkerForBlacklist.trade} | ফোন: {selectedWorkerForBlacklist.phone}</span>
+              <span className="text-rose-700 font-medium block">
+                সতৰ্কতা: ব্লেকলিষ্ট কৰিলে এই শ্ৰমিকে কোনো কাৰখানা বা ঠিকাদাৰৰ অধীনত কাম লাভ কৰিব নোৱাৰিব।
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                ব্লেকলিষ্টৰ কাৰণ (Reason for Blacklisting):
+              </label>
+              <textarea
+                rows={3}
+                value={blacklistReason}
+                onChange={(e) => setBlacklistReason(e.target.value)}
+                placeholder="যেনে: ভুৱা হাজিৰা (Proxy Attendance) অথবা নিৰাপত্তা নিয়ম উলংঘন..."
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowBlacklistModal(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+              >
+                বাতিল কৰক
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await fetch('/api/workers/update-status', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        workerId: selectedWorkerForBlacklist.id,
+                        status: 'Blacklisted',
+                        reason: blacklistReason
+                      })
+                    });
+                  } catch (e) {}
+                  onUpdateWorkerStatus?.(selectedWorkerForBlacklist.id, 'Blacklisted', blacklistReason);
+                  setShowBlacklistModal(false);
+                  showNotice(`${selectedWorkerForBlacklist.name} ক ক’লা তালিকাভুক্ত (Blacklisted) কৰা হ'ল!`, 'error');
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer"
+              >
+                নিশ্চিত ব্লেকলিষ্ট কৰক
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Modal: Edit PF & Bank Details */}
+      {showPFModal && selectedWorkerForPF && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-indigo-100 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2 text-indigo-900 font-black text-base">
+                <Landmark className="w-5 h-5 text-indigo-600" />
+                <span>PF / ESIC আৰু বেংক একাউণ্ট সম্পাদন (Statutory & Bank Update)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPFModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-xs">
+              <span className="font-bold text-indigo-950 block">{selectedWorkerForPF.name}</span>
+              <span className="text-slate-600">ID: {selectedWorkerForPF.id} • Trade: {selectedWorkerForPF.trade}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">EPFO UAN Number (১২ অংক):</label>
+                <input
+                  type="text"
+                  value={editUAN}
+                  onChange={(e) => setEditUAN(e.target.value)}
+                  placeholder="101298492019"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">ESIC IP Number (১০-১৭ অংক):</label>
+                <input
+                  type="text"
+                  value={editESIC}
+                  onChange={(e) => setEditESIC(e.target.value)}
+                  placeholder="319201849201"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">বেংক একাউণ্ট নম্বৰ (Bank A/C):</label>
+                <input
+                  type="text"
+                  value={editBankAcc}
+                  onChange={(e) => setEditBankAcc(e.target.value)}
+                  placeholder="918204928192"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">বেংকৰ IFSC ক’ড:</label>
+                <input
+                  type="text"
+                  value={editIFSC}
+                  onChange={(e) => setEditIFSC(e.target.value.toUpperCase())}
+                  placeholder="SBIN0001829"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">বেংকৰ নাম (Bank Name):</label>
+                <input
+                  type="text"
+                  value={editBankName}
+                  onChange={(e) => setEditBankName(e.target.value)}
+                  placeholder="State Bank of India / Punjab National Bank"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowPFModal(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+              >
+                বাতিল কৰক
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const updates = {
+                    uan: editUAN,
+                    esicNo: editESIC,
+                    bankAccountNo: editBankAcc,
+                    ifscCode: editIFSC,
+                    bankName: editBankName
+                  };
+                  try {
+                    await fetch('/api/workers/update-pf', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        workerId: selectedWorkerForPF.id,
+                        ...updates
+                      })
+                    });
+                  } catch (e) {}
+                  onUpdateWorkerPF?.(selectedWorkerForPF.id, updates);
+                  setShowPFModal(false);
+                  showNotice(`${selectedWorkerForPF.name} ৰ PF & বেংক বিৱৰণ সফলতাৰে আপডেট কৰা হ'ল!`, 'success');
+                }}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer"
+              >
+                সংৰক্ষণ কৰক
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Modal: Disburse Salary */}
+      {showDisburseModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-indigo-100 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2 text-indigo-900 font-black text-base">
+                <Send className="w-5 h-5 text-indigo-600" />
+                <span>মজুৰি প্ৰত্যক্ষ বেংক বিতৰণ (Salary Disbursement DBT)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDisburseModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">শ্ৰমিক বাছনি কৰক:</label>
+                <select
+                  value={disburseWorkerId}
+                  onChange={(e) => setDisburseWorkerId(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                >
+                  {workers.map(w => (
+                    <option key={w.id} value={w.id}>
+                      {w.name} ({w.trade}) - Bank: {w.bankName || 'SBI'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">দৰমহাৰ মাহ (Month):</label>
+                  <input
+                    type="text"
+                    value={disburseMonth}
+                    onChange={(e) => setDisburseMonth(e.target.value)}
+                    placeholder="September 2026"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">মুঠ মজুৰি (Gross Amount ₹):</label>
+                  <input
+                    type="number"
+                    value={disburseAmount}
+                    onChange={(e) => setDisburseAmount(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">পেমেন্ট মাধ্যম (Payment Mode):</label>
+                <select
+                  value={disburseMode}
+                  onChange={(e) => setDisburseMode(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                >
+                  <option value="Direct Bank Transfer">Direct Bank Transfer (Aadhaar DBT)</option>
+                  <option value="NEFT">NEFT (National Electronic Funds Transfer)</option>
+                  <option value="RTGS">RTGS (Real Time Gross Settlement)</option>
+                  <option value="UPI">UPI Direct Payout</option>
+                </select>
+              </div>
+
+              {/* Statutory Calculation preview */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 font-mono text-[11px]">
+                <div className="flex justify-between text-slate-600">
+                  <span>Gross Wage:</span>
+                  <span className="font-bold">₹{disburseAmount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-indigo-700">
+                  <span>EPF Deduction (12%):</span>
+                  <span>-₹{Math.round(disburseAmount * 0.12).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-cyan-700">
+                  <span>ESIC Deduction (0.75%):</span>
+                  <span>-₹{Math.round(disburseAmount * 0.0075).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-emerald-800 font-black border-t border-slate-200 pt-1 text-xs">
+                  <span>শ্ৰমিকৰ একাউণ্টত জমা (Net Paid):</span>
+                  <span>₹{(disburseAmount - Math.round(disburseAmount * 0.12) - Math.round(disburseAmount * 0.0075)).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowDisburseModal(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+              >
+                বাতিল কৰক
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const targetWorker = workers.find(w => w.id === disburseWorkerId) || workers[0];
+                  const pf = Math.round(disburseAmount * 0.12);
+                  const esic = Math.round(disburseAmount * 0.0075);
+                  const net = disburseAmount - pf - esic;
+                  const newTxn: SalaryTransaction = {
+                    id: `sal_${Date.now()}`,
+                    workerId: targetWorker?.id || 'w1',
+                    workerName: targetWorker?.name || 'Worker',
+                    industryId: industries[0]?.id || 'ind1',
+                    industryName: industries[0]?.name || 'Industry',
+                    contractorId: contractors[0]?.id || 'con1',
+                    contractorName: contractors[0]?.name || 'Contractor',
+                    month: disburseMonth,
+                    amount: disburseAmount,
+                    pfDeducted: pf,
+                    esicDeducted: esic,
+                    netPaid: net,
+                    status: 'Paid',
+                    utrNumber: `UTR${Date.now().toString().slice(-8)}IN`,
+                    bankName: targetWorker?.bankName || 'State Bank of India',
+                    accountNumberMasked: targetWorker?.bankAccountNo ? `••${targetWorker.bankAccountNo.slice(-4)}` : '••8192',
+                    paymentMode: disburseMode,
+                    disbursedAt: new Date().toISOString()
+                  };
+                  try {
+                    await fetch('/api/salary/disburse', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(newTxn)
+                    });
+                  } catch (e) {}
+                  onDisburseSalary?.(newTxn);
+                  setShowDisburseModal(false);
+                  showNotice(`${targetWorker?.name} ক ₹${net.toLocaleString()} মজুৰি UTR ৰ সৈতে প্ৰেৰণ কৰা হ'ল!`, 'success');
+                }}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer"
+              >
+                ট্ৰান্সফাৰ সম্পন্ন কৰক
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Modal: Generate Invoice */}
+      {showInvoiceModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-indigo-100 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2 text-indigo-900 font-black text-base">
+                <Receipt className="w-5 h-5 text-indigo-600" />
+                <span>₹১/শ্ৰমিক/দিন মডেলৰ ছাবস্ক্ৰিপশ্বন ইনভইচ জাৰি কৰক</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowInvoiceModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">বিল প্ৰাপকৰ ধৰণ:</label>
+                  <select
+                    value={invBilledEntity}
+                    onChange={(e) => {
+                      const val = e.target.value as 'Industry' | 'Contractor';
+                      setInvBilledEntity(val);
+                      setInvEntityId(val === 'Industry' ? (industries[0]?.id || '') : (contractors[0]?.id || ''));
+                    }}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                  >
+                    <option value="Industry">Industry / Principal Employer</option>
+                    <option value="Contractor">Labour Contractor / Security Agency</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">বিল প্ৰাপকৰ নাম:</label>
+                  <select
+                    value={invEntityId}
+                    onChange={(e) => setInvEntityId(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                  >
+                    {invBilledEntity === 'Industry'
+                      ? industries.map(ind => (
+                          <option key={ind.id} value={ind.id}>{ind.name} ({ind.category})</option>
+                        ))
+                      : contractors.map(con => (
+                          <option key={con.id} value={con.id}>{con.name} ({con.type})</option>
+                        ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">বিলিং মাহ (Billing Month):</label>
+                  <input
+                    type="text"
+                    value={invMonth}
+                    onChange={(e) => setInvMonth(e.target.value)}
+                    placeholder="September 2026"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">সক্ৰিয় শ্ৰমিকৰ সংখ্যা:</label>
+                  <input
+                    type="number"
+                    value={invWorkersCount}
+                    onChange={(e) => setInvWorkersCount(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* ₹1/worker/day calculation breakdown */}
+              {(() => {
+                const days = 30;
+                const mandays = invWorkersCount * days;
+                const subtotal = mandays * 1; // ₹1/worker/day
+                const gst = subtotal * 0.18;
+                const total = subtotal + gst;
+                return (
+                  <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-1.5 font-mono text-[11px]">
+                    <div className="flex justify-between text-slate-600">
+                      <span>হাৰ (ShramikLink Pricing):</span>
+                      <span className="font-bold">₹1 / worker / day</span>
+                    </div>
+                    <div className="flex justify-between text-slate-600">
+                      <span>মুঠ মেন-ডেজ (Mandays = {invWorkersCount} workers × 30 days):</span>
+                      <span>{mandays.toLocaleString()} Days</span>
+                    </div>
+                    <div className="flex justify-between text-slate-800 font-bold">
+                      <span>মূল মাচুল (Base Fee):</span>
+                      <span>₹{subtotal.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-indigo-700">
+                      <span>GST (18%):</span>
+                      <span>+₹{gst.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-indigo-950 font-black border-t border-indigo-200 pt-1 text-xs">
+                      <span>সৰ্বমুঠ প্ৰদেয় বিল (Total Payable):</span>
+                      <span>₹{total.toLocaleString()}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowInvoiceModal(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+              >
+                বাতিল কৰক
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const targetEntity = invBilledEntity === 'Industry' 
+                    ? industries.find(i => i.id === invEntityId) || industries[0]
+                    : contractors.find(c => c.id === invEntityId) || contractors[0];
+                  
+                  const mandays = invWorkersCount * 30;
+                  const subtotal = mandays * 1;
+                  const gst = subtotal * 0.18;
+                  const total = subtotal + gst;
+                  const newInv: AdminPlatformInvoice = {
+                    id: `inv_${Date.now()}`,
+                    invoiceNo: `SL-INV-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+                    billedEntity: invBilledEntity,
+                    entityId: targetEntity?.id || 'e1',
+                    entityName: targetEntity?.name || 'Entity',
+                    month: invMonth,
+                    activeWorkersCount: invWorkersCount,
+                    mandaysCount: mandays,
+                    ratePerWorkerPerDay: 1,
+                    subtotal: subtotal,
+                    gstAmount: gst,
+                    totalPayable: total,
+                    status: 'Issued',
+                    dueDate: '10th October 2026',
+                    issuedDate: new Date().toISOString()
+                  };
+                  try {
+                    await fetch('/api/invoices/generate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(newInv)
+                    });
+                  } catch (e) {}
+                  onGenerateInvoice?.(newInv);
+                  setShowInvoiceModal(false);
+                  showNotice(`${targetEntity?.name} ৰ বাবে ₹${total.toLocaleString()} ৰ ইনভইচ সফলতাৰে সৃষ্টি কৰা হ'ল!`, 'success');
+                }}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer"
+              >
+                ইনভইচ জাৰি কৰক
+              </button>
+            </div>
           </div>
         </div>
       )}

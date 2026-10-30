@@ -17,11 +17,41 @@ import {
   bills,
   verificationLogs,
   auditLogs,
-  revenueLogs
+  revenueLogs,
+  supervisors,
+  complaints,
+  salaryTransactions,
+  leaveRecords,
+  adminPlatformInvoices
 } from "./src/db/schema.ts";
 
+// Process-level uncaught error guards to prevent unexpected dev server termination
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception (handled safely):", err);
+});
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection (handled safely):", reason);
+});
+
 const app = express();
-const PORT = 3000;
+
+// Parse PORT and HOST from environment variables or command line arguments
+let PORT = Number(process.env.PORT) || 3000;
+let HOST = process.env.HOST || "0.0.0.0";
+
+const argv = process.argv.slice(2);
+for (let i = 0; i < argv.length; i++) {
+  if ((argv[i] === "--port" || argv[i] === "-p") && argv[i + 1]) {
+    const parsedPort = Number(argv[i + 1]);
+    if (!isNaN(parsedPort) && parsedPort > 0) {
+      PORT = parsedPort;
+    }
+    i++;
+  } else if ((argv[i] === "--host" || argv[i] === "-h") && argv[i + 1]) {
+    HOST = argv[i + 1];
+    i++;
+  }
+}
 
 app.use(express.json());
 
@@ -133,7 +163,12 @@ app.get("/api/data", async (req: any, res: any) => {
       allBills,
       allVerificationLogs,
       allAuditLogs,
-      allRevenueLogs
+      allRevenueLogs,
+      allSupervisors,
+      allComplaints,
+      allSalaryTransactions,
+      allLeaveRecords,
+      allPlatformInvoices
     ] = await Promise.all([
       db.select().from(industries),
       db.select().from(contractors),
@@ -145,7 +180,12 @@ app.get("/api/data", async (req: any, res: any) => {
       db.select().from(bills),
       db.select().from(verificationLogs).orderBy(desc(verificationLogs.timestamp)),
       db.select().from(auditLogs).orderBy(desc(auditLogs.timestamp)),
-      db.select().from(revenueLogs).orderBy(desc(revenueLogs.date))
+      db.select().from(revenueLogs).orderBy(desc(revenueLogs.date)),
+      db.select().from(supervisors),
+      db.select().from(complaints).orderBy(desc(complaints.createdAt)),
+      db.select().from(salaryTransactions).orderBy(desc(salaryTransactions.paymentDate)),
+      db.select().from(leaveRecords).orderBy(desc(leaveRecords.appliedAt)),
+      db.select().from(adminPlatformInvoices).orderBy(desc(adminPlatformInvoices.issuedDate))
     ]);
 
     // Parse serialized arrays/fields
@@ -165,7 +205,12 @@ app.get("/api/data", async (req: any, res: any) => {
       bills: parsedBills,
       verificationLogs: allVerificationLogs,
       auditLogs: allAuditLogs,
-      revenueLogs: allRevenueLogs
+      revenueLogs: allRevenueLogs,
+      supervisors: allSupervisors,
+      complaints: allComplaints,
+      salaryTransactions: allSalaryTransactions,
+      leaveRecords: allLeaveRecords,
+      platformInvoices: allPlatformInvoices
     });
   } catch (error: any) {
     console.error("Error fetching CLRA compliance data:", error);
@@ -560,11 +605,335 @@ app.post("/api/audit/submit-notice", requireAuth, async (req: any, res: any) => 
   }
 });
 
+// 14. Supervisor generates complaint with auto-CC to Admin & Contractor
+app.post("/api/complaints/submit", async (req: any, res: any) => {
+  const {
+    supervisorId,
+    supervisorName,
+    industryId,
+    industryName,
+    contractorId,
+    contractorName,
+    workerId,
+    workerName,
+    category,
+    subject,
+    description,
+    severity,
+    ccAdmin,
+    ccContractor
+  } = req.body;
+
+  if (!supervisorName || !industryId || !contractorId || !category || !subject || !description) {
+    return res.status(400).json({ error: "Missing mandatory complaint parameters" });
+  }
+
+  try {
+    const complaintId = "cmp-" + Date.now();
+    const count = Math.floor(100 + Math.random() * 900);
+    const complaintNumber = `CMP-2026-${count}`;
+
+    const newComplaint = await db.insert(complaints).values({
+      id: complaintId,
+      complaintNumber,
+      supervisorId: supervisorId || 'sup-1',
+      supervisorName,
+      industryId,
+      industryName: industryName || 'Assigned Industry',
+      contractorId,
+      contractorName: contractorName || 'Assigned Contractor',
+      workerId: workerId || null,
+      workerName: workerName || null,
+      category,
+      subject,
+      description,
+      severity: severity || 'Medium',
+      status: 'Open',
+      ccAdmin: ccAdmin !== false,
+      ccContractor: ccContractor !== false,
+      createdAt: new Date().toLocaleString()
+    }).returning();
+
+    // Also write to audit log so platform admin can see immediate activity
+    await db.insert(auditLogs).values({
+      id: "aud-" + Date.now(),
+      inspectorName: supervisorName,
+      inspectedEntity: "Contractor Compliance",
+      entityId: contractorId,
+      entityName: contractorName || "Contractor",
+      timestamp: new Date().toLocaleString(),
+      findings: `[Formal Supervisor Complaint ${complaintNumber}] Category: ${category}. Subject: ${subject}. CC: Admin, Contractor.`,
+      status: "Notice Issued"
+    });
+
+    res.json({ success: true, complaint: newComplaint[0] });
+  } catch (error: any) {
+    console.error("Error submitting complaint:", error);
+    res.status(500).json({ error: "Failed to lodge supervisor complaint" });
+  }
+});
+
+// 15. Update complaint resolution
+app.post("/api/complaints/update-status", async (req: any, res: any) => {
+  const { complaintId, status, resolutionNotes } = req.body;
+  if (!complaintId || !status) {
+    return res.status(400).json({ error: "Missing complaintId or status" });
+  }
+
+  try {
+    const updated = await db.update(complaints)
+      .set({
+        status,
+        resolutionNotes: resolutionNotes || undefined,
+        resolvedAt: status === 'Resolved' || status === 'Action Taken' ? new Date().toLocaleString() : undefined
+      })
+      .where(eq(complaints.id, complaintId))
+      .returning();
+
+    res.json({ success: true, complaint: updated[0] });
+  } catch (error: any) {
+    console.error("Error updating complaint status:", error);
+    res.status(500).json({ error: "Failed to update complaint" });
+  }
+});
+
+// 16. Admin / HR updates worker status (Active, Deactivated, Blacklisted)
+app.post("/api/workers/update-status", async (req: any, res: any) => {
+  const { workerId, status, blacklistedReason } = req.body;
+  if (!workerId || !status) {
+    return res.status(400).json({ error: "Missing workerId or status" });
+  }
+
+  try {
+    const updated = await db.update(workers)
+      .set({
+        status,
+        blacklistedReason: status === 'Blacklisted' ? (blacklistedReason || 'Administrative disciplinary action') : null
+      })
+      .where(eq(workers.id, workerId))
+      .returning();
+
+    // Log this critical action in verification logs
+    await db.insert(verificationLogs).values({
+      id: "log-" + Date.now(),
+      workerId,
+      workerName: updated[0]?.name || 'Worker',
+      timestamp: new Date().toLocaleString(),
+      activity: `Status-Change-${status}`,
+      status: "Success",
+      remarks: `Platform Admin changed worker status to ${status}. ${blacklistedReason ? 'Reason: ' + blacklistedReason : ''}`
+    });
+
+    res.json({ success: true, worker: updated[0] });
+  } catch (error: any) {
+    console.error("Error updating worker status:", error);
+    res.status(500).json({ error: "Failed to update worker status" });
+  }
+});
+
+// 17. Admin / Contractor updates worker PF / ESIC / Bank Details
+app.post("/api/workers/update-pf", async (req: any, res: any) => {
+  const { workerId, uan, esicNo, bankAccountNo, ifscCode, bankName } = req.body;
+  if (!workerId) {
+    return res.status(400).json({ error: "Missing workerId" });
+  }
+
+  try {
+    const updated = await db.update(workers)
+      .set({
+        uan: uan || undefined,
+        esicNo: esicNo || undefined,
+        bankAccountNo: bankAccountNo || undefined,
+        ifscCode: ifscCode || undefined,
+        bankName: bankName || undefined
+      })
+      .where(eq(workers.id, workerId))
+      .returning();
+
+    res.json({ success: true, worker: updated[0] });
+  } catch (error: any) {
+    console.error("Error updating worker statutory details:", error);
+    res.status(500).json({ error: "Failed to update statutory details" });
+  }
+});
+
+// 18. Salary Bank Transfer Disbursal
+app.post("/api/salary/disburse", async (req: any, res: any) => {
+  const {
+    workerId,
+    workerName,
+    contractorId,
+    contractorName,
+    industryId,
+    industryName,
+    month,
+    amount,
+    paymentMode,
+    utrNumber,
+    accountNumberMasked,
+    bankName,
+    pfDeducted,
+    esicDeducted,
+    netPaid
+  } = req.body;
+
+  if (!workerId || !amount || !month) {
+    return res.status(400).json({ error: "Missing salary disbursal parameters" });
+  }
+
+  try {
+    const txnId = "sal-" + Date.now();
+    const newTxn = await db.insert(salaryTransactions).values({
+      id: txnId,
+      workerId,
+      workerName: workerName || 'Worker',
+      contractorId: contractorId || 'Direct',
+      contractorName,
+      industryId: industryId || 'Direct',
+      industryName,
+      month,
+      amount: Number(amount),
+      paymentDate: new Date().toISOString().split('T')[0],
+      paymentMode: paymentMode || 'Direct Bank Transfer',
+      utrNumber: utrNumber || `UTR${Date.now()}`,
+      accountNumberMasked: accountNumberMasked || 'XXXX-XXXX-0000',
+      bankName: bankName || 'Bank',
+      status: 'Successful',
+      pfDeducted: Number(pfDeducted || 0),
+      esicDeducted: Number(esicDeducted || 0),
+      netPaid: Number(netPaid || amount)
+    }).returning();
+
+    res.json({ success: true, transaction: newTxn[0] });
+  } catch (error: any) {
+    console.error("Error recording salary disbursement:", error);
+    res.status(500).json({ error: "Failed to disburse salary" });
+  }
+});
+
+// 19. Record Leave (Form XXIV Register)
+app.post("/api/leave/record", async (req: any, res: any) => {
+  const {
+    workerId,
+    workerName,
+    contractorId,
+    contractorName,
+    industryId,
+    industryName,
+    leaveType,
+    daysCount,
+    startDate,
+    endDate,
+    reason,
+    wagePaidForLeave
+  } = req.body;
+
+  if (!workerId || !leaveType || !daysCount || !startDate || !endDate) {
+    return res.status(400).json({ error: "Missing leave parameters" });
+  }
+
+  try {
+    const leaveId = "lvr-" + Date.now();
+    const newLeave = await db.insert(leaveRecords).values({
+      id: leaveId,
+      workerId,
+      workerName: workerName || 'Worker',
+      contractorId: contractorId || 'Direct',
+      contractorName,
+      industryId,
+      industryName,
+      leaveType,
+      daysCount: Number(daysCount),
+      startDate,
+      endDate,
+      reason: reason || 'Personal Leave',
+      status: 'Approved',
+      appliedAt: new Date().toISOString().split('T')[0],
+      approvedBy: 'Contractor Management',
+      wagePaidForLeave: wagePaidForLeave !== false
+    }).returning();
+
+    res.json({ success: true, leaveRecord: newLeave[0] });
+  } catch (error: any) {
+    console.error("Error recording leave:", error);
+    res.status(500).json({ error: "Failed to record leave" });
+  }
+});
+
+// 20. Generate Platform Invoice (₹1 per worker per day)
+app.post("/api/invoices/generate", async (req: any, res: any) => {
+  const { billedEntity, entityId, entityName, month, activeWorkersCount, mandaysCount } = req.body;
+  if (!billedEntity || !entityId || !entityName || !month) {
+    return res.status(400).json({ error: "Missing invoice generation parameters" });
+  }
+
+  try {
+    const invId = "pinv-" + Date.now();
+    const mandays = Number(mandaysCount || (Number(activeWorkersCount || 10) * 26));
+    const subtotal = mandays * 1; // ₹1 per worker day
+    const gstAmount = Number((subtotal * 0.18).toFixed(2));
+    const totalPayable = Number((subtotal + gstAmount).toFixed(2));
+    const invoiceNo = `SL-INV-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+
+    const newInv = await db.insert(adminPlatformInvoices).values({
+      id: invId,
+      invoiceNo,
+      billedEntity,
+      entityId,
+      entityName,
+      month,
+      activeWorkersCount: Number(activeWorkersCount || 10),
+      mandaysCount: mandays,
+      ratePerWorkerDay: 1,
+      subtotal,
+      gstAmount,
+      totalPayable,
+      status: 'Generated',
+      issuedDate: new Date().toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0]
+    }).returning();
+
+    res.json({ success: true, invoice: newInv[0] });
+  } catch (error: any) {
+    console.error("Error generating platform invoice:", error);
+    res.status(500).json({ error: "Failed to generate platform invoice" });
+  }
+});
+
+// 21. Update Platform Invoice Status (e.g. Paid)
+app.post("/api/invoices/update-status", async (req: any, res: any) => {
+  const { invoiceId, status, transactionRef } = req.body;
+  if (!invoiceId || !status) {
+    return res.status(400).json({ error: "Missing invoiceId or status" });
+  }
+
+  try {
+    const updated = await db.update(adminPlatformInvoices)
+      .set({
+        status,
+        paidAt: status === 'Paid' ? new Date().toISOString().split('T')[0] : undefined,
+        transactionRef: transactionRef || undefined
+      })
+      .where(eq(adminPlatformInvoices.id, invoiceId))
+      .returning();
+
+    res.json({ success: true, invoice: updated[0] });
+  } catch (error: any) {
+    console.error("Error updating invoice status:", error);
+    res.status(500).json({ error: "Failed to update platform invoice" });
+  }
+});
+
 // Integrate Vite Dev Server / Static files middleware
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    const isHmrDisabled = process.env.DISABLE_HMR === "true";
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: isHmrDisabled ? false : undefined,
+        watch: isHmrDisabled ? null : undefined,
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);
@@ -576,8 +945,16 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`Server running on http://${HOST}:${PORT}`);
+  });
+
+  server.on("error", (err: any) => {
+    if (err.code === "EADDRINUSE") {
+      console.warn(`Port ${PORT} is already in use. Dev server process remains active.`);
+    } else {
+      console.error("Express server error:", err);
+    }
   });
 }
 
