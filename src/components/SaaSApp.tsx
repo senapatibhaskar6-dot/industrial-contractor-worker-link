@@ -96,7 +96,6 @@ import logoUrl from '../assets/images/icwl_logo.png';
 import TransparentImage from './TransparentImage';
 import { PWAInstallButton } from './PWAInstallButton';
 import { AppLanguage, getStoredLanguage, setStoredLanguage, TRANSLATIONS, SUPPORTED_LANGUAGES } from '../i18n';
-import { LanguageSelector } from './LanguageSelector';
 import SupervisorAttendancePanel from './SupervisorAttendancePanel';
 import { ContractorMonthlyAttendanceModal } from './ContractorMonthlyAttendanceModal';
 import AppFeedbackModal from './AppFeedbackModal';
@@ -206,6 +205,14 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                   currentLang === 'hi' ? 'गेट ड्यूटी • गेट पास इन/आउट • मटेरियल पास' :
                   currentLang === 'bn' ? 'গেট ডিউটি • গেট পাস ইন/আউট • মেটেরিয়াল পাস' :
                   'Unarmed Guard • Security Supervisor • Gate Pass In/Out',
+    inspectorCardTitle: currentLang === 'as' ? 'শ্ৰম পৰিদৰ্শক পেনেল (Labour Inspector)' :
+                        currentLang === 'hi' ? 'श्रम निरीक्षक पैनल (Labour Inspector)' :
+                        currentLang === 'bn' ? 'শ্রম পরিদর্শক প্যানেল (Labour Inspector)' :
+                        'Labour Inspector Panel',
+    inspectorCardSub: currentLang === 'as' ? 'চৰকাৰী শ্ৰম আৰু কাৰখানা পৰিদৰ্শন • Form XVI/XVII অডিট • জাননী ও জৰিমনা' :
+                      currentLang === 'hi' ? 'सरकारी श्रम व कारखाना निरीक्षण • Form XVI/XVII ऑडिट • नोटिस व जुर्माना' :
+                      currentLang === 'bn' ? 'সরকারি শ্রম ও কারখানা পরিদর্শন • Form XVI/XVII অডিট • নোটিশ ও জরিমানা' :
+                      'Govt Labor & Factory Inspection • Form XVI/XVII Audit • Legal Notices',
     enterBtn: currentLang === 'as' ? 'প্ৰৱেশ কৰক (Enter)' :
               currentLang === 'hi' ? 'प्रवेश करें (Enter)' :
               currentLang === 'bn' ? 'প্রবেশ করুন (Enter)' :
@@ -3430,13 +3437,8 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
           </div>
         )}
 
-        {/* Top Installer & Language Selector Utility Bar */}
-        <div className="flex items-center justify-between px-2 gap-3">
-          <LanguageSelector 
-            currentLang={currentLang} 
-            onLanguageChange={handleLangChange} 
-            variant="header" 
-          />
+        {/* Top Utility Bar (PWA Install) */}
+        <div className="flex items-center justify-end px-2">
           <PWAInstallButton />
         </div>
 
@@ -3500,7 +3502,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
             {/* 1. Owner Dashboard */}
             <button
               type="button"
@@ -3589,6 +3591,29 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 {uiText.guardCardSub}
               </div>
               <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] font-extrabold text-amber-600 flex items-center gap-1">
+                <span>{uiText.enterBtn}</span> &rarr;
+              </div>
+            </button>
+
+            {/* 5. Labour Inspector Panel */}
+            <button
+              type="button"
+              onClick={() => handleDemoLogin('government_inspector', 'Labour Inspector')}
+              className="bg-white hover:bg-purple-50/70 border-2 border-purple-200 hover:border-purple-500 p-4 rounded-2xl text-left shadow-xs transition-all group cursor-pointer active:scale-98"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-2xl p-2 rounded-xl bg-purple-50 border border-purple-200">⚖️</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-full border border-purple-300">
+                  Inspector Panel
+                </span>
+              </div>
+              <div className="font-black text-slate-900 text-sm group-hover:text-purple-600 transition-colors">
+                {uiText.inspectorCardTitle}
+              </div>
+              <div className="text-[10px] text-slate-500 mt-1 leading-snug">
+                {uiText.inspectorCardSub}
+              </div>
+              <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] font-extrabold text-purple-600 flex items-center gap-1">
                 <span>{uiText.enterBtn}</span> &rarr;
               </div>
             </button>
@@ -3974,11 +3999,11 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                       <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-center">
                         {uiText.fastAccessLabel}
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           type="button"
                           onClick={() => handleDemoLogin('supervisor')}
-                          className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 py-2 px-2 rounded-lg text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                          className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 py-2 px-1 rounded-lg text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                         >
                           <span>👷 ছুপাৰভাইজাৰ</span>
                         </button>
@@ -3988,9 +4013,16 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                             handleDemoLogin('contractor');
                             setContractorTab('supervisors_attendance');
                           }}
-                          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 py-2 px-2 rounded-lg text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 py-2 px-1 rounded-lg text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                         >
                           <span>🏢 কণ্ট্ৰেক্টৰ</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDemoLogin('government_inspector', 'Labour Inspector')}
+                          className="bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-300 py-2 px-1 rounded-lg text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                        >
+                          <span>⚖️ পৰিদৰ্শক</span>
                         </button>
                       </div>
                     </div>
@@ -4650,13 +4682,6 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
-          {/* Pan-India Language Selector in Session Bar */}
-          <LanguageSelector 
-            currentLang={currentLang} 
-            onLanguageChange={handleLangChange} 
-            variant="header" 
-          />
-
           <PWAInstallButton />
 
           {/* App Review & Feedback Button */}
