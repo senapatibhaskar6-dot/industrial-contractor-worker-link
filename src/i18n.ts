@@ -18,9 +18,9 @@ export interface LanguageOption {
 }
 
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [
+  { code: 'en', name: 'English', nativeName: 'English', region: 'Pan-India / Official', flag: '🇮🇳' },
   { code: 'as', name: 'Assamese', nativeName: 'অসমীয়া', region: 'Assam & North East', flag: '🇮🇳' },
   { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', region: 'North, Central & West', flag: '🇮🇳' },
-  { code: 'en', name: 'English', nativeName: 'English', region: 'Pan-India / Official', flag: '🇮🇳' },
   { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', region: 'West Bengal & East', flag: '🇮🇳' },
   { code: 'mr', name: 'Marathi', nativeName: 'मराठी', region: 'Maharashtra & MIDC', flag: '🇮🇳' },
   { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', region: 'Tamil Nadu & South', flag: '🇮🇳' },
@@ -945,10 +945,18 @@ export const getStoredLanguage = (): AppLanguage => {
   if (saved && TRANSLATIONS[saved]) {
     return saved;
   }
-  return 'as'; // Default to user's native Assamese or English
+  return 'en'; // Default display language is English
 };
 
 export const setStoredLanguage = (lang: AppLanguage): void => {
-  localStorage.setItem('icwl_app_lang', lang);
-  localStorage.setItem('shramiklink_app_lang', lang);
+  try {
+    localStorage.setItem('icwl_app_lang', lang);
+    localStorage.setItem('shramiklink_app_lang', lang);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('shramiklink-language-change', { detail: lang }));
+      window.dispatchEvent(new CustomEvent('icwl-language-change', { detail: lang }));
+    }
+  } catch (e) {
+    // ignore
+  }
 };

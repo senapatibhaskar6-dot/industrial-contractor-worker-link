@@ -142,12 +142,128 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   };
   const t = TRANSLATIONS[currentLang];
 
+  useEffect(() => {
+    const handleLangEvent = (e: any) => {
+      if (e?.detail && TRANSLATIONS[e.detail as AppLanguage]) {
+        setInternalLang(e.detail as AppLanguage);
+      }
+    };
+    window.addEventListener('shramiklink-language-change', handleLangEvent);
+    window.addEventListener('icwl-language-change', handleLangEvent);
+    return () => {
+      window.removeEventListener('shramiklink-language-change', handleLangEvent);
+      window.removeEventListener('icwl-language-change', handleLangEvent);
+    };
+  }, []);
+
   const t_supervisor = currentLang === 'as' ? 'কাৰখানা ছুপাৰভাইজাৰ (Factory Supervisor)' :
                        currentLang === 'hi' ? 'कारखाना पर्यवेक्षक (Factory Supervisor)' :
+                       currentLang === 'bn' ? 'কারখানা সুপারভাইজার (Factory Supervisor)' :
                        'Factory Supervisor';
   const t_supervisorDesc = currentLang === 'as' ? 'গেটৰ হাজিৰা লিখক, বায়’মেট্ৰিক পৰীক্ষা কৰক আৰু অভাৰটাইম ট্ৰেক কৰক।' :
                            currentLang === 'hi' ? 'गेट उपस्थिति दर्ज करें, बायोमेट्रिक सत्यापित करें और ओवरटाइम ट्रैक करें।' :
+                           currentLang === 'bn' ? 'গেটের হাজিরা লিখুন, বায়োমেট্রিক যাচাই করুন এবং ওভারটাইম ট্র্যাক করুন।' :
                            'Mark gate attendance, verify biometric check-ins, and track overtime.';
+
+  const uiText = {
+    quickRedirectionTitle: currentLang === 'as' ? 'ডেশ্ববৰ্ডলৈ পোনপটীয়া প্ৰৱেশ (1-Click Direct Role Redirection)' :
+                           currentLang === 'hi' ? '1-क्लिक सीधा पोर्टल प्रवेश (1-Click Direct Role Redirection)' :
+                           currentLang === 'bn' ? 'ড্যাশবোর্ডে সরাসরি প্রবেশ (1-Click Direct Role Redirection)' :
+                           '1-Click Direct Role Portal Access',
+    quickRedirectionSub: currentLang === 'as' ? 'নিৰ্দিষ্ট ভূমিকা বাছক আৰু ডেশ্ববৰ্ড খোলক' :
+                         currentLang === 'hi' ? 'विशिष्ट भूमिका चुनें और डैशबोर्ड खोलें' :
+                         currentLang === 'bn' ? 'নির্দিষ্ট ভূমিকা নির্বাচন করুন এবং ড্যাশবোর্ড খুলুন' :
+                         'Select specific role & launch dedicated portal',
+    ownerCardTitle: currentLang === 'as' ? 'Industry HR / Owner' :
+                    currentLang === 'hi' ? 'उद्योग HR / मालिक (Industry HR / Owner)' :
+                    currentLang === 'bn' ? 'শিল্প এইচআর / মালিক (Industry HR / Owner)' :
+                    'Industry HR / Principal Employer',
+    ownerCardSub: currentLang === 'as' ? 'Industry HR • Apartment Owner • Shop Owner • Corporate Office' :
+                  currentLang === 'hi' ? 'कारखाना HR • अपार्टमेंट सोसाइटी • दुकान मालिक • कार्यालय' :
+                  currentLang === 'bn' ? 'শিল্প এইচআর • অ্যাপার্টমেন্ট ওনার • দোকান • কর্পোরেট অফিস' :
+                  'Industry HR • Apartment Owner • Shop Owner • Office',
+    agencyCardTitle: currentLang === 'as' ? 'Contractor & Agency' :
+                     currentLang === 'hi' ? 'ठेकेदार व सुरक्षा एजेंसी (Contractor & Agency)' :
+                     currentLang === 'bn' ? 'ঠিকাদার ও নিরাপত্তা সংস্থা (Contractor & Agency)' :
+                     'Contractor & Security Agency',
+    agencyCardSub: currentLang === 'as' ? 'Labour Contractor • Security Agency (PSARA Licensed)' :
+                   currentLang === 'hi' ? 'श्रम ठेकेदार • सुरक्षा एजेंसी (PSARA Security)' :
+                   currentLang === 'bn' ? 'লেবার ঠিকাদার • সিকিউরিটি এজেন্সি (PSARA)' :
+                   'Labour Contractor • Security Agency (PSARA Licensed)',
+    labourCardTitle: currentLang === 'as' ? 'Labour / Shramik' :
+                     currentLang === 'hi' ? 'अकुशल श्रमिक / मजदूर (Labour / Shramik)' :
+                     currentLang === 'bn' ? 'অনভিজ্ঞ শ্রমিক / লেবার (Labour / Shramik)' :
+                     'Unskilled Labour / Shramik Desk',
+    labourCardSub: currentLang === 'as' ? 'Daily Hazira • Wage Slips • EPFO/ESIC Linkage' :
+                   currentLang === 'hi' ? 'दैनिक हाजिरी • वेतन पर्ची • EPFO/ESIC लिंकेज' :
+                   currentLang === 'bn' ? 'দৈনিক হাজিরা • বেতন স্লিপ • EPFO/ESIC লিঙ্কেজ' :
+                   'Daily Hazira • Wage Slips • EPFO/ESIC Verification',
+    guardCardTitle: currentLang === 'as' ? 'Security Guard Gate' :
+                    currentLang === 'hi' ? 'सुरक्षा गार्ड डेस्क (Security Guard Gate)' :
+                    currentLang === 'bn' ? 'নিরাপত্তা কর্মী ডেস্ক (Security Guard Gate)' :
+                    'Security Guard & Supervisor Desk',
+    guardCardSub: currentLang === 'as' ? 'Gate Duty • Gate Pass In/Out • Material Pass' :
+                  currentLang === 'hi' ? 'गेट ड्यूटी • गेट पास इन/आउट • मटेरियल पास' :
+                  currentLang === 'bn' ? 'গেট ডিউটি • গেট পাস ইন/আউট • মেটেরিয়াল পাস' :
+                  'Unarmed Guard • Security Supervisor • Gate Pass In/Out',
+    enterBtn: currentLang === 'as' ? 'প্ৰৱেশ কৰক (Enter)' :
+              currentLang === 'hi' ? 'प्रवेश करें (Enter)' :
+              currentLang === 'bn' ? 'প্রবেশ করুন (Enter)' :
+              'Enter Portal',
+    superAdminTitle: currentLang === 'as' ? 'ছুপাৰ এডমিন পেনেল (Super Admin Platform Panel & Census)' :
+                     currentLang === 'hi' ? 'सुपर एडमिन प्लेटफॉर्म पैनल व सेंसस' :
+                     currentLang === 'bn' ? 'সুপার অ্যাডমিন প্ল্যাটফর্ম প্যানেল ও সেন্সাস' :
+                     'Super Admin Platform Panel & Census',
+    superAdminSub: (indCount: number, conCount: number, wrkCount: number) =>
+      currentLang === 'as' ? `🏭 ${indCount} প্ৰতিষ্ঠান (উদ্যোগ/Apt/Shop/Office) • 🏢 ${conCount} সংস্থা (ঠিকাদাৰ/Security) • 👤 ${wrkCount} শ্ৰমিক ও গাৰ্ড • কাৰ্য্যপ্ৰণালী নিৰ্দেশনা` :
+      currentLang === 'hi' ? `🏭 ${indCount} प्रतिष्ठान • 🏢 ${conCount} ठेकेदार/एजेंसी • 👤 ${wrkCount} श्रमिक व गार्ड • संचालन नियमावली` :
+      currentLang === 'bn' ? `🏭 ${indCount} প্রতিষ্ঠান • 🏢 ${conCount} সংস্থা • 👤 ${wrkCount} শ্রমিক ও গার্ড • নির্দেশিকা` :
+      `🏭 ${indCount} Enterprises (Industry/Apt/Shop/Office) • 🏢 ${conCount} Agencies (Contractor/Security) • 👤 ${wrkCount} Workers & Guards • Operating Guidelines`,
+    openAdminBtn: currentLang === 'as' ? 'এডমিন পেনেল খোলক' :
+                  currentLang === 'hi' ? 'एडमिन पैनल खोलें' :
+                  currentLang === 'bn' ? 'অ্যাডমিন প্যানেল খুলুন' :
+                  'Open Admin Panel',
+    gatewayBadge: currentLang === 'as' ? 'সংযুক্ত পৰিচয় দ্বাৰ (Unified Credentials Gateway)' :
+                  currentLang === 'hi' ? 'एकीकृत क्रेडेंशियल गेटवे (Unified Credentials Gateway)' :
+                  currentLang === 'bn' ? 'সংযুক্ত পরিচয় গেটওয়ে (Unified Credentials Gateway)' :
+                  'Unified Credentials Gateway',
+    gatewayTitle: currentLang === 'as' ? '🔒 সুৰক্ষিত লগইন আৰু পঞ্জীয়ন প্ৰণালী' :
+                  currentLang === 'hi' ? '🔒 सुरक्षित लॉगिन और पंजीकरण प्रणाली' :
+                  currentLang === 'bn' ? '🔒 নিরাপদ লগইন এবং নিবন্ধন ব্যবস্থা' :
+                  '🔒 Secure Login & Registration Gateway',
+    gatewayDesc: currentLang === 'as' ? 'পঞ্জীভুক্ত ক্ৰিডেনচিয়েল ব্যৱহাৰ কৰি সুৰক্ষিতভাৱে লগইন কৰক বা নতুন পৰ্টেল একাউণ্ট সৃষ্টি কৰক।' :
+                 currentLang === 'hi' ? 'पंजीकृत क्रेडेंशियल का उपयोग करके सुरक्षित रूप से लॉगिन करें या नया खाता बनाएं।' :
+                 currentLang === 'bn' ? 'নিবন্ধিত তথ্য দিয়ে নিরাপদে লগইন করুন বা একটি নতুন পোর্টাল প্রোফাইল তৈরি করুন।' :
+                 'Log in securely using registered credentials or create a new multi-tenant portal profile secured by password.',
+    loginTab: currentLang === 'as' ? 'লগইন কৰক (Log In)' :
+              currentLang === 'hi' ? 'लॉगिन करें (Log In)' :
+              currentLang === 'bn' ? 'লগইন করুন (Log In)' :
+              'Log In',
+    registerTab: currentLang === 'as' ? 'নতুন পঞ্জীয়ন কৰক (Register)' :
+                 currentLang === 'hi' ? 'नया पंजीकरण करें (Register)' :
+                 currentLang === 'bn' ? 'নতুন নিবন্ধন করুন (Register)' :
+                 'New Registration',
+    emailOrPhoneLabel: currentLang === 'as' ? 'মেইল ঠিকনা / ফোন নম্বৰ (Email or Mobile No)' :
+                       currentLang === 'hi' ? 'ईमेल या मोबाइल नंबर (Email or Mobile No)' :
+                       currentLang === 'bn' ? 'ইমেল বা মোবাইল নম্বর (Email or Mobile No)' :
+                       'Email or 10-Digit Mobile Number',
+    passwordLabel: currentLang === 'as' ? 'পাছৱৰ্ড (Password)' :
+                   currentLang === 'hi' ? 'पासवर्ड (Password)' :
+                   currentLang === 'bn' ? 'পাসওয়ার্ড (Password)' :
+                   'Password',
+    forgotPasswordBtn: currentLang === 'as' ? 'পাছৱৰ্ড পাহৰি গৈছে? (Forgot Password?)' :
+                       currentLang === 'hi' ? 'पासवर्ड भूल गए? (Forgot Password?)' :
+                       currentLang === 'bn' ? 'পাসওয়ার্ড ভুলে গেছেন? (Forgot Password?)' :
+                       'Forgot Password?',
+    enterSessionBtn: currentLang === 'as' ? 'সুৰক্ষিতভাৱে প্ৰৱেশ কৰক (Enter Secure Session)' :
+                     currentLang === 'hi' ? 'सुरक्षित प्रवेश करें (Enter Secure Session)' :
+                     currentLang === 'bn' ? 'নিরাপদে প্রবেশ করুন (Enter Secure Session)' :
+                     'Enter Secure Session',
+    fastAccessLabel: currentLang === 'as' ? '১-ক্লিকত প্ৰত্যক্ষ প্ৰৱেশ (1-Click Fast Preview Access):' :
+                     currentLang === 'hi' ? '1-क्लिक सीधा पूर्वावलोकन (1-Click Fast Access):' :
+                     currentLang === 'bn' ? '১-ক্লিকে দ্রুত প্রবেশ (1-Click Fast Access):' :
+                     '1-Click Fast Preview Access:'
+  };
 
   // Global State (persisted/synchronized to Postgres Cloud SQL)
   const [industries, setIndustries] = useState<Industry[]>(initialIndustries);
@@ -3377,10 +3493,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
-              ডেশ্ববৰ্ডলৈ পোনপটীয়া প্ৰৱেশ (1-Click Direct Role Redirection)
+              {uiText.quickRedirectionTitle}
             </span>
             <span className="text-[10px] font-bold text-slate-400">
-              নিৰ্দিষ্ট ভূমিকা বাছক আৰু ডেশ্ববৰ্ড খোলক
+              {uiText.quickRedirectionSub}
             </span>
           </div>
 
@@ -3398,13 +3514,13 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 </span>
               </div>
               <div className="font-black text-slate-900 text-sm group-hover:text-indigo-600 transition-colors">
-                Industry HR / Owner
+                {uiText.ownerCardTitle}
               </div>
               <div className="text-[10px] text-slate-500 mt-1 leading-snug">
-                Industry HR • Apartment Owner • Shop Owner • Office
+                {uiText.ownerCardSub}
               </div>
               <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] font-extrabold text-indigo-600 flex items-center gap-1">
-                <span>প্ৰৱেশ কৰক (Enter)</span> &rarr;
+                <span>{uiText.enterBtn}</span> &rarr;
               </div>
             </button>
 
@@ -3421,13 +3537,13 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 </span>
               </div>
               <div className="font-black text-slate-900 text-sm group-hover:text-emerald-600 transition-colors">
-                Contractor & Agency
+                {uiText.agencyCardTitle}
               </div>
               <div className="text-[10px] text-slate-500 mt-1 leading-snug">
-                Labour Contractor • Security Agency
+                {uiText.agencyCardSub}
               </div>
               <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] font-extrabold text-emerald-600 flex items-center gap-1">
-                <span>প্ৰৱেশ কৰক (Enter)</span> &rarr;
+                <span>{uiText.enterBtn}</span> &rarr;
               </div>
             </button>
 
@@ -3444,13 +3560,13 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 </span>
               </div>
               <div className="font-black text-slate-900 text-sm group-hover:text-blue-600 transition-colors">
-                Labour / Shramik
+                {uiText.labourCardTitle}
               </div>
               <div className="text-[10px] text-slate-500 mt-1 leading-snug">
-                Daily Hazira • Wage Slips • EPFO/ESIC Linkage
+                {uiText.labourCardSub}
               </div>
               <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] font-extrabold text-blue-600 flex items-center gap-1">
-                <span>প্ৰৱেশ কৰক (Enter)</span> &rarr;
+                <span>{uiText.enterBtn}</span> &rarr;
               </div>
             </button>
 
@@ -3467,13 +3583,13 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 </span>
               </div>
               <div className="font-black text-slate-900 text-sm group-hover:text-amber-600 transition-colors">
-                Security Guard Gate
+                {uiText.guardCardTitle}
               </div>
               <div className="text-[10px] text-slate-500 mt-1 leading-snug">
-                Gate Duty • Gate Pass In/Out • Material Pass
+                {uiText.guardCardSub}
               </div>
               <div className="mt-3 pt-2 border-t border-slate-100 text-[10px] font-extrabold text-amber-600 flex items-center gap-1">
-                <span>প্ৰৱেশ কৰক (Enter)</span> &rarr;
+                <span>{uiText.enterBtn}</span> &rarr;
               </div>
             </button>
           </div>
@@ -3499,19 +3615,19 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-black text-white text-sm group-hover:text-indigo-300 transition-colors">
-                      ছুপাৰ এডমিন পেনেল (Super Admin Platform Panel & Census)
+                      {uiText.superAdminTitle}
                     </span>
                     <span className="text-[9px] font-bold bg-indigo-500/30 text-indigo-300 border border-indigo-500/50 px-2 py-0.5 rounded-full uppercase">
                       Live Stats & System Guide
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">
-                    🏭 {industries.length} প্ৰতিষ্ঠান (উদ্যোগ/Apt/Shop/Office) • 🏢 {contractors.length} সংস্থা (ঠিকাদাৰ/Security) • 👤 {workers.length + 2} শ্ৰমিক ও গাৰ্ড • কাৰ্য্যপ্ৰণালী নিৰ্দেশনা
+                    {uiText.superAdminSub(industries.length, contractors.length, workers.length + 2)}
                   </p>
                 </div>
               </div>
               <div className="text-xs font-black text-indigo-300 flex items-center gap-1.5 shrink-0 bg-indigo-950/80 px-3 py-1.5 rounded-xl border border-indigo-500/40 group-hover:bg-indigo-900 transition-colors">
-                <span>এডমিন পেনেল খোলক</span> &rarr;
+                <span>{uiText.openAdminBtn}</span> &rarr;
               </div>
             </button>
           </div>
@@ -3553,10 +3669,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             
             {/* Header */}
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold text-indigo-600 tracking-widest block">Unified Credentials Gateway</span>
-              <h3 className="text-base font-black text-slate-950 tracking-tight">🔒 সুৰক্ষিত লগইন আৰু পঞ্জীয়ন প্ৰণালী</h3>
+              <span className="text-[10px] uppercase font-bold text-indigo-600 tracking-widest block">{uiText.gatewayBadge}</span>
+              <h3 className="text-base font-black text-slate-950 tracking-tight">{uiText.gatewayTitle}</h3>
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Log in securely using registered credentials or create a new multi-tenant portal profile secured by password.
+                {uiText.gatewayDesc}
               </p>
             </div>
 
@@ -3793,14 +3909,14 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                     onClick={() => setAuthTab('login')}
                     className={`py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${authTab === 'login' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
                   >
-                    লগইন কৰক (Log In)
+                    {uiText.loginTab}
                   </button>
                   <button
                     type="button"
                     onClick={() => setAuthTab('register')}
                     className={`py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${authTab === 'register' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
                   >
-                    নতুন পঞ্জীয়ন কৰক (Register)
+                    {uiText.registerTab}
                   </button>
                 </div>
 
@@ -3808,7 +3924,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 {authTab === 'login' && (
                   <form onSubmit={handleCredentialsLogin} className="space-y-3">
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">মেইল ঠিকনা / ফোন নম্বৰ (Email or Mobile No)</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">{uiText.emailOrPhoneLabel}</label>
                       <input 
                         type="text"
                         required
@@ -3821,7 +3937,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
 
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">পাছৱৰ্ড (Password)</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">{uiText.passwordLabel}</label>
                         <span className="text-[9px] text-slate-400">Default is admin</span>
                       </div>
                       <input 
@@ -3843,7 +3959,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                         }}
                         className="text-[10px] font-black text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
                       >
-                        পাছৱৰ্ড পাহৰি গৈছে? (Forgot Password?)
+                        {uiText.forgotPasswordBtn}
                       </button>
                     </div>
 
@@ -3851,12 +3967,12 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                       type="submit"
                       className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-xs font-bold tracking-wider uppercase transition-all shadow-xs cursor-pointer text-center mt-1"
                     >
-                      সুৰক্ষিতভাৱে প্ৰৱেশ কৰক (Enter Secure Session)
+                      {uiText.enterSessionBtn}
                     </button>
 
                     <div className="pt-2 border-t border-slate-100 space-y-1.5">
                       <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-center">
-                        ১-ক্লিকত প্ৰত্যক্ষ প্ৰৱেশ (1-Click Fast Preview Access):
+                        {uiText.fastAccessLabel}
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <button
@@ -4214,21 +4330,55 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                       type="submit"
                       className="w-full py-2.5 rounded-lg text-xs font-black tracking-wider uppercase transition-all shadow-xs cursor-pointer text-center mt-1 bg-indigo-600 hover:bg-indigo-700 text-white"
                     >
-                      {registerRole === 'government_inspector'
-                        ? '⚖️ চৰকাৰী শ্ৰম পৰিদৰ্শক পঞ্জীয়ন সম্পন্ন কৰক (Complete Inspector Registration)'
-                        : registerRole === 'contractor'
-                        ? '🏢 লেবাৰ ঠিকাদাৰ পঞ্জীয়ন সম্পন্ন কৰক (Complete Contractor Registration)'
-                        : registerRole === 'security_agency'
-                        ? '🛡️ ছিকিউৰিটি এজেন্সি পঞ্জীয়ন সম্পন্ন কৰক (Complete Security Agency Registration)'
-                        : registerRole === 'supervisor'
-                        ? '👷 ছুপাৰভাইজাৰ পঞ্জীয়ন সম্পন্ন কৰক (Complete Supervisor Registration)'
-                        : registerRole === 'security_guard' || registerRole === 'security_guard_unarmed'
-                        ? '👮 ছিকিউৰিটি গাৰ্ড পঞ্জীয়ন সম্পন্ন কৰক (Complete Security Guard Registration)'
-                        : registerRole === 'security_supervisor'
-                        ? '👮 ছিকিউৰিটি ছুপাৰভাইজাৰ পঞ্জীয়ন সম্পন্ন কৰক (Complete Security Supervisor Registration)'
-                        : registerRole === 'unskilled_worker' || registerRole === 'worker'
-                        ? '👤 অদক্ষ শ্ৰমিক পঞ্জীয়ন সম্পন্ন কৰক (Complete Unskilled Worker Registration)'
-                        : '🏭 ইণ্ডাষ্ট্ৰী / প্ৰতিষ্ঠান পঞ্জীয়ন সম্পন্ন কৰক (Complete Owner Registration)'}
+                      {currentLang === 'en' ? (
+                        registerRole === 'government_inspector'
+                          ? '⚖️ Complete Inspector Registration'
+                          : registerRole === 'contractor'
+                          ? '🏢 Complete Labour Contractor Registration'
+                          : registerRole === 'security_agency'
+                          ? '🛡️ Complete Security Agency Registration'
+                          : registerRole === 'supervisor'
+                          ? '👷 Complete Supervisor Registration'
+                          : registerRole === 'security_guard' || registerRole === 'security_guard_unarmed'
+                          ? '👮 Complete Security Guard Registration'
+                          : registerRole === 'security_supervisor'
+                          ? '👮 Complete Security Supervisor Registration'
+                          : registerRole === 'unskilled_worker' || registerRole === 'worker'
+                          ? '👤 Complete Unskilled Worker Registration'
+                          : '🏭 Complete Enterprise / Owner Registration'
+                      ) : currentLang === 'hi' ? (
+                        registerRole === 'government_inspector'
+                          ? '⚖️ सरकारी श्रम निरीक्षक पंजीकरण पूरा करें'
+                          : registerRole === 'contractor'
+                          ? '🏢 श्रम ठेकेदार पंजीकरण पूरा करें'
+                          : registerRole === 'security_agency'
+                          ? '🛡️ सुरक्षा एजेंसी पंजीकरण पूरा करें'
+                          : registerRole === 'supervisor'
+                          ? '👷 पर्यवेक्षक पंजीकरण पूरा करें'
+                          : registerRole === 'security_guard' || registerRole === 'security_guard_unarmed'
+                          ? '👮 सुरक्षा गार्ड पंजीकरण पूरा करें'
+                          : registerRole === 'security_supervisor'
+                          ? '👮 सुरक्षा पर्यवेक्षक पंजीकरण पूरा करें'
+                          : registerRole === 'unskilled_worker' || registerRole === 'worker'
+                          ? '👤 अकुशल श्रमिक पंजीकरण पूरा करें'
+                          : '🏭 उद्योग / प्रतिष्ठान पंजीकरण पूरा करें'
+                      ) : (
+                        registerRole === 'government_inspector'
+                          ? '⚖️ চৰকাৰী শ্ৰম পৰিদৰ্শক পঞ্জীয়ন সম্পন্ন কৰক (Complete Inspector Registration)'
+                          : registerRole === 'contractor'
+                          ? '🏢 লেবাৰ ঠিকাদাৰ পঞ্জীয়ন সম্পন্ন কৰক (Complete Contractor Registration)'
+                          : registerRole === 'security_agency'
+                          ? '🛡️ ছিকিউৰিটি এজেন্সি পঞ্জীয়ন সম্পন্ন কৰক (Complete Security Agency Registration)'
+                          : registerRole === 'supervisor'
+                          ? '👷 ছুপাৰভাইজাৰ পঞ্জীয়ন সম্পন্ন কৰক (Complete Supervisor Registration)'
+                          : registerRole === 'security_guard' || registerRole === 'security_guard_unarmed'
+                          ? '👮 ছিকিউৰিটি গাৰ্ড পঞ্জীয়ন সম্পন্ন কৰক (Complete Security Guard Registration)'
+                          : registerRole === 'security_supervisor'
+                          ? '👮 ছিকিউৰিটি ছুপাৰভাইজাৰ পঞ্জীয়ন সম্পন্ন কৰক (Complete Security Supervisor Registration)'
+                          : registerRole === 'unskilled_worker' || registerRole === 'worker'
+                          ? '👤 অদক্ষ শ্ৰমিক পঞ্জীয়ন সম্পন্ন কৰক (Complete Unskilled Worker Registration)'
+                          : '🏭 ইণ্ডাষ্ট্ৰী / প্ৰতিষ্ঠান পঞ্জীয়ন সম্পন্ন কৰক (Complete Owner Registration)'
+                      )}
                     </button>
                   </form>
                 )}
@@ -4468,11 +4618,31 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               </span>
             </h3>
             <p className="text-[11px] text-slate-500">
-              {currentRole === 'industry_admin' && 'প্ৰধান নিয়োগকাৰী ডেশ্ববৰ্ড: Industry HR, Apartment Owner, Shop Owner, আৰু Office প্ৰতিষ্ঠান ব্যৱস্থাপনা।'}
-              {currentRole === 'contractor' && 'এজেন্সী ডেশ্ববৰ্ড: Labour Contractor আৰু Security Agency অনুপালন।'}
-              {currentRole === 'worker' && 'শ্ৰমিক ডেশ্ববৰ্ড: হাজিৰা, মজুৰি স্লিপ, EPFO/ESIC লিংক আৰু পোনে-পোনে কাম পোৱাৰ ব্যৱস্থা।'}
-              {currentRole === 'security_guard' && 'নিৰাপত্তাৰক্ষী ডেশ্ববৰ্ড: গেট এন্ট্ৰি/এক্সিট, ভ্ৰমণকাৰী পাছ, সামগ্ৰী চালান আৰু জৰুৰীকালীন নিৰীক্ষণ।'}
-              {currentRole === 'admin' && 'কেন্দ্ৰীয় এডমিন পেনেল: উদ্যোগ, এপাৰ্টমেণ্ট, দোকান, অফিচ, ঠিকাদাৰ, ছিকিউৰিটি সংস্থা আৰু শ্ৰমিকৰ লাইভ সংখ্যা ও কাৰ্য্যপ্ৰণালী।'}
+              {currentRole === 'industry_admin' && (
+                currentLang === 'en' ? 'Principal Employer Portal: Industry HR, Apartment Society, Shop Owner, and Office establishment compliance.' :
+                currentLang === 'hi' ? 'प्रधान नियोक्ता पोर्टल: कारखाना HR, अपार्टमेंट सोसाइटी, दुकान व कार्यालय अनुपालन।' :
+                'প্ৰধান নিয়োগকাৰী ডেশ্ববৰ্ড: Industry HR, Apartment Owner, Shop Owner, আৰু Office প্ৰতিষ্ঠান ব্যৱস্থাপনা।'
+              )}
+              {currentRole === 'contractor' && (
+                currentLang === 'en' ? 'Agency Dashboard: Labour Contractor and Security Agency (PSARA) muster roll & statutory compliance.' :
+                currentLang === 'hi' ? 'एजेंसी डैशबोर्ड: श्रम ठेकेदार और सुरक्षा एजेंसी (PSARA) मस्टर रोल व वैधानिक अनुपालन।' :
+                'এজেন্সী ডেশ্ববৰ্ড: Labour Contractor আৰু Security Agency অনুপালন।'
+              )}
+              {currentRole === 'worker' && (
+                currentLang === 'en' ? 'Worker Desk: Daily hazira attendance, wage slips, verified EPFO/ESIC identity, and direct job opportunities.' :
+                currentLang === 'hi' ? 'श्रमिक डेस्क: दैनिक हाजिरी उपस्थिति, वेतन पर्ची, सत्यापित EPFO/ESIC और प्रत्यक्ष रोजगार।' :
+                'শ্ৰমিক ডেশ্ববৰ্ড: হাজিৰা, মজুৰি স্লিপ, EPFO/ESIC লিংক আৰু পোনে-পোনে কাম পোৱাৰ ব্যৱস্থা।'
+              )}
+              {currentRole === 'security_guard' && (
+                currentLang === 'en' ? 'Security Guard Desk: Gate in/out register, visitor pass, material challan, and zero-proxy physical sentry duty.' :
+                currentLang === 'hi' ? 'सुरक्षा गार्ड डेस्क: गेट इन/आउट रजिस्टर, विजिटर पास, सामग्री चालान और संतरी ड्यूटी।' :
+                'নিৰাপত্তাৰক্ষী ডেশ্ববৰ্ড: গেট এন্ট্ৰি/এক্সিট, ভ্ৰমণকাৰী পাছ, সামগ্ৰী চালান আৰু জৰুৰীকালীন নিৰীক্ষণ।'
+              )}
+              {currentRole === 'admin' && (
+                currentLang === 'en' ? 'Central Super Admin: Real-time census of industries, apartments, shops, contractors, security agencies, and workers.' :
+                currentLang === 'hi' ? 'केंद्रीय सुपर एडमिन: उद्योग, अपार्टमेंट, दुकान, ठेकेदारों, सुरक्षा एजेंसियों और श्रमिकों का लाइव सेंसस।' :
+                'কেন্দ্ৰীয় এডমিন পেনেল: উদ্যোগ, এপাৰ্টমেণ্ট, দোকান, অফিচ, ঠিকাদাৰ, ছিকিউৰিটি সংস্থা আৰু শ্ৰমিকৰ লাইভ সংখ্যা ও কাৰ্য্যপ্ৰণালী।'
+              )}
               {currentRole === 'supervisor' && t_supervisorDesc}
               {currentRole === 'government_inspector' && t.inspectorDesc}
             </p>
