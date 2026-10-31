@@ -1714,7 +1714,7 @@ export default function PlatformAdminPanel({
 
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-1 text-xs">
               <span className="font-bold text-rose-900 block">{selectedWorkerForBlacklist.name}</span>
-              <span className="text-slate-600 block">পদবী: {selectedWorkerForBlacklist.trade} | ফোন: {selectedWorkerForBlacklist.phone}</span>
+              <span className="text-slate-600 block">পদবী: {selectedWorkerForBlacklist.sectionOrTrade || selectedWorkerForBlacklist.workerType || 'Unskilled Labor'} | ফোন: {selectedWorkerForBlacklist.phone}</span>
               <span className="text-rose-700 font-medium block">
                 সতৰ্কতা: ব্লেকলিষ্ট কৰিলে এই শ্ৰমিকে কোনো কাৰখানা বা ঠিকাদাৰৰ অধীনত কাম লাভ কৰিব নোৱাৰিব।
               </span>
@@ -1788,7 +1788,7 @@ export default function PlatformAdminPanel({
 
             <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-xs">
               <span className="font-bold text-indigo-950 block">{selectedWorkerForPF.name}</span>
-              <span className="text-slate-600">ID: {selectedWorkerForPF.id} • Trade: {selectedWorkerForPF.trade}</span>
+              <span className="text-slate-600">ID: {selectedWorkerForPF.id} • Trade: {selectedWorkerForPF.sectionOrTrade || selectedWorkerForPF.workerType || 'Unskilled'}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
@@ -1913,7 +1913,7 @@ export default function PlatformAdminPanel({
                 >
                   {workers.map(w => (
                     <option key={w.id} value={w.id}>
-                      {w.name} ({w.trade}) - Bank: {w.bankName || 'SBI'}
+                      {w.name} ({w.sectionOrTrade || w.workerType || 'Unskilled'}) - Bank: {w.bankName || 'SBI'}
                     </option>
                   ))}
                 </select>
@@ -2004,12 +2004,12 @@ export default function PlatformAdminPanel({
                     pfDeducted: pf,
                     esicDeducted: esic,
                     netPaid: net,
-                    status: 'Paid',
+                    status: 'Successful',
                     utrNumber: `UTR${Date.now().toString().slice(-8)}IN`,
                     bankName: targetWorker?.bankName || 'State Bank of India',
                     accountNumberMasked: targetWorker?.bankAccountNo ? `••${targetWorker.bankAccountNo.slice(-4)}` : '••8192',
                     paymentMode: disburseMode,
-                    disbursedAt: new Date().toISOString()
+                    paymentDate: new Date().toISOString()
                   };
                   try {
                     await fetch('/api/salary/disburse', {
@@ -2078,7 +2078,7 @@ export default function PlatformAdminPanel({
                           <option key={ind.id} value={ind.id}>{ind.name} ({ind.category})</option>
                         ))
                       : contractors.map(con => (
-                          <option key={con.id} value={con.id}>{con.name} ({con.type})</option>
+                          <option key={con.id} value={con.id}>{con.name} ({con.contractorType || 'Labour Contractor'})</option>
                         ))}
                   </select>
                 </div>
@@ -2168,11 +2168,11 @@ export default function PlatformAdminPanel({
                     month: invMonth,
                     activeWorkersCount: invWorkersCount,
                     mandaysCount: mandays,
-                    ratePerWorkerPerDay: 1,
+                    ratePerWorkerDay: 1,
                     subtotal: subtotal,
                     gstAmount: gst,
                     totalPayable: total,
-                    status: 'Issued',
+                    status: 'Generated',
                     dueDate: '10th October 2026',
                     issuedDate: new Date().toISOString()
                   };
