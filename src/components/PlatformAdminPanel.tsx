@@ -263,7 +263,7 @@ export default function PlatformAdminPanel({
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
-              <span>🛡️ শ্ৰমিকলিংক কেন্দ্ৰীয় এডমিন পেনেল</span>
+              <span>🛡️ IndustrialContractorWorkerLink কেন্দ্ৰীয় এডমিন পেনেল</span>
               <span className="text-xs font-mono text-indigo-400 font-bold bg-indigo-950/80 px-2.5 py-1 rounded-lg border border-indigo-500/40">
                 Super Admin
               </span>
@@ -1393,7 +1393,7 @@ export default function PlatformAdminPanel({
           <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-3xl p-6 shadow-sm space-y-3">
             <div className="flex items-center gap-2 text-amber-900 font-bold text-base">
               <HelpCircle className="w-5 h-5 text-amber-600" />
-              <span>শ্ৰমিকলিংক (IndustrialContractorWorkerLink) ব্যৱস্থাৰ সম্পূৰ্ণ কাৰ্য্যপ্ৰণালী (Complete System Architecture & Workflow)</span>
+              <span>IndustrialContractorWorkerLink (ICWL) ব্যৱস্থাৰ সম্পূৰ্ণ কাৰ্য্যপ্ৰণালী (Complete System Architecture & Workflow)</span>
             </div>
             <p className="text-xs text-amber-800 leading-relaxed max-w-4xl">
               এই প্ৰণালীটো উদ্যোগিক কাৰখানা, এপাৰ্টমেণ্ট ছচাইটি, বাণিজ্যিক দোকান আৰু অফিচত ঠিকাদাৰী শ্ৰমিক আৰু ছিকিউৰিটি গাৰ্ড ব্যৱস্থাপনাত হোৱা ভুৱা হাজিৰা, পিএফ/ইএছআই ফাঁকি আৰু আইনী জৰিমনা বন্ধ কৰিবলৈ নিৰ্মাণ কৰা হৈছে। তলত ইয়াৰ প্ৰতিটো কাৰ্য্যপ্ৰণালী কেনেকৈ কাম কৰে তাৰ ব্যাখ্যা দিয়া হ’ল:

@@ -11,37 +11,31 @@ import {
   Smartphone,
   LogOut,
   Factory,
-  ShieldCheck
+  ShieldCheck,
+  Home as HomeIcon
 } from 'lucide-react';
 import SaaSApp from './components/SaaSApp';
 import ArchitectureDocs from './components/ArchitectureDocs';
 import RoadmapView from './components/RoadmapView';
-import MobileSingleView from './components/MobileSingleView';
 import PlatformAdminPanel from './components/PlatformAdminPanel';
+import HomeHub from './components/HomeHub';
 import { initialIndustries, initialContractors, initialWorkers } from './mockData';
 import { AppLanguage, getStoredLanguage, setStoredLanguage, TRANSLATIONS } from './i18n';
 import { LanguageSelector } from './components/LanguageSelector';
 
 export default function App() {
-  // Pure Industry / Factory Standalone Mode: 'app' (Main Console) | 'admin' | 'architecture' | 'roadmap'
-  const [activeTab, setActiveTab] = useState<'app' | 'admin' | 'architecture' | 'roadmap'>(() => {
-    return 'app';
+  // Pure Industry / Factory Standalone Mode: 'home' (All Panels Directory Hub) | 'app' (Main Console) | 'admin' | 'architecture' | 'roadmap'
+  const [activeTab, setActiveTab] = useState<'home' | 'app' | 'admin' | 'architecture' | 'roadmap'>(() => {
+    const saved = localStorage.getItem('icwl_industry_tab') || localStorage.getItem('shramiklink_industry_tab');
+    if (saved === 'home' || saved === 'app' || saved === 'admin' || saved === 'architecture' || saved === 'roadmap') {
+      return saved as any;
+    }
+    return 'home';
   });
 
   const [currentLang, setCurrentLangState] = useState<AppLanguage>(() => getStoredLanguage());
-  const [isMobileView, setIsMobileView] = useState<boolean>(() => {
-    const saved = localStorage.getItem('icwl_mobile_mode') || localStorage.getItem('shramiklink_mobile_mode');
-    if (saved !== null) return saved === 'true';
-    return false;
-  });
 
-  const toggleMobileMode = (val: boolean) => {
-    setIsMobileView(val);
-    localStorage.setItem('icwl_mobile_mode', val ? 'true' : 'false');
-    localStorage.setItem('shramiklink_mobile_mode', val ? 'true' : 'false');
-  };
-
-  const handleTabChange = (tab: 'app' | 'admin' | 'architecture' | 'roadmap') => {
+  const handleTabChange = (tab: 'home' | 'app' | 'admin' | 'architecture' | 'roadmap') => {
     setActiveTab(tab);
     localStorage.setItem('icwl_industry_tab', tab);
     localStorage.setItem('shramiklink_industry_tab', tab);
@@ -66,6 +60,9 @@ export default function App() {
       if (localStorage.getItem('s_current_role') === 'tea_garden') {
         localStorage.setItem('s_current_role', 'industry_admin');
       }
+      // Clear legacy mobile flags so all devices automatically receive the full responsive app
+      localStorage.removeItem('icwl_mobile_mode');
+      localStorage.removeItem('shramiklink_mobile_mode');
       // If URL has ?app=bagan or ?app=hub, clean it up to keep it purely industry
       if (typeof window !== 'undefined') {
         const url = new URL(window.location.href);
@@ -81,6 +78,18 @@ export default function App() {
     const handleOpenAppTab = () => handleTabChange('app');
     window.addEventListener('open-app-tab', handleOpenAppTab);
 
+    const handleOpenHomeTab = () => handleTabChange('home');
+    window.addEventListener('shramiklink-open-home', handleOpenHomeTab);
+    window.addEventListener('icwl-open-home', handleOpenHomeTab);
+
+    const handleGlobalLogout = () => {
+      handleTabChange('home');
+      sessionStorage.removeItem('s_session_authenticated');
+      localStorage.setItem('s_is_logged_in', 'false');
+    };
+    window.addEventListener('shramiklink-logout', handleGlobalLogout);
+    window.addEventListener('icwl-logout', handleGlobalLogout);
+
     const handleSwitchTab = (e: any) => {
       if (e?.detail) handleTabChange(e.detail);
     };
@@ -90,6 +99,10 @@ export default function App() {
       window.removeEventListener('shramiklink-language-change', handleLangEvt);
       window.removeEventListener('icwl-language-change', handleLangEvt);
       window.removeEventListener('open-app-tab', handleOpenAppTab);
+      window.removeEventListener('shramiklink-open-home', handleOpenHomeTab);
+      window.removeEventListener('icwl-open-home', handleOpenHomeTab);
+      window.removeEventListener('shramiklink-logout', handleGlobalLogout);
+      window.removeEventListener('icwl-logout', handleGlobalLogout);
       window.removeEventListener('icwl-switch-tab', handleSwitchTab);
     };
   }, []);
@@ -103,6 +116,10 @@ export default function App() {
 
   // Dynamic Navigation & UI Text per selected language (Default: English)
   const navText = {
+    homeTab: currentLang === 'as' ? '🏠 মুখ্য গৃহ (Home)' :
+             currentLang === 'hi' ? '🏠 मुख्य गृह (Home)' :
+             currentLang === 'bn' ? '🏠 প্রধান হোম (Home)' :
+             '🏠 Home Portal',
     appTab: currentLang === 'as' ? '🏭 কাৰখানা ডেশ্ববৰ্ড ও চালান' :
             currentLang === 'hi' ? '🏭 कारखाना डैशबोर्ड व चालान' :
             currentLang === 'bn' ? '🏭 কারখানা ড্যাশবোর্ড ও চালান' :
@@ -137,16 +154,6 @@ export default function App() {
                    '• Unskilled Labor, Security Agencies (PSARA), Biometric Gate Entry & Compliance-Locked Billing'
   };
 
-  if (isMobileView) {
-    return (
-      <MobileSingleView
-        currentLang={currentLang}
-        onLanguageChange={handleLanguageChange}
-        onSwitchToFullDesktop={() => toggleMobileMode(false)}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen md:h-screen w-full bg-white text-slate-900 flex flex-col font-sans overflow-x-hidden md:overflow-hidden relative">
       
@@ -156,19 +163,26 @@ export default function App() {
         {/* ========================================================================= */}
         {/* STANDALONE INDUSTRY & FACTORY SAAS TOP NAVIGATION (FULLY RESPONSIVE) */}
         {/* ========================================================================= */}
-        <nav className="bg-slate-950 text-white flex flex-col sm:flex-row justify-between items-stretch sm:items-center min-h-14 shrink-0 z-40 border-b border-indigo-900/60 shadow-md px-2.5 sm:px-4 py-2 sm:py-0 gap-2 sm:gap-0">
+        <nav className="bg-slate-950 text-white flex flex-col sm:flex-row justify-between items-stretch sm:items-center min-h-14 shrink-0 z-40 border-b border-indigo-900/60 shadow-md px-2.5 sm:px-4 py-2 sm:py-0 gap-2 sm:gap-0 sticky top-0">
           
           {/* Top Row on Mobile: Brand Logo + Quick Controls */}
           <div className="flex items-center justify-between gap-2">
             {/* Brand & Logo */}
             <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900 border border-indigo-500/50 flex items-center justify-center shadow-xs overflow-hidden p-0.5">
+              <div 
+                onClick={() => handleTabChange('home')}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900 border border-indigo-500/50 flex items-center justify-center shadow-xs overflow-hidden p-0.5 cursor-pointer hover:border-indigo-400"
+                title="Go to Home Hub"
+              >
                 <img src="/ICWL.png" alt="ICWL Logo" className="w-full h-full object-contain rounded-lg" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
               </div>
-              <div className="flex flex-col">
+              <div 
+                onClick={() => handleTabChange('home')}
+                className="flex flex-col cursor-pointer"
+                title="Go to Home Hub"
+              >
                 <span className="text-xs sm:text-sm font-black tracking-tight text-white flex items-center gap-1">
-                  <span className="hidden sm:inline">IndustrialContractorWorkerLink</span>
-                  <span className="sm:hidden font-black text-indigo-300">ShramikLink</span>
+                  <span className="font-black text-white">IndustrialContractorWorkerLink</span>
                   <span className="text-indigo-400 font-bold text-[10px] sm:text-xs font-mono">(ICWL)</span>
                 </span>
                 <span className="text-[8px] sm:text-[9px] text-indigo-300/90 font-bold tracking-wider uppercase">
@@ -177,8 +191,22 @@ export default function App() {
               </div>
             </div>
 
-            {/* Quick Actions on Mobile Header */}
+            {/* Quick Actions on Mobile Header: Fixed Home Button + Login + Language */}
             <div className="flex sm:hidden items-center gap-1.5 shrink-0">
+              <button
+                id="mobile-top-home-btn"
+                onClick={() => handleTabChange('home')}
+                title="মুখ্য গৃহ (Home Hub)"
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-all ${
+                  activeTab === 'home'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700'
+                }`}
+              >
+                <HomeIcon className="h-3 w-3" />
+                <span>Home</span>
+              </button>
+
               <button
                 onClick={() => {
                   window.dispatchEvent(new CustomEvent('icwl-logout'));
@@ -202,13 +230,24 @@ export default function App() {
           {/* Dedicated Sub-Tabs (Smooth Horizontal Scroll for Mobile) */}
           <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto no-scrollbar py-0.5 sm:py-0 sm:h-full flex-1 sm:mx-3 scroll-smooth">
             <button
+              id="home-hub-btn"
+              onClick={() => handleTabChange('home')}
+              className={`flex items-center justify-center space-x-1.5 px-3 sm:px-4 py-1.5 sm:py-1.5 transition-all relative cursor-pointer whitespace-nowrap rounded-xl shrink-0 font-extrabold ${
+                activeTab === 'home'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-1 ring-indigo-400'
+                  : 'bg-slate-900/90 hover:bg-slate-800 text-indigo-300 hover:text-white border border-slate-800'
+              }`}
+              title="মুখ্য গৃহ (Home Hub)"
+            >
+              <HomeIcon className="h-4 w-4 text-white shrink-0" />
+              <span className="text-xs sm:text-sm tracking-wide">{navText.homeTab}</span>
+            </button>
+
+            {/* Hidden industry-app-btn as requested - accessible via Home Hub */}
+            <button
               id="industry-app-btn"
               onClick={() => handleTabChange('app')}
-              className={`flex items-center justify-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-0 sm:h-full transition-all relative cursor-pointer whitespace-nowrap rounded-lg sm:rounded-none shrink-0 ${
-                activeTab === 'app'
-                  ? 'text-indigo-400 font-bold bg-indigo-950/70 sm:bg-indigo-950/40'
-                  : 'text-slate-400 hover:text-white bg-slate-900/60 sm:bg-transparent'
-              }`}
+              className="hidden"
             >
               <Building2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
               <span className="text-[11px] sm:text-xs tracking-wide">{navText.appTab}</span>
@@ -280,15 +319,6 @@ export default function App() {
               <span>{navText.loginBtn}</span>
             </button>
 
-            <button
-              onClick={() => toggleMobileMode(true)}
-              title="Mobile Card View"
-              className="bg-indigo-950 hover:bg-indigo-900 border border-indigo-500/40 text-indigo-300 font-bold px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
-            >
-              <Smartphone className="h-3.5 w-3.5 text-indigo-400" />
-              <span>{navText.mobileBtn}</span>
-            </button>
-
             <LanguageSelector 
               currentLang={currentLang} 
               onLanguageChange={handleLanguageChange} 
@@ -320,9 +350,43 @@ export default function App() {
           </div>
         </div>
 
-        {/* Viewport Content with Clean White Dashboard Background */}
-        <div className="flex-1 overflow-y-auto p-2.5 sm:p-5 pb-8 space-y-4 sm:space-y-6 bg-white text-slate-900 scroll-smooth">
+        {/* Viewport Content with Clean White Dashboard Background (with extra bottom padding on mobile for fixed navigation) */}
+        <div className="flex-1 overflow-y-auto p-2.5 sm:p-5 pb-24 sm:pb-8 space-y-4 sm:space-y-6 bg-white text-slate-900 scroll-smooth">
           
+          {activeTab === 'home' && (
+            <div className="space-y-6">
+              <HomeHub
+                currentLang={currentLang}
+                industries={initialIndustries}
+                contractors={initialContractors}
+                workers={initialWorkers}
+                onNavigateToTab={(tab) => handleTabChange(tab)}
+                onNavigateToPanel={(roleKey, subCategory) => {
+                  handleTabChange('app');
+                  localStorage.setItem('s_current_role', roleKey);
+                  if (subCategory) {
+                    localStorage.setItem('s_current_subcategory', subCategory);
+                  }
+                  sessionStorage.setItem('s_session_authenticated', 'true');
+                  localStorage.setItem('s_is_logged_in', 'true');
+                  window.dispatchEvent(new CustomEvent('shramiklink-switch-role', { detail: roleKey }));
+                }}
+                onRegisterRole={(roleKey, subCategory) => {
+                  handleTabChange('app');
+                  window.dispatchEvent(new CustomEvent('icwl-open-register', { detail: { role: roleKey, subCategory } }));
+                }}
+                onContractorApplyIndustry={() => {
+                  handleTabChange('app');
+                  window.dispatchEvent(new CustomEvent('icwl-contractor-apply-industry'));
+                }}
+                onAgencyApplyApartment={() => {
+                  handleTabChange('app');
+                  window.dispatchEvent(new CustomEvent('icwl-agency-apply-apartment'));
+                }}
+              />
+            </div>
+          )}
+
           {activeTab === 'app' && (
             <div className="space-y-6">
               <SaaSApp 
@@ -382,6 +446,63 @@ export default function App() {
           </footer>
         </div>
       </main>
+
+      {/* ========================================================================= */}
+      {/* FIXED MOBILE BOTTOM NAVIGATION BAR (FIXED HOME & KEY PANELS FOR PHONES) */}
+      {/* ========================================================================= */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-md border-t border-indigo-900/60 px-3 py-1.5 flex items-center justify-around shadow-2xl safe-area-pb">
+        <button
+          id="mobile-bottom-home-btn"
+          onClick={() => handleTabChange('home')}
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'home'
+              ? 'text-indigo-400 font-bold bg-indigo-950/80 border border-indigo-500/40 shadow-xs'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <HomeIcon className="h-4 w-4 shrink-0" />
+          <span className="text-[10px] mt-0.5 font-bold">Home (গৃহ)</span>
+        </button>
+
+        <button
+          id="mobile-bottom-app-btn"
+          onClick={() => handleTabChange('app')}
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'app'
+              ? 'text-indigo-400 font-bold bg-indigo-950/80 border border-indigo-500/40 shadow-xs'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Building2 className="h-4 w-4 shrink-0" />
+          <span className="text-[10px] mt-0.5 font-bold">পেনেল</span>
+        </button>
+
+        <button
+          id="mobile-bottom-admin-btn"
+          onClick={() => handleTabChange('admin')}
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'admin'
+              ? 'text-indigo-400 font-bold bg-indigo-950/80 border border-indigo-500/40 shadow-xs'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <ShieldCheck className="h-4 w-4 shrink-0" />
+          <span className="text-[10px] mt-0.5 font-bold">এডমিন</span>
+        </button>
+
+        <button
+          id="mobile-bottom-arch-btn"
+          onClick={() => handleTabChange('architecture')}
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'architecture'
+              ? 'text-indigo-400 font-bold bg-indigo-950/80 border border-indigo-500/40 shadow-xs'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Database className="h-4 w-4 shrink-0" />
+          <span className="text-[10px] mt-0.5 font-bold">ফ্ল’চাৰ্ট</span>
+        </button>
+      </nav>
     </div>
   );
 }

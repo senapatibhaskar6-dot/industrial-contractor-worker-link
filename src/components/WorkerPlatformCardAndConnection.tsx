@@ -112,7 +112,7 @@ export default function WorkerPlatformCardAndConnection({
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                  ShramikLink Verified Card
+                  IndustrialContractorWorkerLink (ICWL) Verified Card
                 </span>
                 <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
                   <Check className="w-3 h-3" /> UIDAI সক্ৰিয়
@@ -165,7 +165,7 @@ export default function WorkerPlatformCardAndConnection({
           {/* Right Unique Platform ID & QR Box */}
           <div className="bg-slate-900/90 border-2 border-indigo-400/60 rounded-2xl p-4 sm:p-5 text-center flex flex-col items-center justify-center shrink-0 w-full sm:w-auto shadow-md">
             <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest block mb-1">
-              ইউনিক প্লেটফৰ্ম আইডি (ShramikLink ID)
+              ইউনিক প্লেটফৰ্ম আইডি (ICWL Platform ID)
             </span>
             
             <div className="flex items-center gap-2 bg-indigo-950 px-4 py-2 rounded-xl border border-indigo-500/50 my-1">

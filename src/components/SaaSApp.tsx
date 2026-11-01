@@ -44,7 +44,8 @@ import {
   CheckCircle2,
   Scale,
   FolderArchive,
-  FolderCheck
+  FolderCheck,
+  Home as HomeIcon
 } from 'lucide-react';
 import { 
   Industry, 
@@ -1521,7 +1522,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       setIsLoggedIn(false);
       sessionStorage.removeItem('s_session_authenticated');
       localStorage.setItem('s_is_logged_in', 'false');
-      showNotice('Logged out of secure CLRA compliance session.', 'info');
+      // Always return to HOME screen upon logout
+      window.dispatchEvent(new CustomEvent('icwl-switch-tab', { detail: 'home' }));
+      window.dispatchEvent(new CustomEvent('shramiklink-open-home'));
+      showNotice('Logged out of secure session. Returned to Home Hub.', 'info');
     }
   };
 
@@ -1602,6 +1606,76 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [selectedContractorMonth, setSelectedContractorMonth] = useState<string>('2026-09');
   const [activeSummaryIndustryId, setActiveSummaryIndustryId] = useState<string | null>(null);
   const [industryTab, setIndustryTab] = useState<'allotments' | 'requisitions' | 'timekeeper' | 'billing' | 'clra' | 'supervisor'>('allotments');
+
+  // React to cross-portal navigation events from Home Hub
+  useEffect(() => {
+    const handleOpenRegisterEvent = (e: any) => {
+      const detail = e.detail || {};
+      const { role, subCategory } = detail;
+      setIsLoggedIn(false);
+      setAuthTab('register');
+      sessionStorage.removeItem('s_session_authenticated');
+      localStorage.setItem('s_is_logged_in', 'false');
+
+      if (role === 'contractor') {
+        if (subCategory === 'Security Agency') {
+          setRegisterRole('security_agency');
+        } else {
+          setRegisterRole('contractor');
+        }
+      } else if (role === 'industry_admin') {
+        if (subCategory === 'Apartment Owner') setRegisterRole('apartment_owner');
+        else if (subCategory === 'Shop Owner') setRegisterRole('shop_owner');
+        else if (subCategory === 'Office') setRegisterRole('office');
+        else setRegisterRole('industry_admin');
+      } else if (role === 'worker') {
+        setRegisterRole('unskilled_worker');
+      } else if (role === 'security_guard') {
+        setRegisterRole('security_guard');
+      } else if (role === 'supervisor') {
+        setRegisterRole('supervisor');
+      } else if (role === 'government_inspector') {
+        setRegisterRole('government_inspector');
+      } else if (role) {
+        setRegisterRole(role);
+      }
+      showNotice(`পঞ্জীয়ন ফৰ্ম খোল খোৱা হ’ল: ${subCategory || role || 'New Registration'} সাজু হৈছে।`, 'info');
+    };
+
+    const handleContractorApplyIndustry = () => {
+      const con = contractors.find(c => c.contractorType !== 'Security Agency') || contractors[0];
+      setSelectedContractorId(con.id);
+      setCurrentRole('contractor');
+      setContractorRoleFilter('Labour Contractor');
+      setContractorTab('client_connections');
+      setIsLoggedIn(true);
+      sessionStorage.setItem('s_session_authenticated', 'true');
+      localStorage.setItem('s_is_logged_in', 'true');
+      showNotice(`🏢 ${con.name} (শ্ৰম ঠিকাদাৰ): কাৰখানা/উদ্যোগলৈ শ্ৰমিক যোগানৰ আবেদন প্ৰেৰণ খোল খোৱা হ’ল।`, 'success');
+    };
+
+    const handleAgencyApplyApartment = () => {
+      const secAgency = contractors.find(c => c.contractorType === 'Security Agency') || contractors[1] || contractors[0];
+      setSelectedContractorId(secAgency.id);
+      setCurrentRole('contractor');
+      setContractorRoleFilter('Security Agency');
+      setContractorTab('client_connections');
+      setIsLoggedIn(true);
+      sessionStorage.setItem('s_session_authenticated', 'true');
+      localStorage.setItem('s_is_logged_in', 'true');
+      showNotice(`🛡️ ${secAgency.name} (ছিকিউৰিটি সংস্থা): এপাৰ্টমেণ্ট ছচাইটি, দোকান আৰু অফিচলৈ নিৰাপত্তা প্ৰস্তাৱ প্ৰেৰণ খোল খোৱা হ’ল।`, 'success');
+    };
+
+    window.addEventListener('icwl-open-register', handleOpenRegisterEvent);
+    window.addEventListener('icwl-contractor-apply-industry', handleContractorApplyIndustry);
+    window.addEventListener('icwl-agency-apply-apartment', handleAgencyApplyApartment);
+
+    return () => {
+      window.removeEventListener('icwl-open-register', handleOpenRegisterEvent);
+      window.removeEventListener('icwl-contractor-apply-industry', handleContractorApplyIndustry);
+      window.removeEventListener('icwl-agency-apply-apartment', handleAgencyApplyApartment);
+    };
+  }, [contractors, industries]);
 
   // Interactive Form Dialog states
   const [isRequirementModalOpen, setIsRequirementModalOpen] = useState(false);
@@ -3503,11 +3577,24 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               </span>
               <button
                 type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('icwl-switch-tab', { detail: 'home' }));
+                  window.dispatchEvent(new CustomEvent('shramiklink-open-home'));
+                }}
+                className="text-[10px] font-bold text-slate-800 hover:text-indigo-900 bg-white hover:bg-slate-100 border border-slate-300 px-2.5 py-1 rounded-xl flex items-center gap-1 cursor-pointer transition-all shadow-2xs active:scale-95"
+                title="সকলো পেনেলৰ Home চাওক (Browse All Panels)"
+              >
+                <HomeIcon className="w-3 h-3 text-indigo-600" />
+                <span>🏠 {currentLang === 'as' ? 'Home (সকলো পেনেল)' : 'Home (All Panels)'}</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent('icwl-switch-tab', { detail: 'architecture' }))}
                 className="text-[10px] font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-xl flex items-center gap-1 cursor-pointer transition-all shadow-2xs active:scale-95"
                 title="গ্ৰাহক আৰু আইনী কাৰ্য্যপ্ৰণালী ফ্ল’চাৰ্ট চাওক (View Customer Workflow Flowchart)"
               >
-                <span>📊 কাৰ্য্যপ্ৰণালী ফ্ল’চাৰ্ট (Workflow Guide)</span> &rarr;
+                <span>📊 {currentLang === 'as' ? 'ফ্ল’চাৰ্ট গাইড' : 'Workflow Guide'}</span> &rarr;
               </button>
             </div>
           </div>
@@ -4711,6 +4798,18 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
           >
             <RefreshCw className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{t.restoreData}</span>
+          </button>
+          
+          <button 
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('icwl-switch-tab', { detail: 'home' }));
+              window.dispatchEvent(new CustomEvent('shramiklink-open-home'));
+            }}
+            title="Go to Home Hub (All Panels Directory)"
+            className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 border border-indigo-200 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+          >
+            <HomeIcon className="h-3.5 w-3.5 text-indigo-600" />
+            <span>{currentLang === 'as' ? '🏠 Home লৈ যাওক' : '🏠 Back to Home'}</span>
           </button>
           
           <button 
