@@ -81,10 +81,16 @@ export default function App() {
     const handleOpenAppTab = () => handleTabChange('app');
     window.addEventListener('open-app-tab', handleOpenAppTab);
 
+    const handleSwitchTab = (e: any) => {
+      if (e?.detail) handleTabChange(e.detail);
+    };
+    window.addEventListener('icwl-switch-tab', handleSwitchTab);
+
     return () => {
       window.removeEventListener('shramiklink-language-change', handleLangEvt);
       window.removeEventListener('icwl-language-change', handleLangEvt);
       window.removeEventListener('open-app-tab', handleOpenAppTab);
+      window.removeEventListener('icwl-switch-tab', handleSwitchTab);
     };
   }, []);
 

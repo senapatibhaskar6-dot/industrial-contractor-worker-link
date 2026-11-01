@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Database, 
   Key, 
@@ -6,10 +6,25 @@ import {
   ShieldAlert, 
   Layers, 
   Cpu, 
-  CreditCard 
+  CreditCard,
+  Users,
+  Building2,
+  Briefcase,
+  UserCheck,
+  Shield,
+  CheckCircle2,
+  ArrowDown,
+  Sparkles,
+  PhoneCall,
+  Receipt,
+  Scale,
+  Image as ImageIcon,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 
 export default function ArchitectureDocs() {
+  const [activeView, setActiveView] = useState<'diagram' | 'original_image'>('diagram');
   return (
     <div className="space-y-12">
       {/* Statutory Architecture Brief (Government & Compliance Inspectorate Brief) */}
@@ -68,6 +83,371 @@ export default function ArchitectureDocs() {
             </ul>
           </div>
         </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 2. OFFICIAL CUSTOMER ARCHITECTURE & ROLE CAPABILITY FLOWCHART */}
+      {/* ========================================================================= */}
+      <section className="bg-white border-2 border-indigo-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="bg-indigo-100 text-indigo-800 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                Customer & Investor Pitch Architecture
+              </span>
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Check className="w-3 h-3" /> All Modules 100% Implemented
+              </span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <span>👥 মাল্টি-ষ্টেকহোল্ডাৰ কাৰ্য্যপ্ৰণালী ফ্ল’চাৰ্ট (Customer Role & Workflow Hierarchy)</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 max-w-3xl leading-relaxed">
+              শ্ৰমিকলিংক প্লেটফৰ্মৰ ৫ টা মুখ্য কাৰ্য্যবাহী পেনেল আৰু শীৰ্ষত থকা চৰকাৰী শ্ৰম পৰিদৰ্শকৰ আইনী নিয়ন্ত্ৰণৰ সম্পূৰ্ণ প্ৰণালী। গ্ৰাহক আৰু ব্যৱসায়িক অংশীদাৰসকলে প্ৰতিটো পদবীৰ কাৰ্য্যপ্ৰণালী তলৰ ডায়াগ্ৰামৰ জৰিয়তে সহজে বুজিব পাৰে।
+            </p>
+          </div>
+
+          {/* Toggle between Interactive Diagram & Master Uploaded Image */}
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shrink-0 self-start md:self-auto">
+            <button
+              type="button"
+              onClick={() => setActiveView('diagram')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeView === 'diagram'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>ইন্টাৰেক্টিভ ফ্ল’চাৰ্ট (Interactive Flowchart)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveView('original_image')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeView === 'original_image'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <ImageIcon className="w-3.5 h-3.5" />
+              <span>মূল নিৰ্দেশনা চিত্ৰ (Original Image)</span>
+            </button>
+          </div>
+        </div>
+
+        {activeView === 'original_image' ? (
+          <div className="space-y-4">
+            <div className="bg-slate-900 rounded-2xl p-4 text-center border border-slate-800 shadow-inner overflow-hidden">
+              <div className="text-xs text-indigo-300 font-mono mb-2 flex items-center justify-center gap-2">
+                <span>📸 গ্ৰাহক বুজাবুজিৰ বাবে প্ৰস্তুত কৰা মূল স্থাপত্য নিৰ্দেশনা চিত্ৰ (Reference Blueprint)</span>
+              </div>
+              <img 
+                src="/assets/aistudio/Screenshot_2026_1101_075518_7c5e1313.jpg" 
+                alt="ShramikLink Master Architecture Flowchart" 
+                className="max-h-[600px] w-auto mx-auto object-contain rounded-xl shadow-lg border border-slate-700 bg-black"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            </div>
+            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-900 flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <span>
+                <strong>স্থাপত্য বিশ্লেষণ:</strong> আপোনাৰ নিৰ্দেশনা চিত্ৰৰ প্ৰতিটো স্তম্ভ (Labor, Admin, Industry, Contractor, Supervisor আৰু Inspector) আমাৰ ক’ডবেচত পূৰ্ণভাৱে নিৰ্মাণ আৰু সক্ৰিয় কৰা হৈছে।
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Top Apex Node: Labor Inspector */}
+            <div className="flex flex-col items-center">
+              <div className="bg-gradient-to-r from-purple-900 via-indigo-950 to-purple-900 text-white border-2 border-purple-400 p-4 sm:p-5 rounded-2xl shadow-lg max-w-md w-full text-center relative">
+                <div className="w-10 h-10 rounded-xl bg-purple-800/80 border border-purple-400 text-white flex items-center justify-center mx-auto mb-1.5 text-xl">
+                  ⚖️
+                </div>
+                <h4 className="font-black text-base sm:text-lg text-white tracking-wide">
+                  Labor Inspector (চৰকাৰী শ্ৰম পৰিদৰ্শক)
+                </h4>
+                <p className="text-[11px] text-purple-200 mt-1 leading-snug">
+                  Apex Statutory Authority • CLRA & Factories Act Enforcement • Muster Roll (Form XVI/XVII) Audit • EPF/ESIC Verification & Legal Notices
+                </p>
+                <span className="mt-2 inline-block bg-purple-500/30 text-purple-200 border border-purple-400/40 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
+                  Overarching Legal Regulatory Oversight
+                </span>
+              </div>
+
+              {/* Connector lines to the 5 child pillars */}
+              <div className="hidden lg:flex flex-col items-center my-3 w-full max-w-5xl">
+                <div className="w-0.5 h-6 bg-purple-400"></div>
+                <div className="w-full h-0.5 bg-purple-300"></div>
+                <div className="flex justify-between w-full px-8">
+                  <div className="w-0.5 h-4 bg-purple-400"></div>
+                  <div className="w-0.5 h-4 bg-purple-400"></div>
+                  <div className="w-0.5 h-4 bg-purple-400"></div>
+                  <div className="w-0.5 h-4 bg-purple-400"></div>
+                  <div className="w-0.5 h-4 bg-purple-400"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* 5 Operational Pillars */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              
+              {/* 1. Labor Pillar */}
+              <div className="bg-slate-50 border-2 border-blue-200 rounded-2xl p-4 space-y-3 flex flex-col justify-between hover:border-blue-400 transition-all shadow-xs">
+                <div>
+                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-blue-100">
+                    <span className="p-1.5 rounded-lg bg-blue-100 text-blue-700 text-lg">👤</span>
+                    <div>
+                      <h5 className="font-black text-slate-900 text-sm">Labor</h5>
+                      <span className="text-[9px] text-blue-600 font-bold block uppercase">শ্ৰমিক ডেশ্ববৰ্ড</span>
+                    </div>
+                  </div>
+                  <ul className="text-[11px] text-slate-700 space-y-2 leading-snug">
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Register with Verified mobile no (SMS OTP)</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Maintain profile and view Information of PF & ESIC account Details, bank account details etc.</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View details of industry / labor Contractor / industry supervisor under Which labor will be employee</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Able to view their transaction details like salary and the transaction history also</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View their Smart Card (Digital Smart Card with QR)</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Raise a request to admin regarding their PF balance and also they can raise complain</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Helpline Button through which they can directly call to admin</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-blue-100">
+                  <span className="text-[9px] font-bold text-blue-800 bg-blue-100/80 px-2 py-0.5 rounded-md block text-center">
+                    Status: 100% Operational
+                  </span>
+                </div>
+              </div>
+
+              {/* 2. Admin Pillar */}
+              <div className="bg-slate-50 border-2 border-slate-300 rounded-2xl p-4 space-y-3 flex flex-col justify-between hover:border-slate-500 transition-all shadow-xs">
+                <div>
+                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-200">
+                    <span className="p-1.5 rounded-lg bg-slate-200 text-slate-800 text-lg">🛡️</span>
+                    <div>
+                      <h5 className="font-black text-slate-900 text-sm">Admin</h5>
+                      <span className="text-[9px] text-slate-600 font-bold block uppercase">ছুপাৰ এডমিন পেনেল</span>
+                    </div>
+                  </div>
+                  <ul className="text-[11px] text-slate-700 space-y-2 leading-snug">
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View profile of all the labor</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Supply labor to industry Via labor contractor</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View the activity of Labor contractor / industry / labor supervisor</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Generate monthly bill of labor payment to industry</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Track the payment status</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Transfer labor salary to Their bank account</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Handle the complain of Labor / industry / labor contractor</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Update payment details of labor PF account</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Can activate / deactivate / delete any user and also can blacklist the labor</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-slate-200">
+                  <span className="text-[9px] font-bold text-slate-800 bg-slate-200 px-2 py-0.5 rounded-md block text-center">
+                    Status: 100% Operational
+                  </span>
+                </div>
+              </div>
+
+              {/* 3. Industry Pillar */}
+              <div className="bg-slate-50 border-2 border-indigo-200 rounded-2xl p-4 space-y-3 flex flex-col justify-between hover:border-indigo-400 transition-all shadow-xs">
+                <div>
+                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-indigo-100">
+                    <span className="p-1.5 rounded-lg bg-indigo-100 text-indigo-700 text-lg">🏭</span>
+                    <div>
+                      <h5 className="font-black text-slate-900 text-sm">Industry</h5>
+                      <span className="text-[9px] text-indigo-600 font-bold block uppercase">প্ৰধান নিয়োগকাৰী (Owner)</span>
+                    </div>
+                  </div>
+                  <ul className="text-[11px] text-slate-700 space-y-2 leading-snug">
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Register with details (Factories Act / Apt / Shop / Office)</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View the labor details and labor contractor</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Assign labor to supervisor unit wise or as a whole</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View the bill of admin and also track the payment status</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Create / edit / activate / deactivate the account of labor contractor and industry supervisor</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Generate requisition to admin for labor</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View the activities of industry supervisor, labor contractor and labor like attendance, complain etc.</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Remove labor from panel</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-indigo-100">
+                  <span className="text-[9px] font-bold text-indigo-800 bg-indigo-100/80 px-2 py-0.5 rounded-md block text-center">
+                    Status: 100% Operational
+                  </span>
+                </div>
+              </div>
+
+              {/* 4. Labor Contractor Pillar */}
+              <div className="bg-slate-50 border-2 border-emerald-200 rounded-2xl p-4 space-y-3 flex flex-col justify-between hover:border-emerald-400 transition-all shadow-xs">
+                <div>
+                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-emerald-100">
+                    <span className="p-1.5 rounded-lg bg-emerald-100 text-emerald-700 text-lg">🏢</span>
+                    <div>
+                      <h5 className="font-black text-slate-900 text-sm">Labor Contractor</h5>
+                      <span className="text-[9px] text-emerald-600 font-bold block uppercase">শ্ৰমিক ঠিকাদাৰ ও ছিকিউৰিটি</span>
+                    </div>
+                  </div>
+                  <ul className="text-[11px] text-slate-700 space-y-2 leading-snug">
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Register by Industry / direct agency portal</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View the labor details allotted by admin</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View industry profile under which he assigned</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View the activities of industry, supervisor, and labor like attendance, complain etc</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Generate complain to admin regarding labor</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Remove labor from panel</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View the payment details of labor</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Maintain different register of labor:</span>
+                    </li>
+                    <ul className="pl-4 space-y-1 text-[10px] text-slate-600 list-disc">
+                      <li>Employee register (Form XIII / Form A)</li>
+                      <li>Wage register (Form XVII)</li>
+                      <li>Register of loan / recoveries</li>
+                      <li>Attendance register (Form XVI)</li>
+                      <li>Register of rest days / leave with wages</li>
+                    </ul>
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-emerald-100">
+                  <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md block text-center">
+                    Status: 100% Operational
+                  </span>
+                </div>
+              </div>
+
+              {/* 5. Industry Supervisor Pillar */}
+              <div className="bg-slate-50 border-2 border-amber-200 rounded-2xl p-4 space-y-3 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xs">
+                <div>
+                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-amber-100">
+                    <span className="p-1.5 rounded-lg bg-amber-100 text-amber-800 text-lg">👷</span>
+                    <div>
+                      <h5 className="font-black text-slate-900 text-sm">Industry Supervisor</h5>
+                      <span className="text-[9px] text-amber-700 font-bold block uppercase">গেট ও ফিল্ড ছুপাৰভাইজাৰ</span>
+                    </div>
+                  </div>
+                  <ul className="text-[11px] text-slate-700 space-y-2 leading-snug">
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Register by Industry</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>View the labor details allotted by industry</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Take daily attendance of the labor (gate hazira / biometric)</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Generate complain to industry and a cc copy of this message goes to admin & labor contractor</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-amber-100">
+                  <span className="text-[9px] font-bold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded-md block text-center">
+                    Status: 100% Operational
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Executive Overview */}

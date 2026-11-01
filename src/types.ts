@@ -50,6 +50,8 @@ export interface Worker {
   onboardingVerified: boolean;
   onboardingDate: string;
   assignedSupervisorId?: string;
+  assignedSupervisorName?: string;
+  assignedIndustryName?: string;
 }
 
 export interface IndustryContractorConnection {

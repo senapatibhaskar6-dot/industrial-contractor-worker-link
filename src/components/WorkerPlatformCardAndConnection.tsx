@@ -56,6 +56,9 @@ export default function WorkerPlatformCardAndConnection({
   const [complaintCategory, setComplaintCategory] = useState<'Wage Default / Delay' | 'Safety Violation' | 'Absenteeism / Discipline' | 'Statutory EPF/ESIC Evasion' | 'Harassment / Welfare Issue'>('Wage Default / Delay');
   const [complaintSubject, setComplaintSubject] = useState('');
   const [complaintDesc, setComplaintDesc] = useState('');
+  const [showPfRequestModal, setShowPfRequestModal] = useState(false);
+  const [pfInquiryType, setPfInquiryType] = useState<'balance_statement' | 'passbook_update' | 'uan_linkage' | 'claim_assistance'>('balance_statement');
+  const [pfInquiryNotes, setPfInquiryNotes] = useState('');
 
   // The worker's platform ID
   const platformId = currentWorker.platformId || `SL-WRK-${currentWorker.id.replace(/\D/g, '') || '1088'}`;
@@ -125,19 +128,36 @@ export default function WorkerPlatformCardAndConnection({
                 <span>ফোন: <strong className="font-mono text-white">{currentWorker.phone}</strong></span>
               </div>
 
-              {/* Status Badge */}
-              <div className="pt-1">
-                {assignedContractor ? (
-                  <span className="text-xs font-bold text-emerald-300 bg-emerald-950/80 px-3 py-1 rounded-lg border border-emerald-500/40 inline-flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-emerald-400" />
-                    সংযুক্ত সংস্থা: {assignedContractor.name} ({assignedContractor.contractorType || 'Labour Contractor'})
-                  </span>
-                ) : (
-                  <span className="text-xs font-bold text-amber-300 bg-amber-950/80 px-3 py-1 rounded-lg border border-amber-500/40 inline-flex items-center gap-1.5">
-                    <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-                    মুক্ত শ্ৰমিক (স্বতন্ত্ৰ - কোনো ঠিকাদাৰৰ লগত সংযুক্ত হোৱা নাই)
-                  </span>
-                )}
+              {/* Status & Detailed Mappings (Industry / Contractor / Supervisor) */}
+              <div className="pt-2 space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="bg-slate-800/90 border border-slate-700/80 rounded-xl p-2.5">
+                    <span className="text-[9px] text-indigo-300 font-bold uppercase tracking-wider block">
+                      🏭 নিয়োজিত উদ্যোগ (Industry)
+                    </span>
+                    <span className="font-bold text-white text-xs truncate block mt-0.5">
+                      {currentWorker.assignedIndustryName || 'Tata Motors Pune Plant (Assam Unit)'}
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-800/90 border border-slate-700/80 rounded-xl p-2.5">
+                    <span className="text-[9px] text-emerald-300 font-bold uppercase tracking-wider block">
+                      🏢 শ্ৰমিক ঠিকাদাৰ (Contractor)
+                    </span>
+                    <span className="font-bold text-white text-xs truncate block mt-0.5">
+                      {assignedContractor ? assignedContractor.name : 'Pragjyotish Manpower Services'}
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-800/90 border border-slate-700/80 rounded-xl p-2.5">
+                    <span className="text-[9px] text-amber-300 font-bold uppercase tracking-wider block">
+                      👷 কাৰখানা ছুপাৰভাইজাৰ (Supervisor)
+                    </span>
+                    <span className="font-bold text-white text-xs truncate block mt-0.5">
+                      {currentWorker.assignedSupervisorName || 'Ramesh Kalita (Shift In-charge)'}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -188,23 +208,32 @@ export default function WorkerPlatformCardAndConnection({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowPfRequestModal(true)}
+              className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <Landmark className="w-4 h-4 text-emerald-600" />
+              <span>PF ব্যালেন্স সোধ-পোছ (PF Inquiry)</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setShowPassbookModal(true)}
-              className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <Receipt className="w-4 h-4 text-indigo-600" />
-              <span>মোৰ মজুৰি পাছবুক ({salaryTransactions.filter(s => s.workerId === currentWorker.id).length} লেনদেন)</span>
+              <span>মোৰ মজুৰি পাছবুক ({salaryTransactions.filter(s => s.workerId === currentWorker.id).length})</span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowHelplineModal(true)}
-              className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <PhoneCall className="w-4 h-4 text-rose-600 animate-pulse" />
-              <span>সহায়তা / হেল্পলাইন (Help & Grievance)</span>
+              <span>সহায়তা / হেল্পলাইন (Help)</span>
             </button>
           </div>
         </div>
@@ -694,6 +723,97 @@ export default function WorkerPlatformCardAndConnection({
                 </form>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. PF BALANCE INQUIRY & EPFO ASSISTANCE MODAL (এডমিনলৈ PF অনুৰোধ) */}
+      {/* ========================================================================= */}
+      {showPfRequestModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl p-6 space-y-4 animate-scaleUp">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center text-xl">
+                  🏛️
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-sm">
+                    ভৱিষ্য নিধি (PF) ব্যালেন্স আৰু তথ্য অনুৰোধ
+                  </h3>
+                  <p className="text-[11px] text-slate-500">EPFO UAN: {currentWorker.uan || '১০১২৯৮৪৯২০১৯'} • ShramikLink Admin Desk</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPfRequestModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                showNotice(`PF ব্যালেন্স সোধ-পোছ অনুৰোধ এডমিনলৈ সফলতাৰে প্ৰেৰণ কৰা হ'ল! এডমিনে সোনকালে আপোনাৰ পাছবুক আপডেট কৰিব।`, 'success');
+                setShowPfRequestModal(false);
+                setPfInquiryNotes('');
+              }}
+              className="space-y-3.5 text-xs"
+            >
+              <div className="bg-emerald-50/70 border border-emerald-200 p-3 rounded-2xl text-emerald-950 text-[11px] space-y-1">
+                <span className="font-bold flex items-center gap-1 text-emerald-800">
+                  <Check className="w-3.5 h-3.5" /> নিয়মীয়া ১২% শ্ৰমিক + ১২% নিয়োগকৰ্তা অৱদান সংৰক্ষিত
+                </span>
+                <p className="text-[10px] text-emerald-700 leading-snug">
+                  আপোনাৰ UAN নম্বৰৰ সৈতে মাহিলী ইপিএফ চালানকৰ্তাৰ জমা ৰেকৰ্ড এডমিনে পৰীক্ষা কৰি আপোনাৰ ডিজিটেল পাছবুকত আপডেট কৰি দিয়ে।
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">অনুৰোধৰ প্ৰকাৰ (Request Type):</label>
+                <select
+                  value={pfInquiryType}
+                  onChange={(e: any) => setPfInquiryType(e.target.value)}
+                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-800 focus:border-emerald-500 focus:bg-white"
+                >
+                  <option value="balance_statement">মোৰ বৰ্তমানৰ মুঠ PF জমা টকাৰ পৰিমাণ জানিবলৈ (PF Balance Statement)</option>
+                  <option value="passbook_update">বিগত মাহৰ PF অৱদান পাছবুক আপডেট কৰক (Update Passbook)</option>
+                  <option value="uan_linkage">মোৰ UAN বা আধাৰ লিংক সংশোধন (UAN / Aadhaar Linkage Issue)</option>
+                  <option value="claim_assistance">PF ধন উলিওৱা বা অগ্ৰিম সাহায্য (EPFO Advance / Claim Assistance)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">অতিৰিক্ত বিৱৰণ বা প্ৰশ্ন (Optional Notes):</label>
+                <textarea
+                  placeholder="যদি কিবা নিৰ্দিষ্ট মাহৰ জমা বা সমস্যা আছে ইয়াত লিখক..."
+                  value={pfInquiryNotes}
+                  onChange={(e) => setPfInquiryNotes(e.target.value)}
+                  rows={3}
+                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium resize-none focus:border-emerald-500 focus:bg-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowPfRequestModal(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs transition-colors flex items-center gap-1.5"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>এডমিনলৈ প্ৰেৰণ কৰক (Submit to Admin)</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -3497,9 +3497,19 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
               {uiText.quickRedirectionTitle}
             </span>
-            <span className="text-[10px] font-bold text-slate-400">
-              {uiText.quickRedirectionSub}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-slate-400 hidden sm:inline">
+                {uiText.quickRedirectionSub}
+              </span>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('icwl-switch-tab', { detail: 'architecture' }))}
+                className="text-[10px] font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-xl flex items-center gap-1 cursor-pointer transition-all shadow-2xs active:scale-95"
+                title="গ্ৰাহক আৰু আইনী কাৰ্য্যপ্ৰণালী ফ্ল’চাৰ্ট চাওক (View Customer Workflow Flowchart)"
+              >
+                <span>📊 কাৰ্য্যপ্ৰণালী ফ্ল’চাৰ্ট (Workflow Guide)</span> &rarr;
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
