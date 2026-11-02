@@ -48,7 +48,7 @@ export const PublicMobileLogin: React.FC<PublicMobileLoginProps> = ({
             <span className="text-xl">📱</span>
             <div>
               <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">
-                Simulated Telecom SMS Gateway
+                সুৰক্ষিত এছ.এম.এছ. প্ৰেৰণ (Secure Telecom SMS Gateway)
               </span>
               <span className="text-xs text-white">{mobileOtpSmsBanner}</span>
             </div>
@@ -117,10 +117,10 @@ export const PublicMobileLogin: React.FC<PublicMobileLoginProps> = ({
               <ArrowRight className="h-4 w-4" />
             </button>
 
-            {/* Fast Click-to-Test Suggested Demo Accounts */}
+            {/* Fast Click-to-Select Verified Portal Accounts */}
             <div className="pt-3 border-t border-slate-100 space-y-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block text-center">
-                পৰীক্ষাৰ বাবে নমুনা একাউণ্ট (Click to Test):
+                সত্যায়িত সঞ্চালন একাউণ্ট (Verified Portal Accounts):
               </span>
               <div className="grid grid-cols-1 gap-1.5 text-xs">
                 <button

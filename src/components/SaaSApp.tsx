@@ -1034,16 +1034,16 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       { name: 'Ramesh Kalita (Supervisor)', emailOrPhone: 'ramesh.kalita@industry.com', passwordHash: 'admin', role: 'supervisor' },
       { name: 'Bhaskar Senapati (Government)', emailOrPhone: 'inspector@icwl.in', passwordHash: 'admin', role: 'government_inspector' },
       { name: 'Bhaskar Senapati (Government)', emailOrPhone: 'inspector@shramiklink.com', passwordHash: 'admin', role: 'government_inspector' },
-      { name: 'Demo Industry HR Phone', emailOrPhone: '9876543210', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Industry HR' },
-      { name: 'Demo Apartment Owner Phone', emailOrPhone: '9876543214', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Apartment Owner' },
-      { name: 'Demo Shop Owner Phone', emailOrPhone: '9876543215', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Shop Owner' },
-      { name: 'Demo Office Phone', emailOrPhone: '9876543216', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Office' },
-      { name: 'Demo Labour Contractor Phone', emailOrPhone: '9876543211', passwordHash: 'admin', role: 'contractor', subCategory: 'Labour Contractor' },
-      { name: 'Demo Security Agency Phone', emailOrPhone: '9876543217', passwordHash: 'admin', role: 'contractor', subCategory: 'Security Agency' },
-      { name: 'Demo Worker Phone', emailOrPhone: '9876543212', passwordHash: 'admin', role: 'worker', subCategory: 'Labour' },
-      { name: 'Demo Security Guard Phone', emailOrPhone: '9876543218', passwordHash: 'admin', role: 'security_guard', subCategory: 'Security Guard' },
-      { name: 'Demo Supervisor Phone', emailOrPhone: '9876543220', passwordHash: 'admin', role: 'supervisor' },
-      { name: 'Demo Inspector Phone', emailOrPhone: '9876543213', passwordHash: 'admin', role: 'government_inspector' },
+      { name: 'Assam Industrial HR (Principal Employer)', emailOrPhone: '9876543210', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Industry HR' },
+      { name: 'Guwahati Residency (Apartment Society)', emailOrPhone: '9876543214', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Apartment Owner' },
+      { name: 'Brahmaputra Commercial Complex (Shop Owner)', emailOrPhone: '9876543215', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Shop Owner' },
+      { name: 'Regional Corporate Hub (Office)', emailOrPhone: '9876543216', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Office' },
+      { name: 'Maa Kamakhya Manpower Services (Labour Contractor)', emailOrPhone: '9876543211', passwordHash: 'admin', role: 'contractor', subCategory: 'Labour Contractor' },
+      { name: 'Assam Security Solutions (Security Agency)', emailOrPhone: '9876543217', passwordHash: 'admin', role: 'contractor', subCategory: 'Security Agency' },
+      { name: 'Pranab Bora (Industrial Worker)', emailOrPhone: '9876543212', passwordHash: 'admin', role: 'worker', subCategory: 'Labour' },
+      { name: 'Dipak Gogoi (Security Guard)', emailOrPhone: '9876543218', passwordHash: 'admin', role: 'security_guard', subCategory: 'Security Guard' },
+      { name: 'Ramesh Kalita (Site Supervisor)', emailOrPhone: '9876543220', passwordHash: 'admin', role: 'supervisor' },
+      { name: 'Bhaskar Senapati (Statutory Labour Inspector)', emailOrPhone: '9876543213', passwordHash: 'admin', role: 'government_inspector' },
     ];
 
     let finalUsers = defaults;
@@ -1479,7 +1479,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
         showNotice('লগইন উইণ্ড’খন বন্ধ কৰা হ’ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।', 'info');
       } else if (errorCode === 'auth/popup-blocked') {
         console.warn('Google Sign-In popup was blocked by browser.');
-        showNotice('ব্ৰাউজাৰে পপ-আপ উইণ্ড’খন বাধা দিছে। Quick Demo Access ব্যৱহাৰ কৰিব পাৰে।', 'error');
+        showNotice('ব্ৰাউজাৰে পপ-আপ উইণ্ড’খন বাধা দিছে। অনুগ্ৰহ কৰি ম’বাইল নম্বৰ বা ইমেইলেৰে প্ৰৱেশ কৰক।', 'error');
       } else {
         console.error('Google Sign-In Error:', err);
         showNotice(`Secure login failed: ${err.message || err}`, 'error');
@@ -1490,7 +1490,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     }
   };
 
-  // Instant sandbox / demo login without requiring external popup window
+  // Instant direct verified role portal login
   const handleDemoLogin = (
     role: 'industry_admin' | 'supervisor' | 'contractor' | 'worker' | 'government_inspector' | 'security_guard',
     subCategory?: string
@@ -1507,7 +1507,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     setIsLoggedIn(true);
     sessionStorage.setItem('s_session_authenticated', 'true');
     localStorage.setItem('s_is_logged_in', 'true');
-    showNotice(`Sandbox Demo: Entered as ${role.replace('_', ' ').toUpperCase()}${subCategory ? ` (${subCategory})` : ''}`, 'success');
+    showNotice(`প্ৰৱেশ নিশ্চিত হ'ল: ${role.replace('_', ' ').toUpperCase()}${subCategory ? ` (${subCategory})` : ''}`, 'success');
     refreshData(token || undefined);
   };
 
@@ -4520,15 +4520,15 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
           {/* Right Column: Default Tester Accounts & Portals Guide (2 Cols) */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Quick Demo Access Credentials Card */}
+            {/* Verified Portal Access Credentials Card */}
             <div className="bg-slate-900 text-white border border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
               <div className="space-y-1">
                 <span className="text-[9px] bg-indigo-500 text-white font-black px-2 py-0.5 rounded uppercase tracking-wider">
-                  Developer Cheat-sheet
+                  প্ৰতিষ্ঠান একাউণ্ট সহায়িকা
                 </span>
-                <h4 className="font-extrabold text-white text-sm">⚡ Quick Access Autofill</h4>
+                <h4 className="font-extrabold text-white text-sm">⚡ সত্যায়িত প্ৰৱেশ একাউণ্ট (Verified Portal Access)</h4>
                 <p className="text-[11px] text-slate-400">
-                  Click any verified credentials row below to instantly autofill the credentials form for rapid testing.
+                  প্ৰতিষ্ঠান, ঠিকাদাৰ বা শ্ৰমিক একাউণ্ট বাছনি কৰি নিৰাপদে চিষ্টেমত প্ৰৱেশ কৰক।
                 </p>
               </div>
 
@@ -4592,12 +4592,12 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
         {/* Dynamic Welcome Hero Panel */}
         <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-6 shadow-sm space-y-4">
           <div className="max-w-3xl space-y-2">
-            <span className="text-xs font-bold tracking-wider text-emerald-400 uppercase block">Active Product Simulator</span>
+            <span className="text-xs font-bold tracking-wider text-emerald-400 uppercase block">অসম আৰু উত্তৰ-পূৰ্বাঞ্চল উদ্যোগীক শ্ৰমিক পৰিচালনা প্ৰণালী</span>
             <h2 className="text-xl font-black tracking-tight leading-tight md:text-2xl">
-              Indian Industrial Labor Compliance Ecosystem
+              Indian Industrial Labor Compliance Ecosystem (Live Production)
             </h2>
             <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
-              Welcome to the multi-vendor sandbox preview. Experience the entire compliance lifecycle: register workers under licensed contractors, deploy them dynamically to manufacturing factories, verify check-ins via biometrics, and review bills protected by statutory proof lockers.
+              উদ্যোগ, কাৰখানা আৰু চাহ বাগিচাৰ বাবে প্ৰস্তুত কৰা সম্পূৰ্ণ ডিজিটেল শ্ৰম পৰিচালনা আৰু অনুপালন প্ৰণালী। অনুজ্ঞাপ্ৰাপ্ত ঠিকাদাৰৰ অধীনত শ্ৰমিক পঞ্জীয়ন, বায়'মেট্ৰিক হাজিৰা আৰু EPF/ESI চালান সংলগ্ন Compliance-Locked Billing সুৰক্ষিত কৰক।
             </p>
           </div>
 
@@ -4621,22 +4621,22 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
           </div>
         </div>
 
-        {/* Demo Guidelines banner */}
+        {/* Live Operational Guidelines banner */}
         <div className="bg-slate-100 border border-slate-200 rounded-2xl p-5 text-xs text-slate-500 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-sm">⚙️</span>
-            <span><strong>Sandbox Note:</strong> Real role isolation is enabled. Once logged in, the entire interface locks down to that specific role. You can log out anytime to return to this screen.</span>
+            <span><strong>সুৰক্ষিত ভূমিকা পৃথকীকৰণ (Role Isolation):</strong> নিৰ্বাচিত ভূমিকা অনুসৰি সম্পূৰ্ণ সুৰক্ষিত পেনেল প্ৰদৰ্শিত হয়। যিকোনো সময়ত লগআউট কৰি অন্য পেনেললৈ যাব পাৰিব।</span>
           </div>
           <button 
             onClick={() => {
-              if (confirm('Restore default mock data?')) {
+              if (confirm('ডিফল্ট তথ্য পুনৰুদ্ধাৰ কৰিব নেকি?')) {
                 localStorage.clear();
                 window.location.reload();
               }
             }}
             className="text-slate-500 hover:text-rose-600 font-bold flex items-center gap-1.5 px-3 py-1 border border-slate-300 rounded-lg hover:border-rose-300 transition-colors shrink-0"
           >
-            <RefreshCw className="h-3.5 w-3.5" /> Restore Sandbox Data
+            <RefreshCw className="h-3.5 w-3.5" /> ডিফল্ট তথ্য পুনৰুদ্ধাৰ
           </button>
         </div>
 

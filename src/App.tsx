@@ -243,11 +243,15 @@ export default function App() {
               <span className="text-xs sm:text-sm tracking-wide">{navText.homeTab}</span>
             </button>
 
-            {/* Hidden industry-app-btn as requested - accessible via Home Hub */}
+            {/* Factory Console & Billing button (Unhidden and active) */}
             <button
               id="industry-app-btn"
               onClick={() => handleTabChange('app')}
-              className="hidden"
+              className={`flex items-center justify-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-0 sm:h-full transition-all relative cursor-pointer whitespace-nowrap rounded-lg sm:rounded-none shrink-0 ${
+                activeTab === 'app'
+                  ? 'text-indigo-400 font-bold bg-indigo-950/70 sm:bg-indigo-950/40'
+                  : 'text-slate-400 hover:text-white bg-slate-900/60 sm:bg-transparent'
+              }`}
             >
               <Building2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
               <span className="text-[11px] sm:text-xs tracking-wide">{navText.appTab}</span>

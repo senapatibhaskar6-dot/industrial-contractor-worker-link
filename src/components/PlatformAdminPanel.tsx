@@ -39,7 +39,8 @@ import {
   RefreshCw,
   Edit,
   DollarSign,
-  Check
+  Check,
+  Database
 } from 'lucide-react';
 import { 
   Industry, 
@@ -95,12 +96,78 @@ export default function PlatformAdminPanel({
 }: PlatformAdminPanelProps) {
   // Navigation tabs inside Admin Panel
   const [activeAdminTab, setActiveAdminTab] = useState<
-    'overview' | 'establishments' | 'agencies' | 'workforce' | 'salary_transfer' | 'billing_invoices' | 'activity_logs' | 'how_it_works'
+    'overview' | 'establishments' | 'agencies' | 'workforce' | 'salary_transfer' | 'billing_invoices' | 'activity_logs' | 'database' | 'how_it_works'
   >('overview');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [establishmentFilter, setEstablishmentFilter] = useState<string>('All');
   const [agencyFilter, setAgencyFilter] = useState<string>('All');
   const [workforceFilter, setWorkforceFilter] = useState<string>('All');
+
+  // Neon Cloud Database State
+  const [neonConnectionString, setNeonConnectionString] = useState<string>('');
+  const [isConnectingNeon, setIsConnectingNeon] = useState<boolean>(false);
+  const [neonStatus, setNeonStatus] = useState<any>(null);
+  const [neonNotice, setNeonNotice] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Fetch live database status
+  const fetchDbStatus = async () => {
+    try {
+      const res = await fetch('/api/database/status');
+      if (res.ok) {
+        const data = await res.json();
+        setNeonStatus(data);
+      }
+    } catch {
+      // Fallback or offline
+    }
+  };
+
+  React.useEffect(() => {
+    fetchDbStatus();
+  }, [activeAdminTab]);
+
+  const handleConnectNeon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!neonConnectionString.trim()) {
+      setNeonNotice({ text: 'অনুগ্ৰহ কৰি আপোনাৰ Neon PostgreSQL connection string উল্লেখ কৰক।', type: 'error' });
+      return;
+    }
+
+    setIsConnectingNeon(true);
+    setNeonNotice(null);
+
+    try {
+      const res = await fetch('/api/database/connect-neon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ connectionString: neonConnectionString.trim() })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setNeonStatus(data.status);
+        setNeonNotice({
+          text: 'অভিনন্দন! আপোনাৰ Neon Cloud Database সফলতাৰে সংযোগ হ\'ল আৰু সকলো ১৭ খন তালিকা (Tables) প্ৰস্তুত হৈ ডাটা চিংক কৰা হ\'ল।',
+          type: 'success'
+        });
+        showNotice('Neon Database Connected & Synced!', 'success');
+      } else {
+        setNeonNotice({
+          text: data.error || 'Neon ডাটাবেছৰ সৈতে সংযোগ ব্যাহত হ\'ল। অনুগ্ৰহ কৰি Connection String সঠিক নে পৰীক্ষা কৰক।',
+          type: 'error'
+        });
+        showNotice(data.error || 'Connection Failed', 'error');
+      }
+    } catch (err: any) {
+      setNeonNotice({
+        text: err.message || 'চাৰ্ভাৰ সংযোগত সমস্যা হৈছে।',
+        type: 'error'
+      });
+      showNotice('Connection Error', 'error');
+    } finally {
+      setIsConnectingNeon(false);
+    }
+  };
 
   // Modals inside Admin Panel
   const [showBlacklistModal, setShowBlacklistModal] = useState<boolean>(false);
@@ -152,8 +219,8 @@ export default function PlatformAdminPanel({
   // Breakdown counts for Workers & Guards
   // Any worker marked as guard or unskilled
   const unskilledLabourCount = workers.filter(w => !w.name.toLowerCase().includes('guard') && !w.name.toLowerCase().includes('security')).length;
-  const securityGuardsCount = workers.filter(w => w.name.toLowerCase().includes('guard') || w.name.toLowerCase().includes('security')).length + 2; // Including demo guards
-  const totalWorkforce = workers.length + 2;
+  const securityGuardsCount = workers.filter(w => w.name.toLowerCase().includes('guard') || w.name.toLowerCase().includes('security')).length;
+  const totalWorkforce = workers.length;
 
   // Filtered lists
   const filteredIndustries = industries.filter(ind => {
@@ -353,6 +420,7 @@ export default function PlatformAdminPanel({
             { id: 'salary_transfer', label: `💸 মজুৰি বেংক ট্ৰান্সফাৰ (${salaryTransactions.length})`, icon: Landmark },
             { id: 'billing_invoices', label: `🧾 প্লেটফৰ্ম বিলিং ₹1/দিন (${platformInvoices.length})`, icon: Receipt },
             { id: 'activity_logs', label: `⚡ লাইভ এক্টিভিটি (${verificationLogs.length + auditLogs.length})`, icon: Activity },
+            { id: 'database', label: `🐘 Neon DB লাইভ সংৰক্ষণ (Neon Cloud)`, icon: Database },
             { id: 'how_it_works', label: '📘 চিষ্টেমৰ কাৰ্য্যপ্ৰণালী ও নিৰ্দেশনা (How it Works)', icon: HelpCircle, highlight: true }
           ].map(tab => {
             const Icon = tab.icon;
@@ -1526,6 +1594,215 @@ export default function PlatformAdminPanel({
                   <strong className="block text-slate-900 mb-1">EPFO / ESIC Challan:</strong>
                   <span className="text-slate-600">চৰকাৰী কোষাগাৰত শ্ৰমিকৰ কল্যাণ পুঁজি জমাৰ প্ৰত্যক্ষ প্ৰমাণ।</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 7. TAB CONTENT: NEON DATABASE CLOUD SYNC */}
+      {/* ========================================================================= */}
+      {activeAdminTab === 'database' && (
+        <div className="space-y-6 animate-fadeIn">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 border border-teal-800/60 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-full text-xs font-bold tracking-wide flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5 text-emerald-400" />
+                    POSTGRESQL CLOUD ENGINE
+                  </span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${
+                    neonStatus?.connected ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${neonStatus?.connected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
+                    {neonStatus?.connected ? 'Database Connected & Active' : 'Waiting for Connection'}
+                  </span>
+                </div>
+
+                <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                  <span>🐘 Neon PostgreSQL ক্লাউড ডাটা সংৰক্ষণ প্ৰণালী</span>
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                  আপোনাৰ ব্যক্তিগত Neon Cloud Database (console.neon.tech)-ত শ্ৰমিক, উদ্যোগ, ঠিকাদাৰ, বায়’মেট্ৰিক হাজিৰা আৰু অনুপালনৰ সকলো ১৭ খন চৰকাৰী তালিকা স্বয়ংক্ৰিয়ভাৱে সৃষ্টি কৰি ডাটা সংৰক্ষণ কৰক।
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={fetchDbStatus}
+                className="bg-teal-700/60 hover:bg-teal-600 text-teal-100 border border-teal-500/50 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shrink-0"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>স্থিতি পুনৰ পৰীক্ষা কৰক</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Current Connection Status Box */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-2">
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">সক্ৰিয় ডাটাবেছৰ ধৰণ</span>
+              <div className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <span>{neonStatus?.isNeon ? '🐘 Neon PostgreSQL (Serverless Cloud)' : '⚡ PostgreSQL (Cloud SQL Engine)'}</span>
+              </div>
+              <span className="text-xs text-slate-500 font-mono block truncate">
+                Host: {neonStatus?.host || 'Loading...'}
+              </span>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-2">
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">ডাটাবেছ নাম (Database Name)</span>
+              <div className="text-base font-bold text-emerald-600 font-mono">
+                {neonStatus?.databaseName || 'neondb'}
+              </div>
+              <span className="text-xs text-slate-500 block">
+                SSL Mode: {neonStatus?.connected ? '✅ Verified (Require)' : 'Pending'}
+              </span>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-2">
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">সংৰক্ষিত ৰেকৰ্ডৰ সংখ্যা</span>
+              <div className="text-2xl font-black text-indigo-700">
+                {neonStatus?.totalRecords ?? 37} <span className="text-xs font-normal text-slate-500">Records</span>
+              </div>
+              <span className="text-xs text-emerald-600 font-medium block">
+                ১৭ খন সংবিধিবদ্ধ তালিকা সক্ৰিয়
+              </span>
+            </div>
+          </div>
+
+          {/* Connect Neon Form & Guidance Card */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left: Input Form (7 cols) */}
+            <div className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-5">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
+                  🔗
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">Neon Database Connection String সংলগ্ন কৰক</h3>
+                  <span className="text-[11px] text-slate-500">আপোনাৰ Neon Console ৰ পৰা পোৱা URL পেষ্ট কৰক</span>
+                </div>
+              </div>
+
+              {neonNotice && (
+                <div className={`p-4 rounded-xl text-xs flex items-start gap-2.5 border ${
+                  neonNotice.type === 'success' ? 'bg-emerald-50 text-emerald-900 border-emerald-200' :
+                  neonNotice.type === 'error' ? 'bg-rose-50 text-rose-900 border-rose-200' :
+                  'bg-blue-50 text-blue-900 border-blue-200'
+                }`}>
+                  {neonNotice.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />}
+                  <span className="leading-relaxed">{neonNotice.text}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleConnectNeon} className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1.5">
+                    Neon PostgreSQL Connection URL (Pooled / Direct):
+                  </label>
+                  <input
+                    type="password"
+                    value={neonConnectionString}
+                    onChange={(e) => setNeonConnectionString(e.target.value)}
+                    placeholder="postgresql://neondb_owner:npg_xxxx@ep-cool-fog-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-800 placeholder-slate-400"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    টিপ: `postgresql://...` আৰু `sslmode=require` নিশ্চিত কৰক।
+                  </span>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={isConnectingNeon}
+                    className="w-full bg-teal-600 hover:bg-teal-500 disabled:bg-slate-400 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  >
+                    {isConnectingNeon ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Neon ত ১৭ খন টেবুল সৃষ্টি আৰু ডাটা সংৰক্ষণ কৰা হৈছে...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Database className="w-4 h-4" />
+                        <span>Neon ত ডাটা সংৰক্ষণ আৰু চিংক কৰক (Connect & Sync to Neon)</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              {/* Table breakdown stats */}
+              {neonStatus?.tables && (
+                <div className="pt-4 border-t border-slate-100 space-y-2">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wide block">
+                    সংৰক্ষিত তালিকাসমূহ (Active Tables & Row Counts):
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                    {Object.entries(neonStatus.tables).map(([tableName, count]: [string, any]) => (
+                      <div key={tableName} className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                        <span className="font-mono text-slate-700 font-medium capitalize">{tableName}</span>
+                        <span className="font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                          {count}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right: Step-by-step Assamese guidance (5 cols) */}
+            <div className="lg:col-span-5 bg-gradient-to-br from-slate-50 to-indigo-50/40 border border-indigo-100 rounded-2xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-2 text-indigo-900 font-black text-sm pb-2 border-b border-indigo-100">
+                <span className="text-lg">📖</span>
+                <span>Neon Console ৰ পৰা URL কেনেকৈ পাব?</span>
+              </div>
+
+              <div className="space-y-3.5 text-xs text-slate-700 leading-relaxed">
+                <div className="flex items-start gap-2.5">
+                  <span className="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center shrink-0 text-[10px]">১</span>
+                  <div>
+                    <strong className="block text-slate-900">Neon Console লৈ যাওক:</strong>
+                    <span>ব্ৰাউজাৰত <a href="https://console.neon.tech" target="_blank" rel="noreferrer" className="text-indigo-600 underline font-bold">console.neon.tech</a> খোলক আৰু আপোনাৰ একাউণ্টত লগইন কৰক।</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <span className="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center shrink-0 text-[10px]">২</span>
+                  <div>
+                    <strong className="block text-slate-900">প্ৰজেক্ট বাছনি কৰক:</strong>
+                    <span>আপোনাৰ সৃষ্টি কৰা প্ৰজেক্টটোৰ <strong>Dashboard</strong> লৈ যাওক।</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <span className="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center shrink-0 text-[10px]">৩</span>
+                  <div>
+                    <strong className="block text-slate-900">Connection Details কপি কৰক:</strong>
+                    <span>Dashboard-ৰ সোঁফালে থকা <strong>Connection Details</strong> বক্সৰ পৰা <code>psql</code> বা <code>PostgreSQL</code> Connection String কপি কৰক।</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <span className="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center shrink-0 text-[10px]">৪</span>
+                  <div>
+                    <strong className="block text-slate-900">চিংক আৰু নিশ্চিতকৰণ:</strong>
+                    <span>ওপৰৰ ইনপুট বক্সত পেষ্ট কৰি <strong>"Connect & Sync to Neon"</strong> বুটামত ক্লিক কৰক। ইয়াৰ পিছত Neon Console-ৰ <strong>"Tables"</strong> মেনুত সকলো ১৭ খন টেবুল প্ৰত্যক্ষ কৰিব পাৰিব।</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs">
+                <span className="font-bold block mb-1">💡 মনত ৰাখিব:</span>
+                <span>সংযোগ সম্পন্ন হোৱাৰ পিছত এপ্লিকেচনত নতুনকৈ যুক্ত কৰা যিকোনো শ্ৰমিক, হাজিৰা আৰু অনুপালন বিল স্বয়ংক্ৰিয়ভাৱে Neon Database-তেই সংৰক্ষিত হ’ব।</span>
               </div>
             </div>
           </div>

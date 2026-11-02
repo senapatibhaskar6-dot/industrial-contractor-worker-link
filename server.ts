@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { db } from "./src/db/index.ts";
+import { db, getDatabaseStatus, reconnectDatabase } from "./src/db/index.ts";
 import { seedDatabase } from "./src/db/seed.ts";
 import { adminAuth } from "./src/lib/firebase-admin.ts";
 import { eq, desc } from "drizzle-orm";
@@ -215,6 +215,38 @@ app.get("/api/data", async (req: any, res: any) => {
   } catch (error: any) {
     console.error("Error fetching CLRA compliance data:", error);
     res.status(500).json({ error: "Failed to load database contents", details: error.message });
+  }
+});
+
+// Database Diagnostics & Live Neon Connection
+app.get("/api/database/status", async (req: any, res: any) => {
+  try {
+    const status = await getDatabaseStatus();
+    res.json(status);
+  } catch (error: any) {
+    res.status(500).json({ error: "Failed to query database status", details: error.message });
+  }
+});
+
+app.post("/api/database/connect-neon", async (req: any, res: any) => {
+  const { connectionString } = req.body;
+  if (!connectionString || typeof connectionString !== "string") {
+    return res.status(400).json({ error: "Connection string is required" });
+  }
+
+  try {
+    const newStatus = await reconnectDatabase(connectionString);
+    res.json({
+      success: true,
+      message: "Neon database connected successfully and schema initialized!",
+      status: newStatus
+    });
+  } catch (error: any) {
+    console.error("Neon database connection error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to connect to Neon database. Please check credentials and URL format."
+    });
   }
 });
 
