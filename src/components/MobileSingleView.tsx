@@ -1027,7 +1027,7 @@ export default function MobileSingleView({
               <div>
                 <div className="text-[10px] uppercase font-bold text-orange-400">CLRA Form XIX Wage Slip</div>
                 <h3 className="text-sm font-black text-white">Apex Manpower &bull; কামৰূপ কাৰখানা</h3>
-                <span className="text-[10px] text-slate-400 font-mono">Principal Employer: Tata Motors</span>
+                <span className="text-[10px] text-slate-400 font-mono">Principal Employer: Brahmaputra Petrochemicals (BCPL)</span>
               </div>
               <button
                 onClick={() => setShowIndustrySlip(false)}

@@ -63,6 +63,15 @@ export default function App() {
       // Clear legacy mobile flags so all devices automatically receive the full responsive app
       localStorage.removeItem('icwl_mobile_mode');
       localStorage.removeItem('shramiklink_mobile_mode');
+
+      // Purge any stale legacy 'Demo' data from user's browser localStorage
+      const keysToCheck = ['s_credential_users', 's_workers_list', 's_inspectors_list'];
+      keysToCheck.forEach(key => {
+        const item = localStorage.getItem(key);
+        if (item && item.toLowerCase().includes('demo')) {
+          localStorage.removeItem(key);
+        }
+      });
       // If URL has ?app=bagan or ?app=hub, clean it up to keep it purely industry
       if (typeof window !== 'undefined') {
         const url = new URL(window.location.href);

@@ -504,7 +504,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
         id: 'capp-1',
         requirementId: 'req-1',
         industryId: 'ind-1',
-        industryName: 'Tata Motors Assembly Plant',
+        industryName: 'Brahmaputra Petrochemicals Complex (BCPL)',
         contractorId: 'con-1',
         contractorName: 'Apex Industrial Manpower Solutions',
         contractorPhone: '9864012345',
@@ -550,7 +550,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       {
         id: 'djob-1',
         industryId: 'ind-1',
-        industryName: 'Tata Motors Assembly Plant',
+        industryName: 'Brahmaputra Petrochemicals Complex (BCPL)',
         location: 'Guwahati Industrial Estate, Sector 3',
         roleTitle: 'General Factory & Assembly Helper',
         skillType: 'Unskilled',
@@ -614,7 +614,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
         id: 'dapp-1',
         jobOpeningId: 'djob-1',
         industryId: 'ind-1',
-        industryName: 'Tata Motors Assembly Plant',
+        industryName: 'Brahmaputra Petrochemicals Complex (BCPL)',
         workerName: 'ৰাহুল ডেকা (Rahul Deka)',
         phone: '9864055443',
         skillType: 'Unskilled',
@@ -1020,13 +1020,13 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     }
 
     const defaults: CredentialUser[] = [
-      { name: 'Tata Motors HR (Industry HR)', emailOrPhone: 'admin@icwl.in', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Industry HR' },
-      { name: 'Tata Motors HR (Industry HR)', emailOrPhone: 'admin@shramiklink.com', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Industry HR' },
+      { name: 'Assam Petrochemicals & Industrial HR', emailOrPhone: 'admin@icwl.in', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Industry HR' },
+      { name: 'Assam Petrochemicals & Industrial HR', emailOrPhone: 'admin@shramiklink.com', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Industry HR' },
       { name: 'Greenwood Heights (Apartment Owner)', emailOrPhone: 'apartment@icwl.in', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Apartment Owner' },
       { name: 'Mega Mart (Shop Owner)', emailOrPhone: 'shop@icwl.in', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Shop Owner' },
       { name: 'Zenith Tech (Office HR)', emailOrPhone: 'office@icwl.in', passwordHash: 'admin', role: 'industry_admin', subCategory: 'Office' },
-      { name: 'Apex Solutions (Labour Contractor)', emailOrPhone: 'contractor@icwl.in', passwordHash: 'admin', role: 'contractor', subCategory: 'Labour Contractor' },
-      { name: 'Apex Solutions (Labour Contractor)', emailOrPhone: 'contractor@shramiklink.com', passwordHash: 'admin', role: 'contractor', subCategory: 'Labour Contractor' },
+      { name: 'Pragjyotish Manpower Services (Labour Contractor)', emailOrPhone: 'contractor@icwl.in', passwordHash: 'admin', role: 'contractor', subCategory: 'Labour Contractor' },
+      { name: 'Pragjyotish Manpower Services (Labour Contractor)', emailOrPhone: 'contractor@shramiklink.com', passwordHash: 'admin', role: 'contractor', subCategory: 'Labour Contractor' },
       { name: 'Jai Hind (Security Agency)', emailOrPhone: 'security@icwl.in', passwordHash: 'admin', role: 'contractor', subCategory: 'Security Agency' },
       { name: 'Gopal Kumar (Worker)', emailOrPhone: 'worker@icwl.in', passwordHash: 'admin', role: 'worker', subCategory: 'Labour' },
       { name: 'Gopal Kumar (Worker)', emailOrPhone: 'worker@shramiklink.com', passwordHash: 'admin', role: 'worker', subCategory: 'Labour' },
@@ -1048,9 +1048,23 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
 
     let finalUsers = defaults;
     if (parsed && Array.isArray(parsed)) {
-      const existingEmails = new Set(parsed.map(u => u.emailOrPhone.trim().toLowerCase()));
+      // Overwrite and cleanse any old cached Demo names from previous sessions
+      const sanitizedParsed = parsed
+        .map((u: any) => {
+          const matchDefault = defaults.find(d => d.emailOrPhone.trim().toLowerCase() === u.emailOrPhone.trim().toLowerCase());
+          if (matchDefault) {
+            return { ...u, name: matchDefault.name, role: matchDefault.role, subCategory: matchDefault.subCategory };
+          }
+          if (u.name && u.name.toLowerCase().includes('demo')) {
+            return { ...u, name: u.name.replace(/demo/gi, '').trim() };
+          }
+          return u;
+        })
+        .filter((u: any) => u.name && !u.name.toLowerCase().includes('demo'));
+
+      const existingEmails = new Set(sanitizedParsed.map((u: any) => u.emailOrPhone.trim().toLowerCase()));
       const missingDefaults = defaults.filter(d => !existingEmails.has(d.emailOrPhone.trim().toLowerCase()));
-      finalUsers = [...parsed, ...missingDefaults];
+      finalUsers = [...sanitizedParsed, ...missingDefaults];
     }
 
     const standardEmailsOrPhones = [
@@ -1491,7 +1505,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   };
 
   // Instant direct verified role portal login
-  const handleDemoLogin = (
+  const handleDirectRoleLogin = (
     role: 'industry_admin' | 'supervisor' | 'contractor' | 'worker' | 'government_inspector' | 'security_guard',
     subCategory?: string
   ) => {
@@ -1552,8 +1566,8 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   }, []);
   
   // Selected Actor Sub-states
-  const [selectedIndustryId, setSelectedIndustryId] = useState<string>('ind-1'); // Tata Motors Pune
-  const [selectedContractorId, setSelectedContractorId] = useState<string>('con-1'); // Apex solutions
+  const [selectedIndustryId, setSelectedIndustryId] = useState<string>('ind-1'); // BCPL Dibrugarh
+  const [selectedContractorId, setSelectedContractorId] = useState<string>('con-1'); // Pragjyotish Manpower
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>('wrk-4'); // Idle worker
 
   // Specific Role Filters for Industry HR and Contractor Panels
@@ -1734,7 +1748,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   // Default fallbacks ensuring zero undefined property access runtime crashes
   const defaultFallbackIndustry: Industry = {
     id: 'ind-1',
-    name: 'Tata Motors Pune Plant',
+    name: 'Brahmaputra Petrochemicals Complex (BCPL, Dibrugarh)',
     location: 'Pimpri-Chinchwad, Maharashtra',
     regNo: 'MH/PUN/892/F-LIC',
     lin: '1982738920',
@@ -2429,7 +2443,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       },
       {
         id: 'fb-2',
-        authorName: 'Tata Motors HR Team',
+        authorName: 'BCPL Industrial HR Team',
         authorRole: 'industry_admin',
         rating: 5,
         category: 'Speed & Performance',
@@ -2767,7 +2781,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       csvRows.push(`Total Gross Wages Disbursed,${targetWorkers.reduce((acc, w) => acc + (w.dailyWageRate * 24), 0)}`);
     } else if (formType === 'Form V') {
       csvRows.push(`FORM V - Certificate by Principal Employer (See Rule 21(2))`);
-      csvRows.push(`Principal Employer,"Tata Motors Industrial Division"`);
+      csvRows.push(`Principal Employer,"Brahmaputra Petrochemicals Complex (BCPL)"`);
       csvRows.push(`Contractor Name,"${contractorObj.name}"`);
       csvRows.push(`License Reference,"${contractorObj.licenseNo}"`);
       csvRows.push(`Nature of Work,"Industrial Assembly & Material Handling"`);
@@ -3603,7 +3617,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             {/* 1. Owner Dashboard */}
             <button
               type="button"
-              onClick={() => handleDemoLogin('industry_admin', 'Industry HR')}
+              onClick={() => handleDirectRoleLogin('industry_admin', 'Industry HR')}
               className="bg-white hover:bg-indigo-50/70 border-2 border-indigo-200 hover:border-indigo-500 p-4 rounded-2xl text-left shadow-xs transition-all group cursor-pointer active:scale-98"
             >
               <div className="flex items-center justify-between mb-2">
@@ -3626,7 +3640,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             {/* 2. Agency Dashboard */}
             <button
               type="button"
-              onClick={() => handleDemoLogin('contractor', 'Labour Contractor')}
+              onClick={() => handleDirectRoleLogin('contractor', 'Labour Contractor')}
               className="bg-white hover:bg-emerald-50/70 border-2 border-emerald-200 hover:border-emerald-500 p-4 rounded-2xl text-left shadow-xs transition-all group cursor-pointer active:scale-98"
             >
               <div className="flex items-center justify-between mb-2">
@@ -3649,7 +3663,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             {/* 3. Labour Dashboard */}
             <button
               type="button"
-              onClick={() => handleDemoLogin('worker')}
+              onClick={() => handleDirectRoleLogin('worker')}
               className="bg-white hover:bg-blue-50/70 border-2 border-blue-200 hover:border-blue-500 p-4 rounded-2xl text-left shadow-xs transition-all group cursor-pointer active:scale-98"
             >
               <div className="flex items-center justify-between mb-2">
@@ -3672,7 +3686,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             {/* 4. Security Guard Dashboard */}
             <button
               type="button"
-              onClick={() => handleDemoLogin('security_guard')}
+              onClick={() => handleDirectRoleLogin('security_guard')}
               className="bg-white hover:bg-amber-50/70 border-2 border-amber-200 hover:border-amber-500 p-4 rounded-2xl text-left shadow-xs transition-all group cursor-pointer active:scale-98"
             >
               <div className="flex items-center justify-between mb-2">
@@ -3695,7 +3709,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             {/* 5. Labour Inspector Panel */}
             <button
               type="button"
-              onClick={() => handleDemoLogin('government_inspector', 'Labour Inspector')}
+              onClick={() => handleDirectRoleLogin('government_inspector', 'Labour Inspector')}
               className="bg-white hover:bg-purple-50/70 border-2 border-purple-200 hover:border-purple-500 p-4 rounded-2xl text-left shadow-xs transition-all group cursor-pointer active:scale-98"
             >
               <div className="flex items-center justify-between mb-2">
@@ -3903,7 +3917,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                       <input 
                         type="text"
                         required
-                        placeholder="E.g., Apex Solutions (Contractor)"
+                        placeholder="E.g., Pragjyotish Manpower Services (Contractor)"
                         value={resetSecurityName}
                         onChange={(e) => setResetSecurityName(e.target.value)}
                         className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500"
@@ -4099,7 +4113,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           type="button"
-                          onClick={() => handleDemoLogin('supervisor')}
+                          onClick={() => handleDirectRoleLogin('supervisor')}
                           className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 py-2 px-1 rounded-lg text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                         >
                           <span>👷 ছুপাৰভাইজাৰ</span>
@@ -4107,7 +4121,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                         <button
                           type="button"
                           onClick={() => {
-                            handleDemoLogin('contractor');
+                            handleDirectRoleLogin('contractor');
                             setContractorTab('supervisors_attendance');
                           }}
                           className="bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-300 py-2 px-1 rounded-lg text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
@@ -4116,7 +4130,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDemoLogin('government_inspector', 'Labour Inspector')}
+                          onClick={() => handleDirectRoleLogin('government_inspector', 'Labour Inspector')}
                           className="bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-300 py-2 px-1 rounded-lg text-[10px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                         >
                           <span>⚖️ পৰিদৰ্শক</span>
@@ -8349,7 +8363,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                                   <div className="text-slate-500 font-bold font-sans text-[11px] text-indigo-900 border-b pb-1">ঠিকাদাৰ আৰু প্ৰতিষ্ঠান তথ্য:</div>
                                   <div>1. Name of Contractor: <strong className="text-slate-900 font-sans">{contractorObj.name}</strong></div>
                                   <div>2. License No. & Date: <strong className="text-slate-900">{contractorObj.licenseNo} (Valid 2026-12-31)</strong></div>
-                                  <div>3. Establishment: <strong className="text-slate-900 font-sans">Tata Motors Plant / Guwahati Industrial Area</strong></div>
+                                  <div>3. Establishment: <strong className="text-slate-900 font-sans">Brahmaputra Petrochemicals Complex / Dibrugarh Industrial Estate</strong></div>
                                   <div>4. Nature of Work: <strong className="text-slate-900 font-sans">Industrial Fabrication & Material Handling</strong></div>
                                 </div>
 
@@ -10719,7 +10733,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
         isOpen={isFeedbackModalOpen}
         onClose={() => setIsFeedbackModalOpen(false)}
         currentUserRole={currentRole}
-        currentUserName={user?.displayName || (currentRole === 'industry_admin' ? 'Tata Motors HR' : currentRole === 'contractor' ? 'Apex Solutions' : currentRole === 'worker' ? 'Gopal Kumar' : 'Labour Officer')}
+        currentUserName={user?.displayName || (currentRole === 'industry_admin' ? 'BCPL Industrial HR' : currentRole === 'contractor' ? 'Pragjyotish Manpower Services' : currentRole === 'worker' ? 'Gopal Kumar' : 'Labour Officer')}
         feedbacks={appFeedbacks}
         onSubmitFeedback={handleAddFeedback}
         showNotice={showNotice}

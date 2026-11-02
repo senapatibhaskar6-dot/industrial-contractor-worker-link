@@ -1221,7 +1221,7 @@ export default function PlatformAdminPanel({
                           {txn.workerName}
                         </td>
                         <td className="p-3.5 text-slate-600">
-                          <span className="font-medium text-slate-800 block">{txn.industryName || 'Tata Motors'}</span>
+                          <span className="font-medium text-slate-800 block">{txn.industryName || 'Brahmaputra Petrochemicals (BCPL)'}</span>
                           <span className="text-[10px] text-slate-400">{txn.contractorName || 'Apex Manpower'}</span>
                         </td>
                         <td className="p-3.5">

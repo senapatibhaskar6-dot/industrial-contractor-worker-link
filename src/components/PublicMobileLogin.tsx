@@ -132,7 +132,7 @@ export const PublicMobileLogin: React.FC<PublicMobileLoginProps> = ({
                     <span className="text-sm">🏢</span>
                     <div>
                       <div className="font-bold text-slate-800 text-[11px] group-hover:text-indigo-800">
-                        লেবাৰ কণ্ট্ৰেক্টৰ (Apex Solutions)
+                        লেবাৰ কণ্ট্ৰেক্টৰ (Pragjyotish Manpower Services)
                       </div>
                       <div className="text-[10px] text-slate-500 font-mono">+91 9876543211</div>
                     </div>
@@ -189,7 +189,7 @@ export const PublicMobileLogin: React.FC<PublicMobileLoginProps> = ({
                     <span className="text-sm">🏭</span>
                     <div>
                       <div className="font-bold text-slate-800 text-[11px] group-hover:text-purple-800">
-                        উদ্যোগিক এইচ.আৰ. (Tata Motors)
+                        উদ্যোগিক এইচ.আৰ. (BCPL Petrochemicals)
                       </div>
                       <div className="text-[10px] text-slate-500 font-mono">+91 9876543210</div>
                     </div>

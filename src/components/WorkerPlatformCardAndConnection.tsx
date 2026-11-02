@@ -136,7 +136,7 @@ export default function WorkerPlatformCardAndConnection({
                       🏭 নিয়োজিত উদ্যোগ (Industry)
                     </span>
                     <span className="font-bold text-white text-xs truncate block mt-0.5">
-                      {currentWorker.assignedIndustryName || 'Tata Motors Pune Plant (Assam Unit)'}
+                      {currentWorker.assignedIndustryName || 'Brahmaputra Petrochemicals Complex (BCPL, Dibrugarh)'}
                     </span>
                   </div>
 
@@ -483,7 +483,7 @@ export default function WorkerPlatformCardAndConnection({
                         <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded">
                           {txn.month}
                         </span>
-                        <h4 className="font-black text-slate-900 text-sm mt-1">{txn.industryName || 'Tata Motors Pune Plant'}</h4>
+                        <h4 className="font-black text-slate-900 text-sm mt-1">{txn.industryName || 'Brahmaputra Petrochemicals Complex (BCPL, Dibrugarh)'}</h4>
                         <span className="text-xs text-slate-500">সংস্থা: {txn.contractorName || 'Apex Manpower Solutions'}</span>
                       </div>
                       <div className="text-right">
@@ -632,7 +632,7 @@ export default function WorkerPlatformCardAndConnection({
                         supervisorId: 'wrk-self',
                         supervisorName: `${currentWorker.name} (Direct Workman Grievance)`,
                         industryId: 'ind-1',
-                        industryName: 'Tata Motors Pune Plant',
+                        industryName: 'Brahmaputra Petrochemicals Complex (BCPL, Dibrugarh)',
                         contractorId: currentWorker.contractorId === 'direct' ? 'con-1' : currentWorker.contractorId,
                         contractorName: assignedContractor?.name || 'Direct Contractor',
                         workerId: currentWorker.id,

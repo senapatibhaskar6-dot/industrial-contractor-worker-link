@@ -22,29 +22,29 @@ import {
 export const initialIndustries: Industry[] = [
   {
     id: 'ind-1',
-    name: 'Tata Motors Pune Plant',
-    location: 'Pimpri-Chinchwad, Maharashtra',
-    regNo: 'MH/PUN/892/F-LIC',
+    name: 'Brahmaputra Petrochemicals Complex (BCPL)',
+    location: 'Lepetkata, Dibrugarh, Assam',
+    regNo: 'AS/DIB/892/F-LIC',
     lin: '1982738920',
-    contactEmail: 'admin.pune@tatamotors.com',
+    contactEmail: 'admin.dibrugarh@bcpl-assam.in',
     category: 'Industry HR'
   },
   {
     id: 'ind-2',
-    name: 'JSW Steel Bellary',
-    location: 'Bellary, Karnataka',
-    regNo: 'KA/BEL/734/F-LIC',
+    name: 'Numaligarh Refinery Industrial Unit',
+    location: 'Golaghat, Assam',
+    regNo: 'AS/GOL/734/F-LIC',
     lin: '1029384758',
-    contactEmail: 'compliance@jswsteel.in',
+    contactEmail: 'compliance@nrl-assam.in',
     category: 'Industry HR'
   },
   {
     id: 'ind-3',
-    name: 'Serum Institute of India',
-    location: 'Hadapsar, Pune',
-    regNo: 'MH/PUN/219/F-LIC',
+    name: 'Guwahati Premier Industrial Manufacturing Estate',
+    location: 'Amingaon Industrial Area, Guwahati, Assam',
+    regNo: 'AS/KAM/219/F-LIC',
     lin: '1847293849',
-    contactEmail: 'hr@seruminstitute.com',
+    contactEmail: 'hr@guwahati-manufacturing.in',
     category: 'Industry HR'
   },
   {
@@ -106,12 +106,12 @@ export const initialIndustries: Industry[] = [
 export const initialContractors: Contractor[] = [
   {
     id: 'con-1',
-    name: 'Apex Industrial Manpower Solutions',
-    licenseNo: 'MH-PUN-CLRA-2024-902',
+    name: 'Pragjyotish Industrial Manpower Solutions',
+    licenseNo: 'AS-GHY-CLRA-2026-902',
     lin: 'L-1293840291',
     pan: 'AAACA1029K',
-    epfCode: 'MH/PUN/4567A/002',
-    esiCode: '31-8973-102-1001',
+    epfCode: 'AS/GHY/4567A/002',
+    esiCode: '43-8973-102-1001',
     contactNo: '+91 98223 11045',
     rating: 4.8,
     contractorType: 'Labour Contractor'
@@ -122,20 +122,20 @@ export const initialContractors: Contractor[] = [
     licenseNo: 'PSARA/AS/2023/SEC-412',
     lin: 'L-1029384812',
     pan: 'AAACJ7732L',
-    epfCode: 'MH/MUM/8821B/005',
-    esiCode: '12-4432-801-2002',
+    epfCode: 'AS/GHY/8821B/005',
+    esiCode: '43-4432-801-2002',
     contactNo: '+91 99304 55321',
     rating: 4.6,
     contractorType: 'Security Agency'
   },
   {
     id: 'con-3',
-    name: 'Sahyadri Allied Services',
-    licenseNo: 'MH-PUN-CLRA-2025-502',
+    name: 'Kaziranga Allied Manpower Services',
+    licenseNo: 'AS-GHY-CLRA-2026-502',
     lin: 'L-1847293021',
     pan: 'AAACS4412M',
-    epfCode: 'MH/PUN/9012C/001',
-    esiCode: '31-4029-202-3003',
+    epfCode: 'AS/GHY/9012C/001',
+    esiCode: '43-4029-202-3003',
     contactNo: '+91 91580 88219',
     rating: 4.2,
     contractorType: 'Labour Contractor'
@@ -423,10 +423,10 @@ export const initialAssignments: MultiIndustryAssignment[] = [
 ];
 
 export const initialRequirements: DailyRequirement[] = [
-  { id: 'req-1', industryId: 'ind-1', industryName: 'Tata Motors Pune Plant', contractorId: 'con-1', date: '2026-09-03', skillType: 'Unskilled', workersNeeded: 5, workersFulfilled: 2, shiftTiming: 'Shift A (06:00 - 14:00)', status: 'Open' },
-  { id: 'req-2', industryId: 'ind-1', industryName: 'Tata Motors Pune Plant', contractorId: 'con-1', date: '2026-09-03', skillType: 'Unskilled', workersNeeded: 10, workersFulfilled: 0, shiftTiming: 'Shift B (14:00 - 22:00)', status: 'Open' },
-  { id: 'req-3', industryId: 'ind-2', industryName: 'JSW Steel Bellary', contractorId: 'con-2', date: '2026-09-03', skillType: 'Unskilled', workersNeeded: 3, workersFulfilled: 1, shiftTiming: 'General (09:00 - 17:00)', status: 'Open' },
-  { id: 'req-4', industryId: 'ind-3', industryName: 'Serum Institute of India', contractorId: 'con-3', date: '2026-09-03', skillType: 'Unskilled', workersNeeded: 4, workersFulfilled: 0, shiftTiming: 'Shift B (14:00 - 22:00)', status: 'Open' }
+  { id: 'req-1', industryId: 'ind-1', industryName: 'Brahmaputra Petrochemicals Complex (BCPL)', contractorId: 'con-1', date: '2026-09-03', skillType: 'Unskilled', workersNeeded: 5, workersFulfilled: 2, shiftTiming: 'Shift A (06:00 - 14:00)', status: 'Open' },
+  { id: 'req-2', industryId: 'ind-1', industryName: 'Brahmaputra Petrochemicals Complex (BCPL)', contractorId: 'con-1', date: '2026-09-03', skillType: 'Unskilled', workersNeeded: 10, workersFulfilled: 0, shiftTiming: 'Shift B (14:00 - 22:00)', status: 'Open' },
+  { id: 'req-3', industryId: 'ind-2', industryName: 'Numaligarh Refinery Industrial Unit', contractorId: 'con-2', date: '2026-09-03', skillType: 'Unskilled', workersNeeded: 3, workersFulfilled: 1, shiftTiming: 'General (09:00 - 17:00)', status: 'Open' },
+  { id: 'req-4', industryId: 'ind-3', industryName: 'Guwahati Premier Industrial Manufacturing Estate', contractorId: 'con-3', date: '2026-09-03', skillType: 'Unskilled', workersNeeded: 4, workersFulfilled: 0, shiftTiming: 'Shift B (14:00 - 22:00)', status: 'Open' }
 ];
 
 export const initialAttendance: Attendance[] = [
@@ -463,34 +463,34 @@ export const initialComplianceDocs: ComplianceDocument[] = [
   { id: 'doc-1', contractorId: 'con-1', industryId: 'ind-1', month: 'July 2026', docType: 'EPF-Challan', fileUrl: 'EPF-CH-JULY-90212.pdf', fileName: 'EPF_ECR_Challan_Jul2026_TRRN90212.pdf', referenceNo: 'TRRN-90212984920', uploadedAt: '2026-08-15', status: 'Verified', verifiedBy: 'System Audit', remarks: 'EPF payment of ₹1,45,200 verified with EPFO portal API.' },
   { id: 'doc-2', contractorId: 'con-1', industryId: 'ind-1', month: 'July 2026', docType: 'ESI-Challan', fileUrl: 'ESI-CH-JULY-88310.pdf', fileName: 'ESIC_Contribution_Challan_Jul2026.pdf', referenceNo: 'ESIC-CH-8831029', uploadedAt: '2026-08-15', status: 'Verified', verifiedBy: 'System Audit', remarks: 'ESI payment of ₹38,400 matching with ESIC records.' },
   { id: 'doc-3', contractorId: 'con-1', industryId: 'ind-1', month: 'July 2026', docType: 'GST-Return', fileUrl: 'GST-3B-JULY-99231.pdf', fileName: 'GSTR_3B_Filed_July_2026.pdf', referenceNo: 'GSTR3B-2026-99231', uploadedAt: '2026-08-18', status: 'Verified', verifiedBy: 'System Audit', remarks: 'GSTR-3B filed. Tax of ₹1,88,290 verified.' },
-  { id: 'doc-1a', contractorId: 'con-1', industryId: 'ind-1', month: 'August 2026', docType: 'Form-IV-License', fileUrl: 'CLRA_FORM_IV_APEX_TATA.pdf', fileName: 'CLRA_Form_IV_License_2026_TataMotors.pdf', referenceNo: 'MH-PUN-CLRA-2024-902', uploadedAt: '2026-08-01', status: 'Verified', verifiedBy: 'Labour Commissioner Office', remarks: 'Licensed for max 50 contract workmen. Valid till 31-Dec-2026.' },
+  { id: 'doc-1a', contractorId: 'con-1', industryId: 'ind-1', month: 'August 2026', docType: 'Form-IV-License', fileUrl: 'CLRA_FORM_IV_APEX_TATA.pdf', fileName: 'CLRA_Form_IV_License_2026_TataMotors.pdf', referenceNo: 'AS-GHY-CLRA-2026-902', uploadedAt: '2026-08-01', status: 'Verified', verifiedBy: 'Labour Commissioner Office', remarks: 'Licensed for max 50 contract workmen. Valid till 31-Dec-2026.' },
   { id: 'doc-1b', contractorId: 'con-1', industryId: 'ind-1', month: 'August 2026', docType: 'Form-VI-A-Notice', fileUrl: 'FORM_VI_A_COMMENCEMENT_TATA.pdf', fileName: 'Notice_Commencement_Form_VI_A_Tata.pdf', referenceNo: 'NOT-VIA-PUN-2026-092', uploadedAt: '2026-08-05', status: 'Verified', verifiedBy: 'Senior Labour Inspector', remarks: 'Notice of contract work commencement acknowledged by Inspectorate.' },
-  { id: 'doc-1c', contractorId: 'con-1', industryId: 'ind-1', month: 'August 2026', docType: 'Bank-Disbursement-Proof', fileUrl: 'NEFT_SALARY_DISBURSEMENT_TATA_AUG.pdf', fileName: 'SBI_Bulk_NEFT_Wages_Aug2026_Batch892.pdf', referenceNo: 'CMS-NEFT-99201948', uploadedAt: '2026-09-02', status: 'Verified', verifiedBy: 'Tata Motors HR Dept', remarks: 'Bank salary credit confirmed to 100% Aadhaar-linked worker bank accounts.' },
+  { id: 'doc-1c', contractorId: 'con-1', industryId: 'ind-1', month: 'August 2026', docType: 'Bank-Disbursement-Proof', fileUrl: 'NEFT_SALARY_DISBURSEMENT_TATA_AUG.pdf', fileName: 'SBI_Bulk_NEFT_Wages_Aug2026_Batch892.pdf', referenceNo: 'CMS-NEFT-99201948', uploadedAt: '2026-09-02', status: 'Verified', verifiedBy: 'BCPL HR Dept', remarks: 'Bank salary credit confirmed to 100% Aadhaar-linked worker bank accounts.' },
 
   // Jai Hind (con-2) Challans - Verified as well
   { id: 'doc-4', contractorId: 'con-2', industryId: 'ind-2', month: 'July 2026', docType: 'EPF-Challan', fileUrl: 'EPF-CH-JUL-2201.pdf', fileName: 'EPF_ECR_Receipt_July_2026.pdf', referenceNo: 'TRRN-2201984210', uploadedAt: '2026-08-14', status: 'Verified', verifiedBy: 'System Audit', remarks: 'EPF verified.' },
   { id: 'doc-5', contractorId: 'con-2', industryId: 'ind-2', month: 'July 2026', docType: 'ESI-Challan', fileUrl: 'ESI-CH-JUL-4322.pdf', fileName: 'ESIC_Paid_Challan_July_2026.pdf', referenceNo: 'ESIC-4322901', uploadedAt: '2026-08-14', status: 'Verified', verifiedBy: 'System Audit', remarks: 'ESI verified.' },
   { id: 'doc-6', contractorId: 'con-2', industryId: 'ind-2', month: 'July 2026', docType: 'GST-Return', fileUrl: 'GST-JUL-7712.pdf', fileName: 'GSTR3B_Receipt_Jul2026.pdf', referenceNo: 'GST-7712390', uploadedAt: '2026-08-14', status: 'Verified', verifiedBy: 'System Audit', remarks: 'GST verified.' },
-  { id: 'doc-4a', contractorId: 'con-2', industryId: 'ind-2', month: 'August 2026', docType: 'Form-IV-License', fileUrl: 'CLRA_FORM_IV_JAIHIND_JSW.pdf', fileName: 'CLRA_Form_IV_License_JSW_Steel.pdf', referenceNo: 'KA-BEL-CLRA-2025-412', uploadedAt: '2026-08-02', status: 'Verified', verifiedBy: 'Labour Enforcement Officer', remarks: 'Licensed for max 35 contract workmen at JSW Steel Bellary.' },
+  { id: 'doc-4a', contractorId: 'con-2', industryId: 'ind-2', month: 'August 2026', docType: 'Form-IV-License', fileUrl: 'CLRA_FORM_IV_JAIHIND_JSW.pdf', fileName: 'CLRA_Form_IV_License_JSW_Steel.pdf', referenceNo: 'KA-BEL-CLRA-2025-412', uploadedAt: '2026-08-02', status: 'Verified', verifiedBy: 'Labour Enforcement Officer', remarks: 'Licensed for max 35 contract workmen at Numaligarh Refinery Industrial Unit.' },
   { id: 'doc-4b', contractorId: 'con-2', industryId: 'ind-2', month: 'August 2026', docType: 'Form-VI-A-Notice', fileUrl: 'FORM_VI_A_JAIHIND_JSW.pdf', fileName: 'Form_VI_A_Commencement_JSW.pdf', referenceNo: 'NOT-VIA-BEL-2026-118', uploadedAt: '2026-08-04', status: 'Verified', verifiedBy: 'Labour Enforcement Officer', remarks: 'Form VI-A filed electronically on ICWL portal.' },
-  { id: 'doc-4c', contractorId: 'con-2', industryId: 'ind-2', month: 'August 2026', docType: 'Bank-Disbursement-Proof', fileUrl: 'NEFT_SALARY_JSW_AUG.pdf', fileName: 'HDFC_Bank_Salary_Statement_Aug2026.pdf', referenceNo: 'HDFC-NEFT-8812903', uploadedAt: '2026-09-01', status: 'Verified', verifiedBy: 'JSW Steel HR', remarks: 'Wages disbursed via direct bank transfer.' },
+  { id: 'doc-4c', contractorId: 'con-2', industryId: 'ind-2', month: 'August 2026', docType: 'Bank-Disbursement-Proof', fileUrl: 'NEFT_SALARY_JSW_AUG.pdf', fileName: 'HDFC_Bank_Salary_Statement_Aug2026.pdf', referenceNo: 'HDFC-NEFT-8812903', uploadedAt: '2026-09-01', status: 'Verified', verifiedBy: 'NRL HR Dept', remarks: 'Wages disbursed via direct bank transfer.' },
 
   // Sahyadri (con-3) has NOT uploaded previous month's GST-Return, only EPF/ESI. This will trigger the compliance billing lock for them!
   { id: 'doc-7', contractorId: 'con-3', industryId: 'ind-1', month: 'July 2026', docType: 'EPF-Challan', fileUrl: 'EPF-CH-JUL-9912.pdf', fileName: 'EPF_Receipt_Jul_2026.pdf', referenceNo: 'TRRN-9912048', uploadedAt: '2026-08-19', status: 'Verified', verifiedBy: 'System Audit', remarks: 'EPF Verified.' },
   { id: 'doc-8', contractorId: 'con-3', industryId: 'ind-1', month: 'July 2026', docType: 'ESI-Challan', fileUrl: 'ESI-CH-JUL-0012.pdf', fileName: 'ESI_Challan_Jul_2026.pdf', referenceNo: 'ESIC-0012984', uploadedAt: '2026-08-19', status: 'Verified', verifiedBy: 'System Audit', remarks: 'ESI Verified.' },
-  { id: 'doc-7a', contractorId: 'con-3', industryId: 'ind-1', month: 'August 2026', docType: 'Form-IV-License', fileUrl: 'CLRA_FORM_IV_SAHYADRI.pdf', fileName: 'Form_IV_License_Sahyadri.pdf', referenceNo: 'MH-PUN-CLRA-2025-502', uploadedAt: '2026-08-10', status: 'Verified', verifiedBy: 'Assistant Labour Commissioner', remarks: 'Contractor license valid.' },
+  { id: 'doc-7a', contractorId: 'con-3', industryId: 'ind-1', month: 'August 2026', docType: 'Form-IV-License', fileUrl: 'CLRA_FORM_IV_SAHYADRI.pdf', fileName: 'Form_IV_License_Sahyadri.pdf', referenceNo: 'AS-GHY-CLRA-2026-502', uploadedAt: '2026-08-10', status: 'Verified', verifiedBy: 'Assistant Labour Commissioner', remarks: 'Contractor license valid.' },
   // Missing GST Challan and Form VI-A for con-3!
 ];
 
 export const initialBills: Bill[] = [
-  // Apex August Bill for Tata Motors (Compliant, pre-existing proof and approved)
+  // Apex August Bill for Brahmaputra Petrochemicals (BCPL) (Compliant, pre-existing proof and approved)
   {
     id: 'bill-1',
     billNumber: 'INV-2026-08-001',
     contractorId: 'con-1',
-    contractorName: 'Apex Solutions',
+    contractorName: 'Pragjyotish Manpower Services',
     industryId: 'ind-1',
-    industryName: 'Tata Motors Manufacturing Plant',
+    industryName: 'Brahmaputra Petrochemicals Complex (BCPL)',
     month: 'August 2026',
     totalWorkers: 4,
     totalDaysWorked: 26,
@@ -508,14 +508,14 @@ export const initialBills: Bill[] = [
     remarks: 'Approved after verification of all EPF and ESI payment challans for July.',
     complianceDocIds: ['doc-1', 'doc-2', 'doc-3']
   },
-  // Jai Hind August Bill for JSW Steel (Submitted, pending review)
+  // Jai Hind August Bill for Numaligarh Refinery Industrial Unit (Submitted, pending review)
   {
     id: 'bill-2',
     billNumber: 'INV-2026-08-002',
     contractorId: 'con-2',
     contractorName: 'Jai Hind Labour Logistics',
     industryId: 'ind-2',
-    industryName: 'JSW Steel Complex',
+    industryName: 'Numaligarh Refinery Industrial Unit Complex',
     month: 'August 2026',
     totalWorkers: 3,
     totalDaysWorked: 20,
@@ -542,8 +542,8 @@ export const initialVerificationLogs: AadhaarVerificationLog[] = [
 ];
 
 export const initialAuditLogs: GovernmentAuditLog[] = [
-  { id: 'aud-1', inspectorName: 'Shri K. D. Rane (Central Labour Commissioner, Pune)', inspectedEntity: 'Industry', entityId: 'ind-1', entityName: 'Tata Motors Pune Plant', timestamp: '2026-08-28 11:30', findings: 'Inspected CLRA Form V and Form VI registers. Payout records are fully compliant. Minimum wage standards strictly matched with digital attendance logs.', status: 'Clean' },
-  { id: 'aud-2', inspectorName: 'Shri K. D. Rane (Central Labour Commissioner, Pune)', inspectedEntity: 'Contractor', entityId: 'con-1', entityName: 'Apex Industrial Manpower Solutions', timestamp: '2026-08-28 14:10', findings: 'EPF payment returns verified against payroll registers. Highly organized digital logs with Aadhaar authentication traces.', status: 'Clean' }
+  { id: 'aud-1', inspectorName: 'Shri Bhaskar Senapati (Joint Labour Commissioner, Assam)', inspectedEntity: 'Industry', entityId: 'ind-1', entityName: 'Brahmaputra Petrochemicals Complex (BCPL)', timestamp: '2026-08-28 11:30', findings: 'Inspected CLRA Form V and Form VI registers. Payout records are fully compliant. Minimum wage standards strictly matched with digital attendance logs.', status: 'Clean' },
+  { id: 'aud-2', inspectorName: 'Shri Bhaskar Senapati (Joint Labour Commissioner, Assam)', inspectedEntity: 'Contractor', entityId: 'con-1', entityName: 'Pragjyotish Industrial Manpower Solutions', timestamp: '2026-08-28 14:10', findings: 'EPF payment returns verified against payroll registers. Highly organized digital logs with Aadhaar authentication traces.', status: 'Clean' }
 ];
 
 export const initialRevenueLogs: RevenueLog[] = [
@@ -579,12 +579,12 @@ export const initialInspectors: GovernmentLaborInspector[] = [
     email: 'kd.rane.labour@gov.in',
     phone: '9822019944',
     state: 'Maharashtra',
-    district: 'Pune District',
+    district: 'Guwahati District',
     jurisdictionZone: 'Pimpri-Chinchwad, Hadapsar & Bhosari Industrial Corridor',
     assignedPinCodes: ['411018', '411028', '411033', '411019'],
     active: true,
     registeredAt: '2026-02-10',
-    officeAddress: 'Kamgar Bhavan, Wakdewadi, Pune, Maharashtra - 411005',
+    officeAddress: 'Kamgar Bhavan, Wakdewadi, Guwahati, Maharashtra - 411005',
     officeHours: 'Mon - Fri: 10:00 AM - 05:30 PM'
   },
   {
@@ -610,10 +610,10 @@ export const initialIndustryContractorConnections: IndustryContractorConnection[
   {
     id: 'conn-1',
     industryId: 'ind-1',
-    industryName: 'Tata Motors Pune Plant',
+    industryName: 'Brahmaputra Petrochemicals Complex (BCPL)',
     industryCategory: 'Industry HR',
     contractorId: 'con-1',
-    contractorName: 'Apex Industrial Manpower Solutions',
+    contractorName: 'Pragjyotish Industrial Manpower Solutions',
     contractorType: 'Labour Contractor',
     initiatedBy: 'contractor',
     status: 'Connected',
@@ -624,7 +624,7 @@ export const initialIndustryContractorConnections: IndustryContractorConnection[
   {
     id: 'conn-2',
     industryId: 'ind-1',
-    industryName: 'Tata Motors Pune Plant',
+    industryName: 'Brahmaputra Petrochemicals Complex (BCPL)',
     industryCategory: 'Industry HR',
     contractorId: 'con-2',
     contractorName: 'Jai Hind Security & Protection Agency',
@@ -686,7 +686,7 @@ export const initialWorkerAgencyConnections: WorkerAgencyConnection[] = [
     workerPhone: '9112233445',
     workerRole: 'Unskilled Worker',
     contractorId: 'con-1',
-    contractorName: 'Apex Industrial Manpower Solutions',
+    contractorName: 'Pragjyotish Industrial Manpower Solutions',
     contractorType: 'Labour Contractor',
     initiatedBy: 'worker',
     status: 'Pending',
@@ -714,9 +714,9 @@ export const initialSalaryTransactions: SalaryTransaction[] = [
     workerId: 'wrk-1',
     workerName: 'Rakesh Kumar Yadav',
     contractorId: 'con-1',
-    contractorName: 'Apex Industrial Manpower Solutions',
+    contractorName: 'Pragjyotish Industrial Manpower Solutions',
     industryId: 'ind-1',
-    industryName: 'Tata Motors Pune Plant',
+    industryName: 'Brahmaputra Petrochemicals Complex (BCPL)',
     month: 'August 2026',
     amount: 14400,
     paymentDate: '2026-09-02',
@@ -734,9 +734,9 @@ export const initialSalaryTransactions: SalaryTransaction[] = [
     workerId: 'wrk-2',
     workerName: 'Vikram Singh Shekhawat',
     contractorId: 'con-1',
-    contractorName: 'Apex Industrial Manpower Solutions',
+    contractorName: 'Pragjyotish Industrial Manpower Solutions',
     industryId: 'ind-1',
-    industryName: 'Tata Motors Pune Plant',
+    industryName: 'Brahmaputra Petrochemicals Complex (BCPL)',
     month: 'August 2026',
     amount: 15360,
     paymentDate: '2026-09-02',
@@ -756,7 +756,7 @@ export const initialSalaryTransactions: SalaryTransaction[] = [
     contractorId: 'con-2',
     contractorName: 'Jai Hind Security & Protection Agency',
     industryId: 'ind-2',
-    industryName: 'JSW Steel Bellary',
+    industryName: 'Numaligarh Refinery Industrial Unit',
     month: 'August 2026',
     amount: 15360,
     paymentDate: '2026-09-01',
@@ -778,7 +778,7 @@ export const initialComplaints: SupervisorComplaint[] = [
     supervisorId: 'sup-1',
     supervisorName: 'Prakash Deshmukh (Shop Floor Supervisor)',
     industryId: 'ind-1',
-    industryName: 'Tata Motors Pune Plant',
+    industryName: 'Brahmaputra Petrochemicals Complex (BCPL)',
     contractorId: 'con-3',
     contractorName: 'Sahyadri Labour Contractors',
     workerId: 'wrk-9',
@@ -798,7 +798,7 @@ export const initialComplaints: SupervisorComplaint[] = [
     supervisorId: 'sup-2',
     supervisorName: 'Kameshwar Rao (JSW Safety Officer)',
     industryId: 'ind-2',
-    industryName: 'JSW Steel Bellary',
+    industryName: 'Numaligarh Refinery Industrial Unit',
     contractorId: 'con-2',
     contractorName: 'Jai Hind Security & Protection Agency',
     category: 'Absenteeism / Discipline',
@@ -819,9 +819,9 @@ export const initialLeaveRecords: LeaveRecord[] = [
     workerId: 'wrk-1',
     workerName: 'Rakesh Kumar Yadav',
     contractorId: 'con-1',
-    contractorName: 'Apex Industrial Manpower Solutions',
+    contractorName: 'Pragjyotish Industrial Manpower Solutions',
     industryId: 'ind-1',
-    industryName: 'Tata Motors Pune Plant',
+    industryName: 'Brahmaputra Petrochemicals Complex (BCPL)',
     leaveType: 'Casual Leave',
     daysCount: 2,
     startDate: '2026-08-18',
@@ -837,9 +837,9 @@ export const initialLeaveRecords: LeaveRecord[] = [
     workerId: 'wrk-2',
     workerName: 'Vikram Singh Shekhawat',
     contractorId: 'con-1',
-    contractorName: 'Apex Industrial Manpower Solutions',
+    contractorName: 'Pragjyotish Industrial Manpower Solutions',
     industryId: 'ind-1',
-    industryName: 'Tata Motors Pune Plant',
+    industryName: 'Brahmaputra Petrochemicals Complex (BCPL)',
     leaveType: 'Sick / Medical Leave',
     daysCount: 3,
     startDate: '2026-08-22',
@@ -858,7 +858,7 @@ export const initialPlatformInvoices: AdminPlatformInvoice[] = [
     invoiceNo: 'SL-INV-2026-08-01',
     billedEntity: 'Industry',
     entityId: 'ind-1',
-    entityName: 'Tata Motors Pune Plant',
+    entityName: 'Brahmaputra Petrochemicals Complex (BCPL)',
     month: 'August 2026',
     activeWorkersCount: 42,
     mandaysCount: 1120,
@@ -877,7 +877,7 @@ export const initialPlatformInvoices: AdminPlatformInvoice[] = [
     invoiceNo: 'SL-INV-2026-08-02',
     billedEntity: 'Contractor',
     entityId: 'con-1',
-    entityName: 'Apex Industrial Manpower Solutions',
+    entityName: 'Pragjyotish Industrial Manpower Solutions',
     month: 'August 2026',
     activeWorkersCount: 35,
     mandaysCount: 910,
@@ -896,7 +896,7 @@ export const initialPlatformInvoices: AdminPlatformInvoice[] = [
     invoiceNo: 'SL-INV-2026-09-01',
     billedEntity: 'Industry',
     entityId: 'ind-2',
-    entityName: 'JSW Steel Bellary',
+    entityName: 'Numaligarh Refinery Industrial Unit',
     month: 'September 2026',
     activeWorkersCount: 38,
     mandaysCount: 980,

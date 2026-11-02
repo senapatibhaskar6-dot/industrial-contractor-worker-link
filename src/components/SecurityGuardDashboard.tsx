@@ -123,7 +123,7 @@ export const SecurityGuardDashboard: React.FC<SecurityGuardDashboardProps> = ({
       type: 'worker',
       name: 'Gopal Kumar',
       passNo: 'SHR-4412',
-      entity: 'Apex Solutions',
+      entity: 'Pragjyotish Manpower Services',
       purpose: 'Packaging Section',
       inTime: '06:22 AM',
       status: 'In-Premises',
