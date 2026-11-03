@@ -10,18 +10,22 @@ import {
   Milestone, 
   Smartphone,
   LogOut,
+  LogIn,
   Factory,
   ShieldCheck,
-  Home as HomeIcon
+  Home as HomeIcon,
+  CheckCircle2
 } from 'lucide-react';
 import SaaSApp from './components/SaaSApp';
 import ArchitectureDocs from './components/ArchitectureDocs';
 import RoadmapView from './components/RoadmapView';
 import PlatformAdminPanel from './components/PlatformAdminPanel';
 import HomeHub from './components/HomeHub';
+import PortalAuthModal from './components/PortalAuthModal';
 import { initialIndustries, initialContractors, initialWorkers } from './mockData';
 import { AppLanguage, getStoredLanguage, setStoredLanguage, TRANSLATIONS } from './i18n';
 import { LanguageSelector } from './components/LanguageSelector';
+import { Industry, Contractor, Worker } from './types';
 
 export default function App() {
   // Pure Industry / Factory Standalone Mode: 'home' (All Panels Directory Hub) | 'app' (Main Console) | 'admin' | 'architecture' | 'roadmap'
@@ -34,6 +38,46 @@ export default function App() {
   });
 
   const [currentLang, setCurrentLangState] = useState<AppLanguage>(() => getStoredLanguage());
+
+  // Entity lists
+  const [industries, setIndustries] = useState<Industry[]>(() => {
+    try {
+      const saved = localStorage.getItem('s_industries_list');
+      return saved ? JSON.parse(saved) : initialIndustries;
+    } catch {
+      return initialIndustries;
+    }
+  });
+
+  const [contractors, setContractors] = useState<Contractor[]>(() => {
+    try {
+      const saved = localStorage.getItem('s_contractors_list');
+      return saved ? JSON.parse(saved) : initialContractors;
+    } catch {
+      return initialContractors;
+    }
+  });
+
+  const [workers, setWorkers] = useState<Worker[]>(() => {
+    try {
+      const saved = localStorage.getItem('s_workers_list');
+      return saved ? JSON.parse(saved) : initialWorkers;
+    } catch {
+      return initialWorkers;
+    }
+  });
+
+  // Portal Authentication & Registration Modal State
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authModalTab, setAuthModalTab] = useState<'login' | 'register'>('login');
+  const [authModalRole, setAuthModalRole] = useState<string>('industry_admin');
+  const [authModalSubCategory, setAuthModalSubCategory] = useState<string | undefined>(undefined);
+  const [toastMessage, setToastMessage] = useState<{ msg: string; type: 'info' | 'success' | 'error' } | null>(null);
+
+  const showNotice = (msg: string, type: 'info' | 'success' | 'error' = 'info') => {
+    setToastMessage({ msg, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   const handleTabChange = (tab: 'home' | 'app' | 'admin' | 'architecture' | 'roadmap') => {
     setActiveTab(tab);
@@ -104,6 +148,23 @@ export default function App() {
     };
     window.addEventListener('icwl-switch-tab', handleSwitchTab);
 
+    const handleOpenRegister = (e: any) => {
+      setAuthModalTab('register');
+      if (e?.detail?.role) setAuthModalRole(e.detail.role);
+      if (e?.detail?.subCategory) setAuthModalSubCategory(e.detail.subCategory);
+      setIsAuthModalOpen(true);
+    };
+    window.addEventListener('icwl-open-register', handleOpenRegister);
+    window.addEventListener('shramiklink-open-register', handleOpenRegister);
+
+    const handleOpenLogin = (e: any) => {
+      setAuthModalTab('login');
+      if (e?.detail?.role) setAuthModalRole(e.detail.role);
+      if (e?.detail?.subCategory) setAuthModalSubCategory(e.detail.subCategory);
+      setIsAuthModalOpen(true);
+    };
+    window.addEventListener('icwl-open-login', handleOpenLogin);
+
     return () => {
       window.removeEventListener('shramiklink-language-change', handleLangEvt);
       window.removeEventListener('icwl-language-change', handleLangEvt);
@@ -113,6 +174,9 @@ export default function App() {
       window.removeEventListener('shramiklink-logout', handleGlobalLogout);
       window.removeEventListener('icwl-logout', handleGlobalLogout);
       window.removeEventListener('icwl-switch-tab', handleSwitchTab);
+      window.removeEventListener('icwl-open-register', handleOpenRegister);
+      window.removeEventListener('shramiklink-open-register', handleOpenRegister);
+      window.removeEventListener('icwl-open-login', handleOpenLogin);
     };
   }, []);
 
@@ -218,13 +282,13 @@ export default function App() {
 
               <button
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent('icwl-logout'));
-                  window.dispatchEvent(new CustomEvent('shramiklink-logout'));
+                  setAuthModalTab('login');
+                  setIsAuthModalOpen(true);
                 }}
-                title="Login / Portal Access"
-                className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold px-2 py-1 rounded-lg text-[10px] flex items-center gap-1 cursor-pointer"
+                title="পৰ্টেল লগইন ও পঞ্জীয়ন (Login / Register)"
+                className="bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 text-white font-bold px-2.5 py-1 rounded-lg text-[10px] flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 transition-all"
               >
-                <LogOut className="h-3 w-3 text-rose-400" />
+                <LogIn className="h-3 w-3 text-white" />
                 <span>{navText.loginBtn}</span>
               </button>
 
@@ -322,13 +386,13 @@ export default function App() {
           <div className="hidden sm:flex shrink-0 items-center gap-2">
             <button
               onClick={() => {
-                window.dispatchEvent(new CustomEvent('icwl-logout'));
-                window.dispatchEvent(new CustomEvent('shramiklink-logout'));
+                setAuthModalTab('login');
+                setIsAuthModalOpen(true);
               }}
-              title="Portal Login"
-              className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white font-bold px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
+              title="পৰ্টেল লগইন ও পঞ্জীয়ন (Login / Register)"
+              className="bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95 transition-all"
             >
-              <LogOut className="h-3.5 w-3.5 text-rose-400" />
+              <LogIn className="h-3.5 w-3.5 text-white" />
               <span>{navText.loginBtn}</span>
             </button>
 
@@ -370,9 +434,9 @@ export default function App() {
             <div className="space-y-6">
               <HomeHub
                 currentLang={currentLang}
-                industries={initialIndustries}
-                contractors={initialContractors}
-                workers={initialWorkers}
+                industries={industries}
+                contractors={contractors}
+                workers={workers}
                 onNavigateToTab={(tab) => handleTabChange(tab)}
                 onNavigateToPanel={(roleKey, subCategory) => {
                   handleTabChange('app');
@@ -385,8 +449,10 @@ export default function App() {
                   window.dispatchEvent(new CustomEvent('shramiklink-switch-role', { detail: roleKey }));
                 }}
                 onRegisterRole={(roleKey, subCategory) => {
-                  handleTabChange('app');
-                  window.dispatchEvent(new CustomEvent('icwl-open-register', { detail: { role: roleKey, subCategory } }));
+                  setAuthModalTab('register');
+                  setAuthModalRole(roleKey);
+                  setAuthModalSubCategory(subCategory);
+                  setIsAuthModalOpen(true);
                 }}
                 onContractorApplyIndustry={() => {
                   handleTabChange('app');
@@ -516,6 +582,51 @@ export default function App() {
           <span className="text-[10px] mt-0.5 font-bold">ফ্ল’চাৰ্ট</span>
         </button>
       </nav>
+
+      {/* Global Toast Notification */}
+      {toastMessage && (
+        <div className={`fixed bottom-16 sm:bottom-6 right-4 sm:right-6 z-50 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold transition-all border animate-fadeIn ${
+          toastMessage.type === 'success' ? 'bg-emerald-950 text-emerald-200 border-emerald-500/50' :
+          toastMessage.type === 'error' ? 'bg-rose-950 text-rose-200 border-rose-500/50' :
+          'bg-slate-900 text-indigo-200 border-indigo-500/50'
+        }`}>
+          <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage.msg}</span>
+        </div>
+      )}
+
+      {/* Standalone Multi-Role Authentication & Registration Modal */}
+      <PortalAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialTab={authModalTab}
+        initialRole={authModalRole}
+        initialSubCategory={authModalSubCategory}
+        onLoginSuccess={(role, subCategory, userName) => {
+          handleTabChange('app');
+          localStorage.setItem('s_current_role', role);
+          if (subCategory) {
+            localStorage.setItem('s_current_subcategory', subCategory);
+          }
+          sessionStorage.setItem('s_session_authenticated', 'true');
+          localStorage.setItem('s_is_logged_in', 'true');
+          window.dispatchEvent(new CustomEvent('shramiklink-switch-role', { detail: role }));
+          showNotice(`স্বাগতম! আপুনি ${role.replace('_', ' ').toUpperCase()} হিচাপে সফলতাৰে প্ৰৱেশ কৰিছে।`, 'success');
+        }}
+        industries={industries}
+        contractors={contractors}
+        workers={workers}
+        onAddNewIndustry={(newInd) => {
+          setIndustries(prev => [newInd, ...prev]);
+        }}
+        onAddNewContractor={(newCon) => {
+          setContractors(prev => [newCon, ...prev]);
+        }}
+        onAddNewWorker={(newWrk) => {
+          setWorkers(prev => [newWrk, ...prev]);
+        }}
+        showNotice={showNotice}
+      />
     </div>
   );
 }

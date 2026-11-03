@@ -511,17 +511,18 @@ export const SupervisorAttendancePanel: React.FC<SupervisorAttendancePanelProps>
 
           {/* Quick Action Buttons */}
           <div className="flex sm:flex-col gap-2 shrink-0">
+            {/* Direct Worker / Guard Entry Trigger for All Supervisors (Contractor & Factory Gate) */}
+            <button
+              onClick={() => setIsDirectWorkerModalOpen(true)}
+              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+              title="স্মাৰ্টফোন নথকা শ্ৰমিক বা নিৰাপত্তাৰক্ষীক ছুপাৰভাইজাৰে পোনে পোনে ভৰ্তি কৰাওক"
+            >
+              <UserPlus className="h-4 w-4" />
+              + পোনপটীয়া শ্ৰমিক ও গাৰ্ড ভৰ্তি (Direct Worker & Guard Entry)
+            </button>
+
             {deskMode === 'contractor' && (
               <>
-                {/* Direct Worker Entry Modal Trigger */}
-                <button
-                  onClick={() => setIsDirectWorkerModalOpen(true)}
-                  className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  + পোনপটীয়া শ্ৰমিক ভৰ্তি (Direct Labour Entry)
-                </button>
-
                 {/* Monthly PDF / Print Sheet Modal Trigger */}
                 <button
                   onClick={() => setIsMonthlySheetModalOpen(true)}

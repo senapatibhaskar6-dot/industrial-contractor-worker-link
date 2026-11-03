@@ -45,6 +45,9 @@ import {
   Scale,
   FolderArchive,
   FolderCheck,
+  AlertCircle,
+  ShieldAlert,
+  Send,
   Home as HomeIcon
 } from 'lucide-react';
 import { 
@@ -273,9 +276,41 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                      '1-Click Fast Preview Access:'
   };
 
-  // Global State (persisted/synchronized to Postgres Cloud SQL)
-  const [industries, setIndustries] = useState<Industry[]>(initialIndustries);
-  const [contractors, setContractors] = useState<Contractor[]>(initialContractors);
+  // Global State (persisted/synchronized to Postgres Cloud SQL & localStorage)
+  const [industries, setIndustries] = useState<Industry[]>(() => {
+    try {
+      const saved = localStorage.getItem('s_industries_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return initialIndustries;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('s_industries_list', JSON.stringify(industries));
+    } catch {}
+  }, [industries]);
+
+  const [contractors, setContractors] = useState<Contractor[]>(() => {
+    try {
+      const saved = localStorage.getItem('s_contractors_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return initialContractors;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('s_contractors_list', JSON.stringify(contractors));
+    } catch {}
+  }, [contractors]);
+
   const [workers, setWorkers] = useState<Worker[]>(() => {
     try {
       const saved = localStorage.getItem('s_workers_list');
@@ -1565,10 +1600,26 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     };
   }, []);
   
-  // Selected Actor Sub-states
-  const [selectedIndustryId, setSelectedIndustryId] = useState<string>('ind-1'); // BCPL Dibrugarh
-  const [selectedContractorId, setSelectedContractorId] = useState<string>('con-1'); // Pragjyotish Manpower
-  const [selectedWorkerId, setSelectedWorkerId] = useState<string>('wrk-4'); // Idle worker
+  // Selected Actor Sub-states (Auto-links to User's Registered Enterprise / Contractor if available)
+  const [selectedIndustryId, setSelectedIndustryId] = useState<string>(() => {
+    return localStorage.getItem('s_selected_industry_id') || 
+           localStorage.getItem('s_my_registered_industry_id') || 
+           'ind-1';
+  });
+  const [selectedContractorId, setSelectedContractorId] = useState<string>(() => {
+    return localStorage.getItem('s_selected_contractor_id') || 
+           localStorage.getItem('s_my_registered_contractor_id') || 
+           'con-1';
+  });
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string>('wrk-4');
+
+  // Track the primary authenticated persona ('industry_admin' | 'contractor' | 'worker' | 'supervisor')
+  const [authenticatedPersona, setAuthenticatedPersona] = useState<string>(() => {
+    return localStorage.getItem('s_authenticated_persona') || 
+           localStorage.getItem('s_user_logged_in_role') || 
+           localStorage.getItem('s_current_role') || 
+           'industry_admin';
+  });
 
   // Specific Role Filters for Industry HR and Contractor Panels
   const [industryRoleFilter, setIndustryRoleFilter] = useState<'All' | 'Industry HR' | 'Apartment Owner' | 'Shop Owner' | 'Office'>('All');
@@ -1749,10 +1800,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const defaultFallbackIndustry: Industry = {
     id: 'ind-1',
     name: 'Brahmaputra Petrochemicals Complex (BCPL, Dibrugarh)',
-    location: 'Pimpri-Chinchwad, Maharashtra',
-    regNo: 'MH/PUN/892/F-LIC',
+    location: 'Lepetkata, Dibrugarh, Assam',
+    regNo: 'AS/DIB/892/F-LIC',
     lin: '1982738920',
-    contactEmail: 'admin.pune@tatamotors.com'
+    contactEmail: 'admin.dibrugarh@bcpl-assam.in'
   };
   const defaultFallbackContractor: Contractor = {
     id: 'con-1',
@@ -1839,6 +1890,11 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     setSelectedIndustryId(newId);
     setIndustryRoleFilter(newEstablishmentForm.category);
     setIsAddEstablishmentModalOpen(false);
+    try {
+      localStorage.setItem('s_selected_industry_id', newId);
+      localStorage.setItem('s_my_registered_industry_id', newId);
+      localStorage.setItem('s_authenticated_persona', 'industry_admin');
+    } catch {}
     setNewEstablishmentForm({
       name: '',
       location: 'Guwahati, Assam',
@@ -1847,7 +1903,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       contactEmail: '',
       category: 'Industry HR'
     });
-    showNotice(`নতুন ${created.category} (${created.name}) সফলতাৰে পঞ্জীয়ন হ'ল!`, 'success');
+    showNotice(`নতুন ${created.category} (${created.name}) সফলতাৰে পঞ্জীয়ন হ'ল আৰু সক্ৰিয় কৰা হ'ল!`, 'success');
   };
 
   const handleCreateContractor = (e: React.FormEvent) => {
@@ -1873,6 +1929,11 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     setSelectedContractorId(newId);
     setContractorRoleFilter(newContractorForm.contractorType);
     setIsAddContractorModalOpen(false);
+    try {
+      localStorage.setItem('s_selected_contractor_id', newId);
+      localStorage.setItem('s_my_registered_contractor_id', newId);
+      localStorage.setItem('s_authenticated_persona', 'contractor');
+    } catch {}
     setNewContractorForm({
       name: '',
       licenseNo: '',
@@ -1883,7 +1944,46 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       contactNo: '',
       contractorType: 'Labour Contractor'
     });
-    showNotice(`নতুন ${created.contractorType} (${created.name}) সফলতাৰে পঞ্জীয়ন হ'ল!`, 'success');
+    showNotice(`নতুন ${created.contractorType} (${created.name}) সফলতাৰে পঞ্জীয়ন হ'ল আৰু সক্ৰিয় কৰা হ'ল!`, 'success');
+  };
+
+  // Clean Slate / Live Production Mode: Clears mock/sample data and keeps ONLY genuine registered enterprises
+  const handleCleanSlateKeepOnlyRegisteredIndustries = () => {
+    const myRegId = localStorage.getItem('s_my_registered_industry_id');
+    const userCreatedIndustries = industries.filter(
+      i => i.id === myRegId || (i.id.startsWith('ind-') && Number(i.id.replace('ind-', '')) > 1000000000)
+    );
+
+    if (userCreatedIndustries.length > 0) {
+      setIndustries(userCreatedIndustries);
+      setSelectedIndustryId(userCreatedIndustries[0].id);
+      try {
+        localStorage.setItem('s_industries_list', JSON.stringify(userCreatedIndustries));
+      } catch {}
+      showNotice(`🧹 লাইভ প্ৰডাকচন মোড সক্ৰিয়: কেৱল আপোনাৰ বাস্তৱ পঞ্জীভুক্ত প্ৰতিষ্ঠানসমূহ (${userCreatedIndustries.map(i => i.name).join(', ')}) সংৰক্ষিত কৰা হ’ল। ডেমো তথ্য আঁতৰোৱা হ’ল।`, 'success');
+    } else {
+      showNotice('আপুনি এতিয়ালৈকে নিজৰ কোনো প্ৰতিষ্ঠান পঞ্জীয়ন কৰা নাই। অনুগ্ৰহ কৰি তলৰ ফৰ্মত আপোনাৰ নিজৰ বাস্তৱ প্ৰতিষ্ঠান পঞ্জীয়ন কৰক।', 'info');
+      setIsAddEstablishmentModalOpen(true);
+    }
+  };
+
+  const handleCleanSlateKeepOnlyRegisteredContractors = () => {
+    const myRegConId = localStorage.getItem('s_my_registered_contractor_id');
+    const userCreatedContractors = contractors.filter(
+      c => c.id === myRegConId || (c.id.startsWith('con-') && Number(c.id.replace('con-', '')) > 1000000000)
+    );
+
+    if (userCreatedContractors.length > 0) {
+      setContractors(userCreatedContractors);
+      setSelectedContractorId(userCreatedContractors[0].id);
+      try {
+        localStorage.setItem('s_contractors_list', JSON.stringify(userCreatedContractors));
+      } catch {}
+      showNotice(`🧹 লাইভ প্ৰডাকচন মোড সক্ৰিয়: কেৱল আপোনাৰ বাস্তৱ পঞ্জীভুক্ত সংস্থাসমূহ (${userCreatedContractors.map(c => c.name).join(', ')}) সংৰক্ষিত কৰা হ’ল। ডেমো তথ্য আঁতৰোৱা হ’ল।`, 'success');
+    } else {
+      showNotice('আপুনি এতিয়ালৈকে নিজৰ কোনো সংস্থা/ঠিকাদাৰ পঞ্জীয়ন কৰা নাই। অনুগ্ৰহ কৰি তলৰ ফৰ্মত আপোনাৰ নিজৰ সংস্থা পঞ্জীয়ন কৰক।', 'info');
+      setIsAddContractorModalOpen(true);
+    }
   };
 
   // Helper to find the assigned Government Labor Inspector for an Industry
@@ -4681,13 +4781,26 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Active Organization Tenant</span>
-              <span className="text-[10px] bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full font-bold">
-                Compliance Locked 🔓
+              <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">
+                {currentRole === 'contractor' ? 'Active Contractor Firm' : 'Active Organization Tenant'}
               </span>
+              <span className="text-[10px] bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full font-bold">
+                {currentRole === 'contractor' ? 'CLRA / PSARA Verified 🛡️' : 'Compliance Locked 🔓'}
+              </span>
+              {activeIndustry?.id === localStorage.getItem('s_my_registered_industry_id') && (
+                <span className="text-[9px] bg-indigo-500/15 text-indigo-700 border border-indigo-300 font-black px-2 py-0.5 rounded-full">
+                  ★ মোৰ পঞ্জীভুক্ত উদ্যোগ
+                </span>
+              )}
             </div>
-            <h2 className="text-lg font-black text-slate-900 tracking-tight">Dharma Manufacturing Hub</h2>
-            <p className="text-xs text-slate-500">Standard registered principal employer factory under MH CLRA rules.</p>
+            <h2 className="text-lg font-black text-slate-900 tracking-tight">
+              {currentRole === 'contractor' ? activeContractor.name : activeIndustry.name}
+            </h2>
+            <p className="text-xs text-slate-500">
+              {currentRole === 'contractor' 
+                ? `${activeContractor.contractorType || 'Manpower Vendor'} • অনুজ্ঞাপত্ৰ: ${activeContractor.licenseNo || 'CLRA Form VI'} • PAN: ${activeContractor.pan}`
+                : `${activeIndustry.location || 'Assam & Northeast Industrial Corridor'} • LIN: ${activeIndustry.lin || 'N/A'} • শ্ৰম আইন অনুপালন প্ৰণালী`}
+            </p>
           </div>
         </div>
 
@@ -5019,8 +5132,238 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       <div className="space-y-6">
         
         {/* ==================== 1. INDUSTRY ADMIN DASHBOARD ==================== */}
-        {currentRole === 'industry_admin' && (
-          <div className="space-y-8 animate-fadeIn">
+        {currentRole === 'industry_admin' && (() => {
+          // Check if current session persona is a Contractor / Security Agency attempting to access Industry HR / Owner console
+          const isContractorPersona = 
+            authenticatedPersona === 'contractor' || 
+            localStorage.getItem('s_authenticated_persona') === 'contractor';
+
+          const activeConnectionWithIndustry = industryContractorConnections.find(
+            c => c.industryId === activeIndustry.id && c.contractorId === selectedContractorId
+          );
+          const isContractorAuthorized = activeConnectionWithIndustry?.status === 'Connected';
+
+          // Statutory Gate: CLRA Act 1970 Sec 21 & Factories Act 1948
+          // Contractor cannot enter Industry / Owner console without explicit permission/connection
+          if (isContractorPersona && !isContractorAuthorized) {
+            return (
+              <div className="bg-white border-2 border-rose-300 rounded-3xl p-6 sm:p-8 shadow-xl max-w-4xl mx-auto space-y-6 text-slate-900 animate-fadeIn my-6">
+                {/* Header with Statutory Seal */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-rose-100 pb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3.5 bg-rose-100 text-rose-700 rounded-2xl shadow-xs border border-rose-200">
+                      <Lock className="h-7 w-7" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-rose-100 text-rose-800 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-rose-300">
+                          CLRA ACT 1970 SEC 21 • আইনী অনুপ্ৰৱেশ বাৰণ
+                        </span>
+                        <span className="text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+                          অনুমতি বাধ্যতামূলক
+                        </span>
+                      </div>
+                      <h2 className="text-xl font-black text-slate-900 mt-1">
+                        🔒 অনুপ্ৰৱেশ প্ৰতিৰোধিত: প্ৰধান নিয়োগকৰ্তা (Industry HR / Owner) ৰ অনুমতি বাধ্যতামূলক
+                      </h2>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setCurrentRole('contractor');
+                      localStorage.setItem('s_current_role', 'contractor');
+                    }}
+                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
+                  >
+                    <span>⬅️ মোৰ ঠিকাদাৰ ডেক্স</span>
+                  </button>
+                </div>
+
+                {/* Statutory Explanation */}
+                <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 sm:p-5 space-y-2 text-rose-950">
+                  <div className="flex items-start gap-2.5">
+                    <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <h4 className="font-extrabold text-sm text-rose-900">
+                        আইনী নীতি (Statutory Regulation):
+                      </h4>
+                      <p className="text-xs text-rose-800 leading-relaxed">
+                        Contract Labour (Regulation & Abolition) Act, 1970 ৰ Section 21 আৰু Factories Act, 1948 অনুসৰি কোনো শ্ৰম ঠিকাদাৰ (Labour Contractor) বা নিৰাপত্তা সংস্থা (Security Agency)-এ প্ৰধান নিয়োগকাৰী (Principal Employer / Factory HR / Apartment Owner) ৰ প্ৰত্যক্ষ লিখিত/ডিজিটেল অনুমোদন আৰু আইনী সংযোগ অবিহনে প্ৰতিষ্ঠানৰ আভ্যন্তৰীণ প্ৰশাসনিক ডেশ্ববৰ্ডত প্ৰৱেশ কৰিব নোৱাৰে।
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Identity & Status Overview Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <span>আপোনাৰ সংস্থা (Your Agency)</span>
+                      <Building2 className="h-4 w-4 text-indigo-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-slate-900 text-sm">{activeContractor.name}</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {activeContractor.contractorType || 'Labour Contractor'}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-1">
+                        অনুজ্ঞাপত্ৰ: {activeContractor.licenseNo} • PAN: {activeContractor.pan}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <span>লক্ষ্য প্ৰতিষ্ঠান (Target Employer)</span>
+                      <Building2 className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-slate-900 text-sm">{activeIndustry.name}</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {activeIndustry.category || 'Industry HR'} • {activeIndustry.location}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-1">
+                        LIN: {activeIndustry.lin} • পঞ্জীয়ন: {activeIndustry.regNo}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <span>অনুমতিৰ স্থিতি (Permission Status)</span>
+                      <ShieldAlert className="h-4 w-4 text-rose-600" />
+                    </div>
+                    <div>
+                      {activeConnectionWithIndustry?.status === 'Pending' ? (
+                        <div>
+                          <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
+                            <Clock className="h-3 w-3" />
+                            আবেদন বিবেচনাধীন (Pending)
+                          </span>
+                          <p className="text-[11px] text-amber-800 font-medium mt-1.5 leading-snug">
+                            প্ৰধান নিয়োগকৰ্তালৈ ইতিমধ্যে শ্ৰমিক যোগান আৰু সংযোগৰ আবেদন প্ৰেৰণ কৰা হৈছে ({activeConnectionWithIndustry.requestedAt})। প্ৰধান নিয়োগকৰ্তাই অনুমোদন দিলেহে পেনেল খোল খাব।
+                          </p>
+                        </div>
+                      ) : activeConnectionWithIndustry?.status === 'Rejected' ? (
+                        <div>
+                          <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-900 border border-rose-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
+                            <X className="h-3 w-3" />
+                            অনুমোদন নাকচ (Rejected)
+                          </span>
+                          <p className="text-[11px] text-rose-800 font-medium mt-1.5 leading-snug">
+                            প্ৰধান নিয়োগকৰ্তাই এই সংস্থাক শ্ৰমিক যোগান বা প্ৰৱেশৰ অনুমতি প্ৰদান নকৰিলে।
+                          </p>
+                        </div>
+                      ) : (
+                        <div>
+                          <span className="inline-flex items-center gap-1 bg-slate-200 text-slate-800 border border-slate-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
+                            <Lock className="h-3 w-3" />
+                            কোনো অনুমতি নাই (Unapproved)
+                          </span>
+                          <p className="text-[11px] text-slate-600 font-medium mt-1.5 leading-snug">
+                            এই প্ৰতিষ্ঠানৰ আভ্যন্তৰীণ পেনেল চাবলৈ প্ৰথমে শ্ৰমিক যোগানৰ ডিজিটেল আবেদন প্ৰেৰণ কৰক।
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Primary Action Button */}
+                <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 space-y-3">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <h4 className="font-black text-indigo-950 text-sm">
+                        {activeConnectionWithIndustry?.status === 'Pending' 
+                          ? 'আবেদন ইতিমধ্যে প্ৰেৰণ কৰা হৈছে' 
+                          : 'প্ৰধান নিয়োগকাৰীৰ পৰা অনুমতি লাভ কৰিব বিচাৰে নেকি?'}
+                      </h4>
+                      <p className="text-xs text-indigo-700">
+                        {activeConnectionWithIndustry?.status === 'Pending'
+                          ? 'প্ৰধান নিয়োগকৰ্তাই নিজৰ Owner / HR Console ত আপোনাৰ আবেদন Approve কৰিলে আপুনি স্বয়ংক্রিয়ভাৱে সংযুক্ত হৈ যাব।'
+                          : 'তলৰ বুটামত ক্লিক কৰি প্ৰধান নিয়োগকাৰী (Industry HR/Owner) লৈ ডিজিটেল শ্ৰমিক যোগান & প্ৰৱেশৰ আবেদন প্ৰেৰণ কৰক।'}
+                      </p>
+                    </div>
+
+                    {(!activeConnectionWithIndustry || activeConnectionWithIndustry.status === 'Rejected') && (
+                      <button
+                        onClick={() => handleApplyToIndustry(
+                          activeIndustry.id, 
+                          `${activeContractor.name} (${activeContractor.contractorType}) দ্বাৰা শ্ৰমিক যোগান & আইনী প্ৰৱেশৰ অনুমতিৰ বাবে আবেদন কৰা হৈছে।`
+                        )}
+                        className="bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs px-5 py-3 rounded-xl transition-all flex items-center gap-2 shadow-sm hover:scale-105 cursor-pointer shrink-0"
+                      >
+                        <Send className="h-4 w-4" />
+                        <span>📤 প্ৰধান নিয়োগকৰ্তালৈ অনুমতিৰ আবেদন প্ৰেৰণ কৰক</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Role Redirection / Alternate Options */}
+                <div className="border-t border-slate-200 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                  <span className="text-slate-500">
+                    অন্য পেনেললৈ যাবলৈ বিকল্প বাছক:
+                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => {
+                        setCurrentRole('contractor');
+                        localStorage.setItem('s_current_role', 'contractor');
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>🏢 মোৰ ঠিকাদাৰ ডেক্সলৈ ঘূৰি যাওক</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setAuthenticatedPersona('industry_admin');
+                        localStorage.setItem('s_authenticated_persona', 'industry_admin');
+                        showNotice(`প্ৰধান নিয়োগকাৰী (${activeIndustry.name}) মোডলৈ সলনি কৰা হ’ল।`, 'success');
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <UserCheck className="h-3.5 w-3.5" />
+                      <span>🔑 মই প্ৰধান নিয়োগকাৰী (I am the Industry HR/Owner)</span>
+                    </button>
+
+                    <button
+                      onClick={() => setIsAddEstablishmentModalOpen(true)}
+                      className="bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>+ মোৰ নিজৰ প্ৰতিষ্ঠান পঞ্জীয়ন কৰক</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="space-y-8 animate-fadeIn">
+              {/* Authorized Badge if Contractor was given permission */}
+              {isContractorPersona && isContractorAuthorized && (
+                <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-emerald-950 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-xs shrink-0">
+                      <ShieldCheck className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <h4 className="font-extrabold text-sm text-emerald-950">
+                        ✅ প্ৰধান নিয়োগকৰ্তাৰ দ্বাৰা অনুমোদিত আৰু সংযুক্ত শ্ৰম ঠিকাদাৰ ({activeContractor.name})
+                      </h4>
+                      <p className="text-xs text-emerald-700">
+                        CLRA Act 1970 Sec 21 অনুসৰি {activeIndustry.name} কৰ্তৃপক্ষই আপোনাৰ সংস্থাক শ্ৰমিক যোগান আৰু উপস্থিতি নিৰীক্ষণৰ আইনী প্ৰৱেশাধিকাৰ প্ৰদান কৰিছে।
+                      </p>
+                    </div>
+                  </div>
+                  <span className="bg-emerald-600 text-white font-mono text-[10px] font-bold px-3 py-1 rounded-full uppercase shrink-0">
+                    Authorized Connected
+                  </span>
+                </div>
+              )}
             
             {/* Top Selector & Meta (Industry HR, Apartment Owner, Shop Owner, Office) */}
             <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs space-y-5">
@@ -5051,6 +5394,14 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                   >
                     <Plus className="h-4 w-4" />
                     <span>+ নতুন প্ৰতিষ্ঠান যোগ কৰক (Add Establishment)</span>
+                  </button>
+
+                  <button
+                    onClick={handleCleanSlateKeepOnlyRegisteredIndustries}
+                    title="কেৱল আপোনাৰ পঞ্জীভুক্ত বাস্তৱ উদ্যোগ সংৰক্ষণ কৰক আৰু ডেমো তথ্য আঁতৰাওক"
+                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    <span>🧹 কেৱল মোৰ পঞ্জীভুক্ত প্ৰতিষ্ঠান ৰাখক (Production Mode)</span>
                   </button>
 
                   <button 
@@ -5909,7 +6260,8 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               </div>
             )}
           </div>
-        )}
+        );
+      })()}
 
         {/* ==================== 1.5. SUPERVISOR DASHBOARD ==================== */}
         {currentRole === 'supervisor' && (
@@ -6002,6 +6354,14 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                   >
                     <Plus className="h-4 w-4" />
                     <span>+ নতুন সংস্থা যোগ কৰক (Add Agency)</span>
+                  </button>
+
+                  <button
+                    onClick={handleCleanSlateKeepOnlyRegisteredContractors}
+                    title="কেৱল আপোনাৰ পঞ্জীভুক্ত বাস্তৱ সংস্থা সংৰক্ষণ কৰক আৰু ডেমো তথ্য আঁতৰাওক"
+                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    <span>🧹 কেৱল মোৰ পঞ্জীভুক্ত সংস্থা ৰাখক (Production Mode)</span>
                   </button>
 
                   <button 

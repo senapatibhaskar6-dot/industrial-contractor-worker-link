@@ -23,7 +23,7 @@ export const DirectWorkerEntryModal: React.FC<DirectWorkerEntryModalProps> = ({
   const [phone, setPhone] = useState<string>('');
   const [hasNoSmartphone, setHasNoSmartphone] = useState<boolean>(true);
   const [aadhaarLastDigits, setAadhaarLastDigits] = useState<string>('');
-  const [skillType, setSkillType] = useState<'Unskilled'>('Unskilled');
+  const [workerTypeSelection, setWorkerTypeSelection] = useState<'Unskilled-Laborer' | 'Security-Guard' | 'Security-Supervisor'>('Unskilled-Laborer');
   const [dailyWageRate, setDailyWageRate] = useState<number>(480);
   const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Male');
   const [assignedShift, setAssignedShift] = useState<string>('General (09:00 - 17:00)');
@@ -33,7 +33,7 @@ export const DirectWorkerEntryModal: React.FC<DirectWorkerEntryModalProps> = ({
 
   const safeContractor: Contractor = contractor || {
     id: 'con-1',
-    name: 'Apex Industrial Manpower Solutions',
+    name: 'Pragjyotish Industrial Manpower Solutions',
     licenseNo: 'CLRA/AS/2026/8921',
     lin: '1928374650',
     pan: 'ABCDE1234F',
@@ -43,16 +43,22 @@ export const DirectWorkerEntryModal: React.FC<DirectWorkerEntryModalProps> = ({
     rating: 4.9
   };
 
-  // Standard minimum wage for unskilled labor
-  const handleWageChange = (rate: number) => {
-    setDailyWageRate(rate);
+  const handleWorkerTypeChange = (type: 'Unskilled-Laborer' | 'Security-Guard' | 'Security-Supervisor') => {
+    setWorkerTypeSelection(type);
+    if (type === 'Security-Guard') {
+      setDailyWageRate(550);
+    } else if (type === 'Security-Supervisor') {
+      setDailyWageRate(650);
+    } else {
+      setDailyWageRate(480);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name.trim()) {
-      showNotice('অনুগ্ৰহ কৰি শ্ৰমিকৰ নাম প্ৰবিষ্ট কৰক!', 'error');
+      showNotice('অনুগ্ৰহ কৰি শ্ৰমিকৰ বা গাৰ্ডৰ নাম প্ৰবিষ্ট কৰক!', 'error');
       return;
     }
 
@@ -67,15 +73,22 @@ export const DirectWorkerEntryModal: React.FC<DirectWorkerEntryModalProps> = ({
     const lastFour = cleanAadhaar.length >= 4 ? cleanAadhaar.slice(-4) : String(Math.floor(1000 + Math.random() * 9000));
     const maskedAadhaar = `XXXX-XXXX-${lastFour}`;
 
+    const isGuard = workerTypeSelection === 'Security-Guard';
+    const isSup = workerTypeSelection === 'Security-Supervisor';
+    const prefix = isSup ? 'SL-SUP' : isGuard ? 'SL-GRD' : 'SL-WKR';
+    const randomCode = Math.floor(1000 + Math.random() * 9000);
+
     const newWorkerId = `wrk-${Date.now()}`;
     const newWorker: Worker = {
       id: newWorkerId,
+      platformId: `${prefix}-${randomCode}`,
       name: name.trim(),
       aadhaarHash: maskedAadhaar,
       phone: phone.trim(),
       contractorId: safeContractor.id,
-      skillType: skillType,
-      dailyWageRate: Number(dailyWageRate) || 480,
+      skillType: 'Unskilled',
+      workerType: workerTypeSelection,
+      dailyWageRate: Number(dailyWageRate) || (isGuard ? 550 : isSup ? 650 : 480),
       status: 'Available',
       onboardingVerified: true,
       onboardingDate: new Date().toISOString().split('T')[0]
@@ -83,7 +96,7 @@ export const DirectWorkerEntryModal: React.FC<DirectWorkerEntryModalProps> = ({
 
     onAddWorker(newWorker);
     showNotice(
-      `সফল! ছুপাৰভাইজাৰ ${supervisor?.name || 'Supervisor'} দ্বাৰা শ্ৰমিক ${name} ক কণ্ট্ৰেক্টৰ ${safeContractor.name} ৰ অধীনত পোনপটীয়াকৈ ভৰ্তি কৰা হ'ল!`,
+      `সফল! ছুপাৰভাইজাৰ ${supervisor?.name || 'Supervisor'} দ্বাৰা ${isGuard ? 'নিৰাপত্তাৰক্ষী' : isSup ? 'ছিকিউৰিটি ছুপাৰভাইজাৰ' : 'শ্ৰমিক'} ${name} (ID: ${newWorker.platformId}) ক কণ্ট্ৰেক্টৰ/সংস্থা ${safeContractor.name} ৰ অধীনত পোনপটীয়াকৈ ভৰ্তি কৰা হ'ল!`,
       'success'
     );
 
@@ -207,34 +220,69 @@ export const DirectWorkerEntryModal: React.FC<DirectWorkerEntryModalProps> = ({
             </span>
           </div>
 
-          {/* Worker Category & Daily Wage Rate */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-700 font-extrabold mb-1">
-                শ্ৰমিকৰ শ্ৰেণী (Labour Category)
-              </label>
-              <div className="w-full bg-slate-100 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800 text-xs flex items-center justify-between">
-                <span>অদক্ষ শ্ৰমিক (Unskilled Labourer)</span>
-                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">মান্য</span>
-              </div>
-            </div>
+          {/* Worker Category Selection: Unskilled Worker vs Security Guard vs Security Supervisor */}
+          <div>
+            <label className="block text-slate-700 font-extrabold mb-1">
+              কৰ্মীৰ শ্ৰেণী / ভূমিকা (Role Category) *
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleWorkerTypeChange('Unskilled-Laborer')}
+                className={`py-2 px-2.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                  workerTypeSelection === 'Unskilled-Laborer'
+                    ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-xs ring-2 ring-amber-300'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <span>👷 কাৰখানা শ্ৰমিক</span>
+                <span className="text-[9px] opacity-80">(₹480/দিন)</span>
+              </button>
 
-            <div>
-              <label className="block text-slate-700 font-extrabold mb-1">
-                দৈনিক মজুৰি হাৰ (Daily Wage Rate ₹) *
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 font-bold text-slate-400">₹</span>
-                <input
-                  type="number"
-                  required
-                  min={300}
-                  max={2500}
-                  value={dailyWageRate}
-                  onChange={(e) => setDailyWageRate(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-7 pr-3 py-2.5 font-mono font-black text-slate-900 outline-none focus:border-indigo-500 text-xs"
-                />
-              </div>
+              <button
+                type="button"
+                onClick={() => handleWorkerTypeChange('Security-Guard')}
+                className={`py-2 px-2.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                  workerTypeSelection === 'Security-Guard'
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-600 shadow-xs ring-2 ring-emerald-300'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <span>👮 নিৰাপত্তাৰক্ষী</span>
+                <span className="text-[9px] opacity-80">(₹550/দিন)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleWorkerTypeChange('Security-Supervisor')}
+                className={`py-2 px-2.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                  workerTypeSelection === 'Security-Supervisor'
+                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs ring-2 ring-indigo-400'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <span>🛡️ গাৰ্ড ছুপাৰভাইজাৰ</span>
+                <span className="text-[9px] opacity-80">(₹650/দিন)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Daily Wage Rate */}
+          <div>
+            <label className="block text-slate-700 font-extrabold mb-1">
+              দৈনিক মজুৰি হাৰ (Daily Wage Rate ₹) *
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 font-bold text-slate-400">₹</span>
+              <input
+                type="number"
+                required
+                min={300}
+                max={2500}
+                value={dailyWageRate}
+                onChange={(e) => setDailyWageRate(Number(e.target.value))}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-7 pr-3 py-2.5 font-mono font-black text-slate-900 outline-none focus:border-indigo-500 text-xs"
+              />
             </div>
           </div>
 

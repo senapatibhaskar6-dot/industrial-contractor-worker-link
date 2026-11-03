@@ -182,8 +182,42 @@ export default function HomeHub({
         currentLang === 'as' ? 'মাহিলী বিল আৰু পেমেন্ট ট্ৰেকিং (Admin Bill & Pay)' : 'Admin Billing & Payment Status'
       ],
       actionText: currentLang === 'as' ? 'উদ্যোগ পেনেলত প্ৰৱেশ' : 'Enter Factory Console',
-      registerText: currentLang === 'as' ? 'প্ৰতিষ্ঠান পঞ্জীয়ন' : 'Register Enterprise',
+      registerText: currentLang === 'as' ? 'উদ্যোগ পঞ্জীয়ন' : 'Register Industry',
       tag: 'Principal Employer'
+    },
+    {
+      id: 'owner_establishment',
+      roleKey: 'industry_admin',
+      subCategory: 'Apartment Owner',
+      registerRoleKey: 'apartment_owner',
+      category: 'enterprise',
+      icon: HomeIcon,
+      accentColor: 'indigo',
+      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      title: currentLang === 'as' ? '🏢 প্ৰতিষ্ঠান আৰু ছচাইটি মালিক ডেক্স' : 
+             currentLang === 'hi' ? '🏢 प्रतिष्ठान व सोसाइटी मालिक डेस्क' : 
+             currentLang === 'bn' ? '🏢 প্রতিষ্ঠান ও সোসাইটি মালিক ডেস্ক' : 
+             '🏢 Establishment & Society Owner Desk',
+      subTitle: currentLang === 'as' ? 'Apartment Society • Commercial Complex • Shop Owner • Office' :
+                currentLang === 'hi' ? 'अपार्टमेंट सोसाइटी • कॉम्प्लेक्स • दुकान मालिक • कार्यालय' :
+                currentLang === 'bn' ? 'অ্যাপার্টমেন্ট সোসাইটি • দোকান মালিক • কর্পোরেট অফিস' :
+                'Apartment Society • Commercial Complex • Shop Owner • Office',
+      target: currentLang === 'as' ? 'এপাৰ্টমেণ্ট ছচাইটি, দোকান আৰু বাণিজ্যিক চৌহদৰ মালিক' : 'Apartment Societies & Commercial Owners',
+      description: currentLang === 'as'
+        ? 'এপাৰ্টমেণ্ট আৰু বাণিজ্যিক প্ৰতিষ্ঠানৰ বাবে নিৰাপত্তা সংস্থা (PSARA Agency) নিয়োগ, গেট পহৰাদাৰী, ডিজিটেল গেট পাছ আৰু অনলাইন বিলিং পৰিচালনা কৰক।'
+        : 'Contract licensed PSARA security agencies for apartment societies, retail shops, and commercial offices with digital gate tracking.',
+      highlights: [
+        currentLang === 'as' ? 'নিৰাপত্তা সংস্থা নিয়োগ আৰু প্ৰস্তাৱ (Hire PSARA Agency)' : 'Hire PSARA Security Agency',
+        currentLang === 'as' ? 'গেট ভিজিটৰ আৰু সামগ্ৰী এন্ট্ৰি/এক্সিট পাছ' : 'Gate Visitor & Material Pass Log',
+        currentLang === 'as' ? 'মালিক পঞ্জীয়ন আৰু অনুপালন বিলিং (Owner Compliance)' : 'Owner Registration & Invoicing',
+        currentLang === 'as' ? 'পহৰাদাৰী আৰু নিৰাপত্তাৰক্ষী হাজিৰা নিৰীক্ষণ' : 'Guard Attendance & Patrol Tracking'
+      ],
+      actionText: currentLang === 'as' ? 'মালিক পেনেলত প্ৰৱেশ' : 'Enter Owner Desk',
+      registerText: currentLang === 'as' ? 'মালিক পঞ্জীয়ন' : 'Register Owner',
+      tag: 'Premises Owner',
+      hasB2BRequestButton: true,
+      b2bButtonText: currentLang === 'as' ? '🛡️ PSARA নিৰাপত্তা সংস্থা বিচাৰি সংযোগ কৰক' : '🛡️ Find & Connect PSARA Agency',
+      b2bButtonType: 'agency_to_apartment'
     },
     {
       id: 'contractor',
