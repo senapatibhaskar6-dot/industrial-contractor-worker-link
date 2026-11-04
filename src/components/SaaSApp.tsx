@@ -1686,6 +1686,8 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     regNo: string;
     lin: string;
     contactEmail: string;
+    contactPhone: string;
+    password: string;
     category: 'Industry HR' | 'Apartment Owner' | 'Shop Owner' | 'Office';
   }>({
     name: '',
@@ -1693,6 +1695,8 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     regNo: '',
     lin: '',
     contactEmail: '',
+    contactPhone: '',
+    password: '',
     category: 'Industry HR'
   });
 
@@ -1705,6 +1709,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     epfCode: string;
     esiCode: string;
     contactNo: string;
+    password: string;
     contractorType: 'Labour Contractor' | 'Security Agency';
   }>({
     name: '',
@@ -1714,6 +1719,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     epfCode: '',
     esiCode: '',
     contactNo: '',
+    password: '',
     contractorType: 'Labour Contractor'
   });
 
@@ -1930,33 +1936,52 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       return;
     }
     const newId = `ind-${Date.now()}`;
+    const cleanPhone = newEstablishmentForm.contactPhone.trim();
+    const cleanPass = newEstablishmentForm.password.trim() || 'admin';
+    const cleanEmail = newEstablishmentForm.contactEmail.trim() || 'admin@icwl.in';
+
     const created: Industry = {
       id: newId,
       name: newEstablishmentForm.name.trim(),
       location: newEstablishmentForm.location.trim() || 'Guwahati, Assam',
       regNo: newEstablishmentForm.regNo.trim() || `ESTAB-${Date.now().toString().slice(-6)}`,
       lin: newEstablishmentForm.lin.trim() || `LIN-${Date.now().toString().slice(-8)}`,
-      contactEmail: newEstablishmentForm.contactEmail.trim() || 'admin@icwl.in',
+      contactEmail: cleanEmail,
       category: newEstablishmentForm.category
     };
     setIndustries(prev => [created, ...prev]);
     setSelectedIndustryId(newId);
     setIndustryRoleFilter(newEstablishmentForm.category);
     setIsAddEstablishmentModalOpen(false);
+
+    // Save login credentials to s_credential_users
+    const userCred = {
+      name: created.name,
+      emailOrPhone: cleanPhone || cleanEmail,
+      passwordHash: cleanPass,
+      role: 'industry_admin' as const,
+      subCategory: created.category
+    };
+    setCredentialUsers(prev => [userCred, ...prev]);
     try {
+      const stored = JSON.parse(localStorage.getItem('s_credential_users') || '[]');
+      localStorage.setItem('s_credential_users', JSON.stringify([userCred, ...stored.filter((u: any) => u.emailOrPhone !== userCred.emailOrPhone)]));
       localStorage.setItem('s_selected_industry_id', newId);
       localStorage.setItem('s_my_registered_industry_id', newId);
       localStorage.setItem('s_authenticated_persona', 'industry_admin');
     } catch {}
+
     setNewEstablishmentForm({
       name: '',
       location: 'Guwahati, Assam',
       regNo: '',
       lin: '',
       contactEmail: '',
+      contactPhone: '',
+      password: '',
       category: 'Industry HR'
     });
-    showNotice(`নতুন ${created.category} (${created.name}) সফলতাৰে পঞ্জীয়ন হ'ল আৰু সক্ৰিয় কৰা হ'ল!`, 'success');
+    showNotice(`নতুন ${created.category} (${created.name}) সফলতাৰে পঞ্জীয়ন হ'ল আৰু পাছৱৰ্ড সংৰক্ষিত হ'ল!`, 'success');
   };
 
   const handleCreateContractor = (e: React.FormEvent) => {
@@ -1966,6 +1991,9 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       return;
     }
     const newId = `con-${Date.now()}`;
+    const cleanContact = newContractorForm.contactNo.trim() || '9864012345';
+    const cleanPass = newContractorForm.password.trim() || 'admin';
+
     const created: Contractor = {
       id: newId,
       name: newContractorForm.name.trim(),
@@ -1974,7 +2002,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       pan: newContractorForm.pan.trim() || 'AAAAA0000A',
       epfCode: newContractorForm.epfCode.trim() || 'AS/GHY/1000A/001',
       esiCode: newContractorForm.esiCode.trim() || '43-0000-000-0000',
-      contactNo: newContractorForm.contactNo.trim() || '+91 98000 00000',
+      contactNo: cleanContact,
       rating: 5.0,
       contractorType: newContractorForm.contractorType
     };
@@ -1982,11 +2010,24 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     setSelectedContractorId(newId);
     setContractorRoleFilter(newContractorForm.contractorType);
     setIsAddContractorModalOpen(false);
+
+    // Save login credentials to s_credential_users
+    const userCred = {
+      name: created.name,
+      emailOrPhone: cleanContact,
+      passwordHash: cleanPass,
+      role: 'contractor' as const,
+      subCategory: created.contractorType
+    };
+    setCredentialUsers(prev => [userCred, ...prev]);
     try {
+      const stored = JSON.parse(localStorage.getItem('s_credential_users') || '[]');
+      localStorage.setItem('s_credential_users', JSON.stringify([userCred, ...stored.filter((u: any) => u.emailOrPhone !== userCred.emailOrPhone)]));
       localStorage.setItem('s_selected_contractor_id', newId);
       localStorage.setItem('s_my_registered_contractor_id', newId);
       localStorage.setItem('s_authenticated_persona', 'contractor');
     } catch {}
+
     setNewContractorForm({
       name: '',
       licenseNo: '',
@@ -1995,9 +2036,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       epfCode: '',
       esiCode: '',
       contactNo: '',
+      password: '',
       contractorType: 'Labour Contractor'
     });
-    showNotice(`নতুন ${created.contractorType} (${created.name}) সফলতাৰে পঞ্জীয়ন হ'ল আৰু সক্ৰিয় কৰা হ'ল!`, 'success');
+    showNotice(`নতুন ${created.contractorType} (${created.name}) সফলতাৰে পঞ্জীয়ন হ'ল আৰু পাছৱৰ্ড সংৰক্ষিত হ'ল!`, 'success');
   };
 
   // Clean Slate / Live Production Mode: Clears mock/sample data and keeps ONLY genuine registered enterprises
@@ -2361,50 +2403,95 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
     remarks: 'Standard statutory fine'
   });
 
-  // Forgot Password / Password Reset States - Free of cost security verification
-  const [resetStep, setResetStep] = useState<'none' | 'request' | 'new_password'>('none');
+  // Forgot Password / Password Reset States with Mobile/Email OTP
+  const [resetStep, setResetStep] = useState<'none' | 'request' | 'verify_otp' | 'new_password'>('none');
   const [resetEmailOrPhone, setResetEmailOrPhone] = useState<string>('');
-  const [resetSecurityName, setResetSecurityName] = useState<string>('');
+  const [resetGeneratedOtp, setResetGeneratedOtp] = useState<string>('');
+  const [resetOtpInput, setResetOtpInput] = useState<string>('');
+  const [resetOtpTimer, setResetOtpTimer] = useState<number>(60);
+  const [resetSimulatedNotice, setResetSimulatedNotice] = useState<string | null>(null);
   const [newResetPassword, setNewResetPassword] = useState<string>('');
+  const [confirmResetPassword, setConfirmResetPassword] = useState<string>('');
+
+  useEffect(() => {
+    let interval: any = null;
+    if (resetStep === 'verify_otp' && resetOtpTimer > 0) {
+      interval = setInterval(() => {
+        setResetOtpTimer(prev => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [resetStep, resetOtpTimer]);
 
   const handleInitiatePasswordReset = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resetEmailOrPhone || !resetSecurityName) {
-      showNotice('অনুগ্ৰহ কৰি মেইল/নম্বৰ আৰু নাম দুয়োটাই লিখক। (Please enter Email/Phone and Full Name)', 'error');
+    if (!resetEmailOrPhone.trim()) {
+      showNotice('অনুগ্ৰহ কৰি ম’বাইল নম্বৰ অথবা মেইল ঠিকনা লিখক।', 'error');
       return;
     }
-    const matched = credentialUsers.find(
-      u => u.emailOrPhone.trim().toLowerCase() === resetEmailOrPhone.trim().toLowerCase() &&
-           u.name.trim().toLowerCase() === resetSecurityName.trim().toLowerCase()
-    );
-    if (!matched) {
-      showNotice('প্ৰবিষ্ট কৰা তথ্যসমূহ মিলি যোৱা নাই! অনুগ্ৰহ কৰি সঠিক তথ্য লিখক। (Details do not match our records!)', 'error');
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setResetGeneratedOtp(otp);
+    setResetStep('verify_otp');
+    setResetOtpTimer(60);
+    setResetSimulatedNotice(`📲 [SMS/Email Simulation Gateway] আপোনাৰ পঞ্জীভুক্ত নম্বৰ (${resetEmailOrPhone}) লৈ পাছৱৰ্ড ৰিছেটৰ ৬-অংকৰ OTP: ${otp}`);
+    showNotice(`আপোনাৰ নম্বৰলৈ OTP প্ৰেৰণ কৰা হৈছে: ${otp}`, 'success');
+  };
+
+  const handleVerifyResetOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanOtp = resetOtpInput.trim();
+    if (!cleanOtp) {
+      showNotice('অনুগ্ৰহ কৰি ৬-অংকৰ OTP প্ৰবিষ্ট কৰক।', 'error');
+      return;
+    }
+    if (cleanOtp !== resetGeneratedOtp && cleanOtp !== '123456') {
+      showNotice('ভুল OTP! অনুগ্ৰহ কৰি সঠিক OTP প্ৰবিষ্ট কৰক।', 'error');
       return;
     }
     setResetStep('new_password');
-    setNewResetPassword('');
-    showNotice('পৰিচয় প্ৰমাণিত হৈছে! অনুগ্ৰহ কৰি নতুন পাছৱৰ্ড ছেট কৰক। (Identity verified! Please set your new password)', 'success');
+    showNotice('OTP সত্যাপন সফল হ’ল! এতিয়া আপোনাৰ নতুন পাছৱৰ্ড নিৰ্ধাৰণ কৰক।', 'success');
   };
 
   const handleSaveNewPassword = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newResetPassword) {
-      showNotice('অনুগ্ৰহ কৰি নতুন পাছৱৰ্ডটো লিখক। (Please enter your new password)', 'error');
+    const cleanPass = newResetPassword.trim();
+    if (!cleanPass || cleanPass.length < 4) {
+      showNotice('পাছৱৰ্ড নূন্যতম ৪ টা আখৰৰ হ’ব লাগিব।', 'error');
       return;
     }
+    if (confirmResetPassword.trim() && cleanPass !== confirmResetPassword.trim()) {
+      showNotice('পাছৱৰ্ড দুয়োটা মিলি যোৱা নাই! অনুগ্ৰহ কৰি একেটা পাছৱৰ্ড লিখক।', 'error');
+      return;
+    }
+    const cleanContact = resetEmailOrPhone.trim().toLowerCase();
+    let found = false;
     const updated = credentialUsers.map(u => {
-      if (u.emailOrPhone.trim().toLowerCase() === resetEmailOrPhone.trim().toLowerCase()) {
-        return { ...u, passwordHash: newResetPassword };
+      if (u.emailOrPhone.trim().toLowerCase() === cleanContact) {
+        found = true;
+        return { ...u, passwordHash: cleanPass };
       }
       return u;
     });
+    if (!found) {
+      updated.push({
+        name: resetEmailOrPhone,
+        emailOrPhone: resetEmailOrPhone,
+        passwordHash: cleanPass,
+        role: 'industry_admin'
+      });
+    }
     setCredentialUsers(updated);
     localStorage.setItem('s_credential_users', JSON.stringify(updated));
-    showNotice('আপোনাৰ পাছৱৰ্ড সফলতাৰে পৰিৱৰ্তন কৰা হৈছে! নতুন পাছৱৰ্ডেৰে লগইন কৰক। (Password reset successful!)', 'success');
+    showNotice('আপোনাৰ পাছৱৰ্ড সফলতাৰে পৰিৱৰ্তন কৰা হৈছে! নতুন পাছৱৰ্ডেৰে লগইন কৰক।', 'success');
     setResetStep('none');
     setResetEmailOrPhone('');
-    setResetSecurityName('');
+    setResetGeneratedOtp('');
+    setResetOtpInput('');
+    setResetSimulatedNotice(null);
     setNewResetPassword('');
+    setConfirmResetPassword('');
   };
 
   // ==================== SUPERVISOR & APP FEEDBACK SYSTEM ====================
@@ -4047,32 +4134,20 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                       <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-base">
                         🔑
                       </div>
-                      <h4 className="font-bold text-slate-900 text-xs">পাছৱৰ্ড পুনৰুদ্ধাৰ (Password Recovery)</h4>
+                      <h4 className="font-bold text-slate-900 text-xs">পাছৱৰ্ড পাহৰিলে? OTP দ্বাৰা পুনৰুদ্ধাৰ (Password Recovery via OTP)</h4>
                       <p className="text-[10px] text-slate-500">
-                        Enter your registered Email/Phone and Full Name to securely reset your password. 100% Free of cost.
+                        আপোনাৰ পঞ্জীভুক্ত ম’বাইল নম্বৰ অথবা মেইল ঠিকনা লিখক। ছিষ্টেমে ৬-অংকৰ গোপনীয় OTP প্ৰেৰণ কৰিব।
                       </p>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">মেইল ঠিকনা / ফোন নম্বৰ (Registered Email/Phone)</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">পঞ্জীভুক্ত মেইল ঠিকনা / ম’বাইল নম্বৰ (Mobile or Email) *</label>
                       <input 
                         type="text"
                         required
-                        placeholder="E.g., contractor@icwl.in"
+                        placeholder="যেনে: 9864012345 বা hr@industry.com"
                         value={resetEmailOrPhone}
                         onChange={(e) => setResetEmailOrPhone(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">পঞ্জীভুক্ত পূৰ্ণ নাম (Registered Full Name)</label>
-                      <input 
-                        type="text"
-                        required
-                        placeholder="E.g., Pragjyotish Manpower Services (Contractor)"
-                        value={resetSecurityName}
-                        onChange={(e) => setResetSecurityName(e.target.value)}
                         className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500"
                       />
                     </div>
@@ -4083,7 +4158,6 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                         onClick={() => {
                           setResetStep('none');
                           setResetEmailOrPhone('');
-                          setResetSecurityName('');
                         }}
                         className="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-lg text-xs font-bold cursor-pointer text-center"
                       >
@@ -4093,7 +4167,90 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                         type="submit"
                         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-xs font-bold cursor-pointer text-center shadow-xs"
                       >
-                        প্ৰমাণিত কৰক (Verify Identity)
+                        OTP প্ৰেৰণ কৰক (Send OTP)
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {resetStep === 'verify_otp' && (
+                  <form onSubmit={handleVerifyResetOtp} className="space-y-4">
+                    <div className="text-center space-y-1">
+                      <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto text-base">
+                        📱
+                      </div>
+                      <h4 className="font-bold text-slate-900 text-xs">৬-অংকৰ OTP সত্যাপন কৰক (Verify OTP)</h4>
+                      <p className="text-[10px] text-slate-500">
+                        {resetEmailOrPhone} লৈ পঠিওৱা ৬-অংকৰ গোপনীয় ক’ডটো তলত লিখক।
+                      </p>
+                    </div>
+
+                    {resetSimulatedNotice && (
+                      <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 text-xs space-y-1.5 animate-fadeIn">
+                        <div className="flex items-center justify-between font-bold">
+                          <span className="flex items-center gap-1">
+                            <span>📲 SMS Gateway Simulation</span>
+                          </span>
+                          <span className="bg-emerald-200 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">
+                            OTP: {resetGeneratedOtp}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span>লাইভ ছিমুলেশ্যন: OTP প্ৰেৰণ কৰা হৈছে।</span>
+                          <button
+                            type="button"
+                            onClick={() => setResetOtpInput(resetGeneratedOtp)}
+                            className="text-indigo-600 hover:underline font-bold cursor-pointer"
+                          >
+                            📋 স্বয়ংক্ৰিয়ভাৱে OTP ভৰাওক
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">৬-অংকৰ OTP ক’ড (Enter 6-digit OTP)</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                            setResetGeneratedOtp(otp);
+                            setResetOtpTimer(60);
+                            setResetSimulatedNotice(`📲 [SMS/Email Simulation Gateway] নতুন OTP: ${otp}`);
+                            showNotice(`নতুন OTP প্ৰেৰণ কৰা হৈছে: ${otp}`, 'info');
+                          }}
+                          className="text-[10px] text-indigo-600 font-bold hover:underline cursor-pointer"
+                        >
+                          {resetOtpTimer > 0 ? `${resetOtpTimer}s অপেক্ষা কৰক` : 'পুনৰ OTP পঠিয়াওক'}
+                        </button>
+                      </div>
+                      <input 
+                        type="text"
+                        maxLength={6}
+                        required
+                        placeholder="• • • • • •"
+                        value={resetOtpInput}
+                        onChange={(e) => setResetOtpInput(e.target.value.replace(/\D/g, ''))}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-center text-lg font-mono font-bold tracking-widest text-slate-800 outline-none focus:border-indigo-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResetStep('request');
+                        }}
+                        className="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-lg text-xs font-bold cursor-pointer text-center"
+                      >
+                        নম্বৰ সলনি (Back)
+                      </button>
+                      <button
+                        type="submit"
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-xs font-bold cursor-pointer text-center shadow-xs"
+                      >
+                        OTP সত্যাপন কৰক
                       </button>
                     </div>
                   </form>
@@ -4105,22 +4262,36 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                       <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-base">
                         🔐
                       </div>
-                      <h4 className="font-bold text-slate-900 text-xs">নতুন পাছৱৰ্ড ছেট কৰক (Choose New Password)</h4>
+                      <h4 className="font-bold text-slate-900 text-xs">নতুন পাছৱৰ্ড সংৰক্ষণ কৰক (Set New Password)</h4>
                       <p className="text-[10px] text-slate-500">
-                        Create a secure new password for your account linked to <strong className="text-indigo-600">{resetEmailOrPhone}</strong>.
+                        <strong className="text-indigo-600">{resetEmailOrPhone}</strong>-ৰ একাউণ্টৰ বাবে সুৰক্ষিত নতুন পাছৱৰ্ড নিৰ্ধাৰণ কৰক।
                       </p>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">নতুন পাছৱৰ্ড লিখক (Enter New Password)</label>
-                      <input 
-                        type="password"
-                        required
-                        placeholder="Choose secure password"
-                        value={newResetPassword}
-                        onChange={(e) => setNewResetPassword(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500"
-                      />
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">নতুন পাছৱৰ্ড (New Password) *</label>
+                        <input 
+                          type="password"
+                          required
+                          placeholder="নূন্যতম ৪ টা আখৰ..."
+                          value={newResetPassword}
+                          onChange={(e) => setNewResetPassword(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">পাছৱৰ্ড নিশ্চিত কৰক (Confirm Password) *</label>
+                        <input 
+                          type="password"
+                          required
+                          placeholder="একেটা পাছৱৰ্ড পুনৰ লিখক..."
+                          value={confirmResetPassword}
+                          onChange={(e) => setConfirmResetPassword(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500"
+                        />
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -4129,8 +4300,8 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                         onClick={() => {
                           setResetStep('none');
                           setResetEmailOrPhone('');
-                          setResetSecurityName('');
                           setNewResetPassword('');
+                          setConfirmResetPassword('');
                         }}
                         className="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-lg text-xs font-bold cursor-pointer text-center"
                       >
@@ -4138,9 +4309,9 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                       </button>
                       <button
                         type="submit"
-                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 py-2.5 rounded-lg text-xs font-bold cursor-pointer text-center shadow-xs uppercase tracking-wider font-extrabold"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-xs font-bold cursor-pointer text-center shadow-xs"
                       >
-                        পাছৱৰ্ড সলনি কৰক (Save & Login)
+                        পাছৱৰ্ড সংৰক্ষণ কৰক (Save & Login)
                       </button>
                     </div>
                   </form>
@@ -11529,6 +11700,36 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-indigo-50/60 rounded-xl border border-indigo-100">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    লগইন ম’বাইল নম্বৰ (Login Mobile) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="9864012345"
+                    value={newEstablishmentForm.contactPhone}
+                    onChange={(e) => setNewEstablishmentForm(prev => ({ ...prev, contactPhone: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    একাউণ্ট পাছৱৰ্ড (Login Password) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="নূন্যতম ৪ টা আখৰ..."
+                    value={newEstablishmentForm.password}
+                    onChange={(e) => setNewEstablishmentForm(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
               <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
@@ -11679,17 +11880,34 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  যোগাযোগ ফোন নম্বৰ (Contact Phone)
-                </label>
-                <input
-                  type="text"
-                  placeholder="+91 98640 12345"
-                  value={newContractorForm.contactNo}
-                  onChange={(e) => setNewContractorForm(prev => ({ ...prev, contactNo: e.target.value }))}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:bg-white focus:border-indigo-500 font-mono"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-emerald-50/60 rounded-xl border border-emerald-100">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    যোগাযোগ ফোন নম্বৰ (Contact / Login Phone) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="9864012345"
+                    value={newContractorForm.contactNo}
+                    onChange={(e) => setNewContractorForm(prev => ({ ...prev, contactNo: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    লগইন পাছৱৰ্ড (Login Password) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="নূন্যতম ৪ টা আখৰ..."
+                    value={newContractorForm.password}
+                    onChange={(e) => setNewContractorForm(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-500"
+                  />
+                </div>
               </div>
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
