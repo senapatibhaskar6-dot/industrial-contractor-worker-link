@@ -566,6 +566,183 @@ export default function HomeHub({
         </div>
       </div>
 
+      {/* CORE PLATFORM PURPOSE: TRIPARTITE RELATIONSHIP ECOSYSTEM (HR Industry/Owner + Labour Contractor + Worker/Guard) */}
+      <div className="bg-gradient-to-br from-white via-indigo-50/40 to-slate-50 border-2 border-indigo-200/80 rounded-3xl p-5 sm:p-7 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-indigo-100 pb-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="bg-indigo-600 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-xs">
+                Platform Purpose
+              </span>
+              <span className="text-xs font-bold text-indigo-900">
+                ত্ৰিপাক্ষিক ঔদ্যোগিক সম্পৰ্ক শৃংখল (Tripartite Industrial Ecosystem)
+              </span>
+            </div>
+            <h2 className="text-base sm:text-lg font-black text-slate-900">
+              🤝 প্ৰধান নিয়োগকাৰী (Industry HR/Owner) ⇄ শ্ৰম ঠিকাদাৰ/এজেন্সি ⇄ শ্ৰমিক আৰু সুৰক্ষা কৰ্মী
+            </h2>
+            <p className="text-xs text-slate-600">
+              ShramikLink হৈছে এটি স্বয়ংক্ৰিয় মঞ্চ—য’ত প্ৰতিটো অংশীদাৰে নিজৰ প’ৰ্টেলত পঞ্জীয়ন কৰে আৰু এক শৃংখলাবদ্ধ আইনী সম্পৰ্কৰ মাজেৰে কাম কৰে:
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => onRegisterRole ? onRegisterRole('industry_admin') : window.dispatchEvent(new CustomEvent('icwl-open-register', { detail: { role: 'industry_admin' } }))}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-2 rounded-xl transition-all shadow-xs cursor-pointer hover:scale-105"
+            >
+              + পঞ্জীয়ন গেটৱে’
+            </button>
+          </div>
+        </div>
+
+        {/* 3 Interactive Pillars Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          {/* Pillar 1: Industry HR / Owner */}
+          <div className="bg-white border-2 border-indigo-100 hover:border-indigo-300 rounded-2xl p-4 space-y-3 shadow-xs transition-all">
+            <div className="flex items-center justify-between">
+              <span className="bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">
+                Pillar 1
+              </span>
+              <span className="text-xs font-bold text-slate-400">Principal Employer</span>
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                <Factory className="h-4 w-4 text-indigo-600" />
+                <span>প্ৰধান নিয়োগকাৰী (Industry HR & Owners)</span>
+              </h3>
+              <p className="text-[11px] text-slate-600 leading-snug">
+                কাৰখানা, এপাৰ্টমেণ্ট ছচাইটি, দোকান আৰু অফিচৰ স্ব-পঞ্জীয়ন। শ্ৰমিকৰ চাহিদা প্ৰকাশ, অনুজ্ঞাপ্ৰাপ্ত ঠিকাদাৰক অনুমোদন আৰু চালান অডিট।
+              </p>
+            </div>
+            <div className="bg-indigo-50/60 p-2.5 rounded-xl text-[11px] text-indigo-950 space-y-1 font-medium">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                <span>শ্ৰমিক আৰু গাৰ্ডৰ চাহিদা প্ৰকাশ</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                <span>ঠিকাদাৰ অনুজ্ঞাপত্ৰ পৰীক্ষা & অনুমোদন</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                <span>EPF/ESI চালন নিৰীক্ষণ কৰি বিল মুকলি</span>
+              </div>
+            </div>
+            <div className="pt-1 flex items-center gap-2">
+              <button
+                onClick={() => onRegisterRole ? onRegisterRole('industry_admin') : window.dispatchEvent(new CustomEvent('icwl-open-register', { detail: { role: 'industry_admin' } }))}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-xl transition-all text-center cursor-pointer"
+              >
+                + উদ্যোগ পঞ্জীয়ন
+              </button>
+              <button
+                onClick={() => onNavigateToPanel('industry_admin')}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer"
+              >
+                প্ৰৱেশ
+              </button>
+            </div>
+          </div>
+
+          {/* Pillar 2: Labour Contractor & Security Agency */}
+          <div className="bg-white border-2 border-blue-100 hover:border-blue-300 rounded-2xl p-4 space-y-3 shadow-xs transition-all">
+            <div className="flex items-center justify-between">
+              <span className="bg-blue-100 text-blue-800 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">
+                Pillar 2
+              </span>
+              <span className="text-xs font-bold text-slate-400">Licensed Agency</span>
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                <Users className="h-4 w-4 text-blue-600" />
+                <span>শ্ৰম ঠিকাদাৰ & নিৰাপত্তা সংস্থা</span>
+              </h3>
+              <p className="text-[11px] text-slate-600 leading-snug">
+                CLRA/PSARA অনুজ্ঞাপত্ৰ সহ স্ব-পঞ্জীয়ন। উদ্যোগলৈ শ্ৰমিক যোগানৰ আবেদন, কৰ্মীদল আৰু ছুপাৰভাইজাৰ পৰিচালনা, আইনী ৰেজিষ্টাৰ প্ৰস্তুত।
+              </p>
+            </div>
+            <div className="bg-blue-50/60 p-2.5 rounded-xl text-[11px] text-blue-950 space-y-1 font-medium">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                <span>উদ্যোগলৈ শ্ৰমিক যোগানৰ আবেদন</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                <span>৫ টা আইনী ৰেজিষ্টাৰ (Form XIII, XVII, XVI)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                <span>EPF/ESI চালন সহ ইনভয়েচ প্ৰেৰণ</span>
+              </div>
+            </div>
+            <div className="pt-1 flex items-center gap-2">
+              <button
+                onClick={() => onRegisterRole ? onRegisterRole('contractor') : window.dispatchEvent(new CustomEvent('icwl-open-register', { detail: { role: 'contractor' } }))}
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded-xl transition-all text-center cursor-pointer"
+              >
+                + সংস্থা পঞ্জীয়ন
+              </button>
+              <button
+                onClick={() => onNavigateToPanel('contractor')}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer"
+              >
+                প্ৰৱেশ
+              </button>
+            </div>
+          </div>
+
+          {/* Pillar 3: Workers & Security Guards */}
+          <div className="bg-white border-2 border-amber-100 hover:border-amber-300 rounded-2xl p-4 space-y-3 shadow-xs transition-all">
+            <div className="flex items-center justify-between">
+              <span className="bg-amber-100 text-amber-800 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">
+                Pillar 3
+              </span>
+              <span className="text-xs font-bold text-slate-400">Shramik & Guard</span>
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                <HardHat className="h-4 w-4 text-amber-600" />
+                <span>অসংগঠিত শ্ৰমিক & নিৰাপত্তাৰক্ষী</span>
+              </h3>
+              <p className="text-[11px] text-slate-600 leading-snug">
+                ডিজিটেল স্মাৰ্ট কাৰ্ডৰ বাবে স্ব-পঞ্জীয়ন। স্বচ্ছ দৈনিক গেট হাজিৰা, পে-স্লিপ, বেংক একাউণ্টত প্ৰত্যক্ষ মজুৰি আৰু EPF/ESIC পেঞ্চন সুবিধা।
+              </p>
+            </div>
+            <div className="bg-amber-50/60 p-2.5 rounded-xl text-[11px] text-amber-950 space-y-1 font-medium">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                <span>QR ক’ড সহ ডিজিটেল শ্ৰমিক কাৰ্ড</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                <span>দৈনিক গেট হাজিৰা (Form XVI) খতিয়ান</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                <span>প্ৰত্যক্ষ বেংক দৰমহা & EPF বেলেঞ্চ চাব পৰা সুবিধা</span>
+              </div>
+            </div>
+            <div className="pt-1 flex items-center gap-2">
+              <button
+                onClick={() => onRegisterRole ? onRegisterRole('worker') : window.dispatchEvent(new CustomEvent('icwl-open-register', { detail: { role: 'worker' } }))}
+                className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black py-2 rounded-xl transition-all text-center cursor-pointer"
+              >
+                + শ্ৰমিক পঞ্জীয়ন
+              </button>
+              <button
+                onClick={() => onNavigateToPanel('worker')}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer"
+              >
+                প্ৰৱেশ
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       {/* Search & Category Filter Navigation */}
       <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">

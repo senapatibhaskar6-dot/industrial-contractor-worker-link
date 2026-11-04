@@ -39,32 +39,59 @@ export default function App() {
 
   const [currentLang, setCurrentLangState] = useState<AppLanguage>(() => getStoredLanguage());
 
-  // Entity lists
+  const isMockEntity = (item: any) => {
+    if (!item) return false;
+    const idStr = String(item.id || '');
+    const nameStr = String(item.name || item.industryName || item.contractorName || item.workerName || '');
+    if (/^(ind-[0-9]+|ind-apt-[0-9]+|ind-shop-[0-9]+|ind-off-[0-9]+|con-[0-9]+|wrk-[0-9]+)/.test(idStr)) return true;
+    if (/Brahmaputra|BCPL|Numaligarh|Greenwood|Mega Mart|Apex|Pragjyotish|Jai Hind|Kaziranga|Rakesh Kumar|Vikram Singh|Anil S|Sunita Devi|Ramesh Sawant|Pappu Yadav|Sandeep Gite|Laxmi Shinde|Arjun Pujari|Shiva Ramanna|Rupen Das|Bikash Barman|Gopal Kumar/i.test(nameStr)) return true;
+    return false;
+  };
+
+  // Entity lists (Sanitized for real production usage)
   const [industries, setIndustries] = useState<Industry[]>(() => {
     try {
       const saved = localStorage.getItem('s_industries_list');
-      return saved ? JSON.parse(saved) : initialIndustries;
-    } catch {
-      return initialIndustries;
-    }
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter(i => !isMockEntity(i));
+          localStorage.setItem('s_industries_list', JSON.stringify(cleaned));
+          return cleaned;
+        }
+      }
+    } catch {}
+    return initialIndustries;
   });
 
   const [contractors, setContractors] = useState<Contractor[]>(() => {
     try {
       const saved = localStorage.getItem('s_contractors_list');
-      return saved ? JSON.parse(saved) : initialContractors;
-    } catch {
-      return initialContractors;
-    }
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter(c => !isMockEntity(c));
+          localStorage.setItem('s_contractors_list', JSON.stringify(cleaned));
+          return cleaned;
+        }
+      }
+    } catch {}
+    return initialContractors;
   });
 
   const [workers, setWorkers] = useState<Worker[]>(() => {
     try {
       const saved = localStorage.getItem('s_workers_list');
-      return saved ? JSON.parse(saved) : initialWorkers;
-    } catch {
-      return initialWorkers;
-    }
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter(w => !isMockEntity(w));
+          localStorage.setItem('s_workers_list', JSON.stringify(cleaned));
+          return cleaned;
+        }
+      }
+    } catch {}
+    return initialWorkers;
   });
 
   // Portal Authentication & Registration Modal State

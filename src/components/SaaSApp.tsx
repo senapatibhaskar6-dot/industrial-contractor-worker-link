@@ -47,7 +47,9 @@ import {
   FolderCheck,
   AlertCircle,
   ShieldAlert,
+  Shield,
   Send,
+  HardHat,
   Home as HomeIcon
 } from 'lucide-react';
 import { 
@@ -276,13 +278,30 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                      '1-Click Fast Preview Access:'
   };
 
+  const isLegacyDemoItem = (item: any) => {
+    if (!item) return false;
+    const idStr = String(item.id || '');
+    const nameStr = String(item.name || item.industryName || item.contractorName || item.workerName || '');
+    if (/^(ind-[0-9]+|ind-apt-[0-9]+|ind-shop-[0-9]+|ind-off-[0-9]+|con-[0-9]+|wrk-[0-9]+|asg-[0-9]+|req-[0-9]+|att-[0-9]+|doc-[0-9]+|bill-[0-9]+|log-[0-9]+|aud-[0-9]+|insp-[0-9]+|conn-[0-9]+|wconn-[0-9]+|sal-[0-9]+|cmp-[0-9]+|lvr-[0-9]+|pinv-[0-9]+)$/.test(idStr)) {
+      return true;
+    }
+    if (/Brahmaputra|BCPL|Numaligarh|Greenwood|Mega Mart|Apex|Pragjyotish|Jai Hind|Kaziranga|Rakesh Kumar|Vikram Singh|Anil S|Sunita Devi|Ramesh Sawant|Pappu Yadav|Sandeep Gite|Laxmi Shinde|Arjun Pujari|Shiva Ramanna|Rupen Das|Bikash Barman|Gopal Kumar/i.test(nameStr)) {
+      return true;
+    }
+    return false;
+  };
+
   // Global State (persisted/synchronized to Postgres Cloud SQL & localStorage)
   const [industries, setIndustries] = useState<Industry[]>(() => {
     try {
       const saved = localStorage.getItem('s_industries_list');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter(i => !isLegacyDemoItem(i));
+          localStorage.setItem('s_industries_list', JSON.stringify(cleaned));
+          return cleaned;
+        }
       }
     } catch {}
     return initialIndustries;
@@ -299,7 +318,11 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       const saved = localStorage.getItem('s_contractors_list');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter(c => !isLegacyDemoItem(c));
+          localStorage.setItem('s_contractors_list', JSON.stringify(cleaned));
+          return cleaned;
+        }
       }
     } catch {}
     return initialContractors;
@@ -314,10 +337,16 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [workers, setWorkers] = useState<Worker[]>(() => {
     try {
       const saved = localStorage.getItem('s_workers_list');
-      return saved ? JSON.parse(saved) : initialWorkers;
-    } catch (e) {
-      return initialWorkers;
-    }
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter(w => !isLegacyDemoItem(w));
+          localStorage.setItem('s_workers_list', JSON.stringify(cleaned));
+          return cleaned;
+        }
+      }
+    } catch (e) {}
+    return initialWorkers;
   });
 
   useEffect(() => {
@@ -335,10 +364,16 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [inspectors, setInspectors] = useState<GovernmentLaborInspector[]>(() => {
     try {
       const saved = localStorage.getItem('s_inspectors_list');
-      return saved ? JSON.parse(saved) : initialInspectors;
-    } catch (e) {
-      return initialInspectors;
-    }
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter(insp => !isLegacyDemoItem(insp));
+          localStorage.setItem('s_inspectors_list', JSON.stringify(cleaned));
+          return cleaned;
+        }
+      }
+    } catch (e) {}
+    return initialInspectors;
   });
 
   useEffect(() => {
@@ -355,7 +390,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [industryContractorConnections, setIndustryContractorConnections] = useState<IndustryContractorConnection[]>(() => {
     try {
       const saved = localStorage.getItem('s_industry_contractor_connections');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter(c => !isLegacyDemoItem(c));
+      }
     } catch (e) {}
     return initialIndustryContractorConnections;
   });
@@ -369,7 +407,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [workerAgencyConnections, setWorkerAgencyConnections] = useState<WorkerAgencyConnection[]>(() => {
     try {
       const saved = localStorage.getItem('s_worker_agency_connections');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter(w => !isLegacyDemoItem(w));
+      }
     } catch (e) {}
     return initialWorkerAgencyConnections;
   });
@@ -391,7 +432,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [salaryTransactions, setSalaryTransactions] = useState<SalaryTransaction[]>(() => {
     try {
       const saved = localStorage.getItem('s_salary_transactions');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter(s => !isLegacyDemoItem(s));
+      }
     } catch (e) {}
     return initialSalaryTransactions;
   });
@@ -404,7 +448,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [complaints, setComplaints] = useState<SupervisorComplaint[]>(() => {
     try {
       const saved = localStorage.getItem('s_supervisor_complaints');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter(cmp => !isLegacyDemoItem(cmp));
+      }
     } catch (e) {}
     return initialComplaints;
   });
@@ -417,7 +464,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>(() => {
     try {
       const saved = localStorage.getItem('s_leave_records');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter(l => !isLegacyDemoItem(l));
+      }
     } catch (e) {}
     return initialLeaveRecords;
   });
@@ -430,7 +480,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [platformInvoices, setPlatformInvoices] = useState<AdminPlatformInvoice[]>(() => {
     try {
       const saved = localStorage.getItem('s_platform_invoices');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter(p => !isLegacyDemoItem(p));
+      }
     } catch (e) {}
     return initialPlatformInvoices;
   });
@@ -1758,7 +1811,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
 
   // Contractor Billing States & Automated Invoice Engine
   const [billMonth, setBillMonth] = useState('August 2026');
-  const [billTargetIndustry, setBillTargetIndustry] = useState('ind-1');
+  const [billTargetIndustry, setBillTargetIndustry] = useState('');
   const [billCustomNumber, setBillCustomNumber] = useState<string>('INV-2026-08-042');
   const [billDailySalaryRate, setBillDailySalaryRate] = useState<number>(600); // Manually editable labour salary/day
   const [billBaseWage, setBillBaseWage] = useState(150000); // Total wage manual override
@@ -1775,7 +1828,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [newAudit, setNewAudit] = useState({
     inspectedEntity: 'Industry' as 'Industry' | 'Contractor',
-    entityId: 'ind-1',
+    entityId: '',
     findings: '',
     status: 'Clean' as 'Clean' | 'Minor-Observations' | 'Non-Compliant-Alert'
   });
@@ -1798,35 +1851,35 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
 
   // Default fallbacks ensuring zero undefined property access runtime crashes
   const defaultFallbackIndustry: Industry = {
-    id: 'ind-1',
-    name: 'Brahmaputra Petrochemicals Complex (BCPL, Dibrugarh)',
-    location: 'Lepetkata, Dibrugarh, Assam',
-    regNo: 'AS/DIB/892/F-LIC',
-    lin: '1982738920',
-    contactEmail: 'admin.dibrugarh@bcpl-assam.in'
+    id: '',
+    name: 'পঞ্জীভুক্ত প্ৰতিষ্ঠান উপলব্ধ নহয় (পঞ্জীয়ন কৰক)',
+    location: 'অসম',
+    regNo: 'পঞ্জীয়ন কৰক',
+    lin: '---',
+    contactEmail: ''
   };
   const defaultFallbackContractor: Contractor = {
-    id: 'con-1',
-    name: 'Apex Industrial Manpower Solutions',
-    licenseNo: 'CLRA/AS/2026/8921',
-    lin: '1928374650',
-    pan: 'ABCDE1234F',
-    epfCode: 'AS/GHY/0029381/000',
-    esiCode: '13000982710000001',
-    contactNo: '+91 98640 11223',
-    rating: 4.9
+    id: '',
+    name: 'পঞ্জীভুক্ত সংস্থা উপলব্ধ নহয় (পঞ্জীয়ন কৰক)',
+    licenseNo: 'পঞ্জীয়ন কৰক',
+    lin: '---',
+    pan: '---',
+    epfCode: '---',
+    esiCode: '---',
+    contactNo: '',
+    rating: 5.0
   };
   const defaultFallbackWorker: Worker = {
-    id: 'wrk-1',
-    name: 'Rakesh Kumar Yadav',
-    aadhaarHash: 'XXXXXXXX4910',
-    phone: '+91 98765 43210',
-    contractorId: 'con-1',
+    id: '',
+    name: 'পঞ্জীভুক্ত শ্ৰমিক উপলব্ধ নহয় (পঞ্জীয়ন কৰক)',
+    aadhaarHash: 'XXXX-XXXX-XXXX',
+    phone: '',
+    contractorId: '',
     skillType: 'Unskilled',
     dailyWageRate: 480,
     status: 'Available',
-    onboardingVerified: true,
-    onboardingDate: '2026-08-10'
+    onboardingVerified: false,
+    onboardingDate: ''
   };
 
   // Helper selectors & filtered lists
@@ -4741,17 +4794,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
             <span className="text-sm">⚙️</span>
             <span><strong>সুৰক্ষিত ভূমিকা পৃথকীকৰণ (Role Isolation):</strong> নিৰ্বাচিত ভূমিকা অনুসৰি সম্পূৰ্ণ সুৰক্ষিত পেনেল প্ৰদৰ্শিত হয়। যিকোনো সময়ত লগআউট কৰি অন্য পেনেললৈ যাব পাৰিব।</span>
           </div>
-          <button 
-            onClick={() => {
-              if (confirm('ডিফল্ট তথ্য পুনৰুদ্ধাৰ কৰিব নেকি?')) {
-                localStorage.clear();
-                window.location.reload();
-              }
-            }}
-            className="text-slate-500 hover:text-rose-600 font-bold flex items-center gap-1.5 px-3 py-1 border border-slate-300 rounded-lg hover:border-rose-300 transition-colors shrink-0"
-          >
-            <RefreshCw className="h-3.5 w-3.5" /> ডিফল্ট তথ্য পুনৰুদ্ধাৰ
-          </button>
+          <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 font-bold shrink-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>সক্ৰিয় পঞ্জীয়ন ডেটাবেচ (Live Registered DB)</span>
+          </div>
         </div>
 
           </div>
@@ -4919,12 +4965,20 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
           </button>
 
           <button 
-            onClick={handleResetState}
-            title="Restore original data"
-            className="text-xs text-slate-600 hover:text-rose-600 font-bold px-2.5 py-1.5 border border-slate-200 hover:border-rose-300 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer bg-white"
+            onClick={() => {
+              if (currentRole === 'contractor') {
+                setIsAddContractorModalOpen(true);
+              } else if (currentRole === 'industry_admin') {
+                setIsAddEstablishmentModalOpen(true);
+              } else {
+                window.dispatchEvent(new CustomEvent('icwl-open-register', { detail: { role: currentRole } }));
+              }
+            }}
+            title="নতুন প্ৰতিষ্ঠান / সংস্থা পঞ্জীয়ন কৰক"
+            className="text-xs text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 font-bold px-3 py-1.5 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t.restoreData}</span>
+            <Plus className="h-3.5 w-3.5" />
+            <span>+ নিজে পঞ্জীয়ন কৰক</span>
           </button>
           
           <button 
@@ -4949,48 +5003,102 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
         </div>
       </div>
 
-      {/* Role Navigation & Fast Switcher Bar (Clean White Design with Sub-role Navigation Filters) */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col gap-3 shadow-sm text-slate-900">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 flex-wrap w-full lg:w-auto">
-            <span className="text-[11px] font-black uppercase text-slate-500 px-2 tracking-wider shrink-0 flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              পেনেল বাছক (Active Desk):
-            </span>
-            {[
-              { role: 'industry_admin', label: '🏭 প্ৰধান নিয়োগকাৰী (Owner Dashboard: Industry HR, Apartment, Shop, Office)', short: '🏭 Owner Dashboard', isPrimary: true },
-              { role: 'contractor', label: '🏢 এজেন্সী ডেশ্ববৰ্ড (Agency Dashboard: Labour Contractor & Security Agency)', short: '🏢 Agency Dashboard' },
-              { role: 'worker', label: '👤 শ্ৰমিক ডেশ্ববৰ্ড (Labour Dashboard)', short: '👤 Labour' },
-              { role: 'security_guard', label: '👮 নিৰাপত্তাৰক্ষী গেট ডেশ্ববৰ্ড (Security Guard Dashboard)', short: '👮 Security Guard' },
-              { role: 'admin', label: '🛡️ ছুপাৰ এডমিন পেনেল (Super Admin Panel)', short: '🛡️ Super Admin' },
-              { role: 'supervisor', label: '👷 ছুপাৰভাইজাৰ পেনেল (Supervisor Desk)', short: '👷 ছুপাৰভাইজাৰ' },
-              { role: 'government_inspector', label: '⚖️ চৰকাৰী পৰিদৰ্শক (Inspector)', short: '⚖️ পৰিদৰ্শক' },
-            ].map((item) => {
-              const isActive = currentRole === item.role;
-              return (
-                <button
-                  key={item.role}
-                  onClick={() => {
-                    setCurrentRole(item.role as any);
-                    localStorage.setItem('s_current_role', item.role);
-                    showNotice(`সক্ৰিয় পেনেল সলনি কৰা হ'ল: ${item.short}`, 'info');
-                  }}
-                  className={`px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-                    isActive
-                      ? 'bg-indigo-600 text-white shadow-xs ring-2 ring-indigo-300'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-                  }`}
-                >
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+      {/* Strict Role Isolation Session Banner (No Cross-role Switching Allowed) */}
+      <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 shadow-sm text-slate-900">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className={`p-3 rounded-2xl shadow-xs shrink-0 text-white ${
+              currentRole === 'industry_admin' ? 'bg-indigo-600' :
+              currentRole === 'contractor' ? 'bg-emerald-700' :
+              currentRole === 'worker' ? 'bg-blue-600' :
+              currentRole === 'security_guard' ? 'bg-slate-800' :
+              currentRole === 'supervisor' ? 'bg-amber-600' :
+              currentRole === 'government_inspector' ? 'bg-purple-700' :
+              'bg-slate-900'
+            }`}>
+              {currentRole === 'industry_admin' && <Factory className="h-6 w-6" />}
+              {currentRole === 'contractor' && <Building2 className="h-6 w-6" />}
+              {currentRole === 'worker' && <Users className="h-6 w-6" />}
+              {currentRole === 'security_guard' && <Shield className="h-6 w-6" />}
+              {currentRole === 'supervisor' && <HardHat className="h-6 w-6" />}
+              {currentRole === 'government_inspector' && <Scale className="h-6 w-6" />}
+              {currentRole === 'admin' && <ShieldCheck className="h-6 w-6" />}
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                  {currentRole === 'industry_admin' ? 'প্ৰধান নিয়োগকাৰী (Principal Employer)' :
+                   currentRole === 'contractor' ? 'সংস্থা পৰিচালক (Agency Operations)' :
+                   currentRole === 'worker' ? 'শ্ৰমিক আত্ম-সেৱা (Worker Self-Service)' :
+                   currentRole === 'security_guard' ? 'নিৰাপত্তাৰক্ষী গেট (Security Sentry)' :
+                   currentRole === 'supervisor' ? 'কাৰখানা ছুপাৰভাইজাৰ (Site Supervisor)' :
+                   currentRole === 'government_inspector' ? 'শ্ৰম পৰিদৰ্শক (Statutory Inspector)' :
+                   'প্লেটফৰ্ম এডমিন (Platform Admin)'}
+                </span>
+
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded-full">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  আইনী ভূমিকা সুৰক্ষিত (Strict Role Isolation Active)
+                </span>
+              </div>
+
+              <h2 className="text-base sm:text-lg font-black text-slate-900 mt-1">
+                {currentRole === 'industry_admin' && '🏭 প্ৰধান নিয়োগকাৰী ডেক্স: উদ্যোগিক HR ও প্ৰতিষ্ঠান স্বত্বাধিকাৰী'}
+                {currentRole === 'contractor' && '🏢 শ্ৰম ঠিকাদাৰ ও নিৰাপত্তা সংস্থা ডেক্স (Contractor & Agency Desk)'}
+                {currentRole === 'worker' && '👤 পঞ্জীভুক্ত শ্ৰমিক আত্ম-সেৱা ডেক্স (Worker Self-Service Portal)'}
+                {currentRole === 'security_guard' && '👮 নিৰাপত্তাৰক্ষী প্ৰৱেশ ও গেট এন্ট্ৰি ডেক্স (Security Guard Desk)'}
+                {currentRole === 'supervisor' && '👷 কাৰখানা ও বাগিচা ছুপাৰভাইজাৰ ডেক্স (Supervisor Desk)'}
+                {currentRole === 'government_inspector' && '⚖️ চৰকাৰী শ্ৰম পৰিদৰ্শক বিধিবদ্ধ ডেক্স (Labor Inspectorate)'}
+                {currentRole === 'admin' && '🛡️ ছুপাৰ এডমিন প্লেটফৰ্ম গভৰ্ণেন্স (Platform Admin Panel)'}
+              </h2>
+
+              <p className="text-xs text-slate-500 mt-0.5 max-w-2xl leading-relaxed">
+                {currentRole === 'industry_admin' && 'আপুনি কেৱল আপোনাৰ পঞ্জীভুক্ত উদ্যোগ / প্ৰতিষ্ঠান আৰু ইয়াৰ সৈতে সংযুক্ত ঠিকাদাৰ ও শ্ৰমিকৰ তথ্যহে চাব পাৰিব। অন্য পেনেলত প্ৰৱেশ নিষিদ্ধ।'}
+                {currentRole === 'contractor' && 'আপুনি কেৱল আপোনাৰ পঞ্জীভুক্ত সংস্থা, সংলগ্ন শ্ৰমিক আৰু অনুমোদিত ক্লায়েণ্ট প্ৰতিষ্ঠানৰ তথ্যহে চাব পাৰিব।'}
+                {currentRole === 'worker' && 'আপুনি কেৱল আপোনাৰ নিজৰ হাজিৰা, ডিজিটেল পৰিচয় পত্ৰ আৰু প্ৰাপ্য মজুৰিৰ তথ্যহে চাব পাৰিব।'}
+                {currentRole === 'security_guard' && 'কেৱল নিৰাপত্তা প্ৰহৰী গেট এন্ট্ৰি, প্ৰৱেশ পৰীক্ষা আৰু হাজিৰা স্কেনিং।'}
+                {currentRole === 'supervisor' && 'কেৱল কৰ্তব্যস্থানৰ শ্ৰমিক হাজিৰা, ফিল্ড টাস্ক আৰু ওভাৰটাইম পৰীক্ষণ।'}
+                {currentRole === 'government_inspector' && 'চৰকাৰী শ্ৰম আইন, ফৰ্ম আৰু চালান পৰিদৰ্শন।'}
+                {currentRole === 'admin' && 'প্লেটফৰ্ম পৰিচালনা আৰু কেন্দ্ৰীয় পিয়ল ব্যৱস্থাপনা।'}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full lg:w-auto justify-end shrink-0 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2.5 w-full lg:w-auto justify-end shrink-0 flex-wrap sm:flex-nowrap pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+            {currentRole === 'industry_admin' && (
+              <button
+                onClick={() => setIsAddEstablishmentModalOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer hover:scale-[1.02]"
+              >
+                <Plus className="h-4 w-4" />
+                <span>+ নিজৰ প্ৰতিষ্ঠান পঞ্জীয়ন কৰক</span>
+              </button>
+            )}
+
+            {currentRole === 'contractor' && (
+              <button
+                onClick={() => setIsAddContractorModalOpen(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer hover:scale-[1.02]"
+              >
+                <Plus className="h-4 w-4" />
+                <span>+ নিজৰ সংস্থা পঞ্জীয়ন কৰক</span>
+              </button>
+            )}
+
+            {currentRole === 'worker' && (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('icwl-open-register', { detail: { role: 'worker' } }))}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer hover:scale-[1.02]"
+              >
+                <Plus className="h-4 w-4" />
+                <span>+ নতুন শ্ৰমিক পঞ্জীয়ন</span>
+              </button>
+            )}
+
             <button
               onClick={handleLogout}
-              className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-black px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-black px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
               title="লগ আউট কৰক (Log Out)"
             >
               <LogOut className="h-4 w-4" />
@@ -5078,55 +5186,45 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
         </div>
       )}
 
-      {/* Quick Navigation Banner for Newly Added Contractor Supervisor & Monthly Attendance */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border-2 border-emerald-500/40 rounded-2xl p-4 text-white shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-emerald-500 text-slate-950 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full animate-pulse">
-              ★ নতুন সুবিধা সক্ৰিয় (New Features Active)
-            </span>
-            <span className="text-xs text-emerald-300 font-bold">
-              কণ্ট্ৰেক্টৰ ছুপাৰভাইজাৰ & মাহেকীয়া হাজিৰা বহী (PDF Export)
-            </span>
+      {/* Quick Navigation Banner for Newly Added Contractor Supervisor & Monthly Attendance (Only in Contractor Portal) */}
+      {currentRole === 'contractor' && (
+        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border-2 border-emerald-500/40 rounded-2xl p-4 text-white shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="bg-emerald-500 text-slate-950 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full animate-pulse">
+                ★ কণ্ট্ৰেক্টৰ বিশেষ মডিউল (Contractor Module)
+              </span>
+              <span className="text-xs text-emerald-300 font-bold">
+                ছুপাৰভাইজাৰ ব্যৱস্থাপনা & মাহেকীয়া হাজিৰা বহী (PDF Export)
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300 max-w-2xl leading-relaxed">
+              এণ্ড্ৰইড ফোন নথকা শ্ৰমিকৰ অফলাইন এন্ট্ৰি, ছুপাৰভাইজাৰ পৰিচালনা আৰু চৰকাৰী Form XVI ৰ সৈতে সুকীয়া মাহেকীয়া বহী।
+            </p>
           </div>
-          <p className="text-[11px] text-slate-300 max-w-2xl leading-relaxed">
-            এণ্ড্ৰইড ফোন নথকা শ্ৰমিকৰ পোনপটীয়া এন্ট্ৰি, একাধিক ছুপাৰভাইজাৰ পৰিচালনা আৰু চৰকাৰী Form XVI ৰ সৈতে সংঘাতমুক্ত সুকীয়া মাহেকীয়া বহী।
-          </p>
+
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <button
+              onClick={() => {
+                setContractorTab('supervisors_attendance');
+                showNotice('কণ্ট্ৰেক্টৰ ছুপাৰভাইজাৰ আৰু হাজিৰা টেবলৈ লৈ যোৱা হৈছে।', 'info');
+              }}
+              className="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer hover:scale-105"
+            >
+              <HardHat className="h-3.5 w-3.5" />
+              <span>👥 ছুপাৰভাইজাৰ ও হাজিৰা তালিকা</span>
+            </button>
+
+            <button
+              onClick={() => setIsContractorMonthlySheetOpen(true)}
+              className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer hover:scale-105"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              <span>📄 মাহেকীয়া বহী PDF</span>
+            </button>
+          </div>
         </div>
-
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
-          <button
-            onClick={() => {
-              setCurrentRole('supervisor');
-              localStorage.setItem('s_current_role', 'supervisor');
-              showNotice('কণ্ট্ৰেক্টৰ ছুপাৰভাইজাৰ পেনেল খোলক (Opened Supervisor Desk)', 'info');
-            }}
-            className="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer hover:scale-105"
-          >
-            <span>👷 ছুপাৰভাইজাৰ পেনেল</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setCurrentRole('contractor');
-              setContractorTab('supervisors_attendance');
-              localStorage.setItem('s_current_role', 'contractor');
-              showNotice('কণ্ট্ৰেক্টৰ ছুপাৰভাইজাৰ & হাজিৰা টেবলৈ লৈ যোৱা হৈছে।', 'info');
-            }}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer hover:scale-105"
-          >
-            <span>👥 ছুপাৰভাইজাৰ তালিকা</span>
-          </button>
-
-          <button
-            onClick={() => setIsContractorMonthlySheetOpen(true)}
-            className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer hover:scale-105"
-          >
-            <Printer className="h-3.5 w-3.5" />
-            <span>📄 মাহেকীয়া বহী PDF</span>
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Main SaaS Screen */}
       <div className="space-y-6">
@@ -5390,18 +5488,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                   <button
                     onClick={() => setIsAddEstablishmentModalOpen(true)}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer hover:scale-105"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>+ নতুন প্ৰতিষ্ঠান যোগ কৰক (Add Establishment)</span>
-                  </button>
-
-                  <button
-                    onClick={handleCleanSlateKeepOnlyRegisteredIndustries}
-                    title="কেৱল আপোনাৰ পঞ্জীভুক্ত বাস্তৱ উদ্যোগ সংৰক্ষণ কৰক আৰু ডেমো তথ্য আঁতৰাওক"
-                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
-                  >
-                    <span>🧹 কেৱল মোৰ পঞ্জীভুক্ত প্ৰতিষ্ঠান ৰাখক (Production Mode)</span>
+                    <span>+ নিজৰ উদ্যোগ / প্ৰতিষ্ঠান পঞ্জীয়ন কৰক (Self-Register)</span>
                   </button>
 
                   <button 
@@ -5463,75 +5553,187 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               {/* Establishment Selection & Live Metadata Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
                 
-                {/* Establishment Dropdown */}
+                {/* Establishment Dropdown / Empty State */}
                 <div className="lg:col-span-5">
                   <label className="block text-xs font-bold text-slate-500 tracking-wider uppercase mb-1.5 flex items-center justify-between">
-                    <span>সক্ৰিয় প্ৰতিষ্ঠান বাছক (Active Establishment Tenant)</span>
+                    <span>সক্ৰিয় প্ৰতিষ্ঠান বাছক (Active Establishment)</span>
                     <span className="text-[10px] text-indigo-600 font-bold lowercase">
-                      {industryRoleFilter !== 'All' ? `filter: ${industryRoleFilter}` : 'all categories'}
+                      {industryRoleFilter !== 'All' ? `filter: ${industryRoleFilter}` : `${industries.length} establishments`}
                     </span>
                   </label>
-                  <select 
-                    value={selectedIndustryId} 
-                    onChange={(e) => setSelectedIndustryId(e.target.value)}
-                    className="font-bold text-slate-800 text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors w-full shadow-xs"
-                  >
-                    {filteredIndustries.map(ind => (
-                      <option key={ind.id} value={ind.id}>
-                        {ind.category === 'Industry HR' ? '🏭 [Industry HR]' :
-                         ind.category === 'Apartment Owner' ? '🏢 [Apartment Owner]' :
-                         ind.category === 'Shop Owner' ? '🛍️ [Shop Owner]' :
-                         ind.category === 'Office' ? '🏛️ [Office]' : '🏢'} {ind.name} — {ind.location}
-                      </option>
-                    ))}
-                  </select>
+                  {filteredIndustries.length === 0 ? (
+                    <div className="bg-amber-50/80 border border-amber-300 rounded-xl p-3.5 space-y-2">
+                      <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
+                        <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                        <span>কোনো প্ৰতিষ্ঠান এতিয়ালৈকে পঞ্জীভুক্ত হোৱা নাই</span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 leading-snug">
+                        অনুগ্ৰহ কৰি আপোনাৰ নিজৰ উদ্যোগ, কাৰখানা, এপাৰ্টমেণ্ট বা ব্যৱসায়িক প্ৰতিষ্ঠান পঞ্জীয়ন কৰক।
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddEstablishmentModalOpen(true)}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>+ নিজৰ উদ্যোগ / প্ৰতিষ্ঠান পঞ্জীয়ন কৰক</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <select 
+                      value={selectedIndustryId} 
+                      onChange={(e) => setSelectedIndustryId(e.target.value)}
+                      className="font-bold text-slate-800 text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors w-full shadow-xs"
+                    >
+                      {filteredIndustries.map(ind => (
+                        <option key={ind.id} value={ind.id}>
+                          {ind.category === 'Industry HR' ? '🏭 [Industry HR]' :
+                           ind.category === 'Apartment Owner' ? '🏢 [Apartment Owner]' :
+                           ind.category === 'Shop Owner' ? '🛍️ [Shop Owner]' :
+                           ind.category === 'Office' ? '🏛️ [Office]' : '🏢'} {ind.name} — {ind.location}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 {/* Role Badge and Metadata */}
-                <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                  
-                  {/* Specific Role Badge */}
-                  <div className="bg-indigo-50/70 border border-indigo-100 p-3 rounded-xl flex flex-col justify-between">
-                    <span className="text-slate-500 block mb-0.5 font-bold text-[10px] uppercase">প্ৰতিষ্ঠানৰ শ্ৰেণী (Role Category)</span>
-                    <span className="font-extrabold text-indigo-900 text-xs flex items-center gap-1.5">
-                      {activeIndustry.category === 'Apartment Owner' ? '🏢 Apartment Owner' :
-                       activeIndustry.category === 'Shop Owner' ? '🛍️ Shop Owner' :
-                       activeIndustry.category === 'Office' ? '🏛️ Office' :
-                       '🏭 Industry HR'}
-                    </span>
-                    <span className="text-[10px] text-indigo-700/80 mt-0.5">
-                      {activeIndustry.category === 'Apartment Owner' ? 'আৱাসিক গৃহ নিৰ্মাণ ও সুৰক্ষা' :
-                       activeIndustry.category === 'Shop Owner' ? 'খুচুৰা বিপণী ও শ্ৰমিক সহায়ক' :
-                       activeIndustry.category === 'Office' ? 'কৰ্পোৰেট হাউচকিপিং ও সহায়ক' :
-                       'কাৰখানা শ্ৰম আইন, ১৯৪৮'}
-                    </span>
-                  </div>
+                <div className="lg:col-span-7">
+                  {industries.length > 0 && activeIndustry?.id ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      {/* Specific Role Badge */}
+                      <div className="bg-indigo-50/70 border border-indigo-100 p-3 rounded-xl flex flex-col justify-between">
+                        <span className="text-slate-500 block mb-0.5 font-bold text-[10px] uppercase">প্ৰতিষ্ঠানৰ শ্ৰেণী (Role Category)</span>
+                        <span className="font-extrabold text-indigo-900 text-xs flex items-center gap-1.5">
+                          {activeIndustry.category === 'Apartment Owner' ? '🏢 Apartment Owner' :
+                           activeIndustry.category === 'Shop Owner' ? '🛍️ Shop Owner' :
+                           activeIndustry.category === 'Office' ? '🏛️ Office' :
+                           '🏭 Industry HR'}
+                        </span>
+                        <span className="text-[10px] text-indigo-700/80 mt-0.5">
+                          {activeIndustry.category === 'Apartment Owner' ? 'আৱাসিক গৃহ নিৰ্মাণ ও সুৰক্ষা' :
+                           activeIndustry.category === 'Shop Owner' ? 'খুচুৰা বিপণী ও শ্ৰমিক সহায়ক' :
+                           activeIndustry.category === 'Office' ? 'কৰ্পোৰেট হাউচকিপিং ও সহায়ক' :
+                           'কাৰখানা শ্ৰম আইন, ১৯৪৮'}
+                        </span>
+                      </div>
 
-                  {/* License / Reg No */}
-                  <div className="bg-slate-50 p-3 border border-slate-200 rounded-xl">
-                    <span className="text-slate-400 block mb-0.5 font-semibold text-[10px] uppercase">
-                      {activeIndustry.category === 'Apartment Owner' ? 'Society Reg No' :
-                       activeIndustry.category === 'Shop Owner' ? 'Trade / Shop Lic' :
-                       activeIndustry.category === 'Office' ? 'Estab Reg No' :
-                       'Factory License No'}
-                    </span>
-                    <span className="font-mono font-bold text-slate-800 truncate block" title={activeIndustry.regNo}>
-                      {activeIndustry.regNo}
-                    </span>
-                    <span className="text-[10px] text-emerald-600 font-semibold block mt-1">Verified Legal Tenant</span>
-                  </div>
+                      {/* License / Reg No */}
+                      <div className="bg-slate-50 p-3 border border-slate-200 rounded-xl">
+                        <span className="text-slate-400 block mb-0.5 font-semibold text-[10px] uppercase">
+                          {activeIndustry.category === 'Apartment Owner' ? 'Society Reg No' :
+                           activeIndustry.category === 'Shop Owner' ? 'Trade / Shop Lic' :
+                           activeIndustry.category === 'Office' ? 'Estab Reg No' :
+                           'Factory License No'}
+                        </span>
+                        <span className="font-mono font-bold text-slate-800 truncate block" title={activeIndustry.regNo}>
+                          {activeIndustry.regNo}
+                        </span>
+                        <span className="text-[10px] text-emerald-600 font-semibold block mt-1">Verified Legal Tenant</span>
+                      </div>
 
-                  {/* Labour Identification Number */}
-                  <div className="bg-slate-50 p-3 border border-slate-200 rounded-xl">
-                    <span className="text-slate-400 block mb-0.5 font-semibold text-[10px] uppercase">Labour ID (LIN)</span>
-                    <span className="font-mono font-bold text-slate-800 truncate block" title={activeIndustry.lin}>
-                      {activeIndustry.lin}
-                    </span>
-                    <span className="text-[10px] text-indigo-600 font-semibold block mt-1">Shram Suvidha Synced</span>
-                  </div>
-
+                      {/* Labour Identification Number */}
+                      <div className="bg-slate-50 p-3 border border-slate-200 rounded-xl">
+                        <span className="text-slate-400 block mb-0.5 font-semibold text-[10px] uppercase">Labour ID (LIN)</span>
+                        <span className="font-mono font-bold text-slate-800 truncate block" title={activeIndustry.lin}>
+                          {activeIndustry.lin}
+                        </span>
+                        <span className="text-[10px] text-indigo-600 font-semibold block mt-1">Shram Suvidha Synced</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-4 text-center text-slate-500 text-xs">
+                      <span className="font-bold text-slate-700 block">কোনো প্ৰতিষ্ঠানৰ তথ্য নাই</span>
+                      <span className="text-[11px] text-slate-400 mt-0.5 block">প্ৰতিষ্ঠান পঞ্জীয়ন কৰিলে ইয়াৰ লাইচেঞ্চ আৰু শ্ৰম পৰিচয় নম্বৰ (LIN) ইয়াত দেখা পাব।</span>
+                    </div>
+                  )}
                 </div>
 
+              </div>
+            </div>
+
+            {/* ==================== TRIPARTITE ECOSYSTEM: INDUSTRY ⇄ CONTRACTOR ⇄ WORKER ==================== */}
+            <div className="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 text-white rounded-2xl p-5 shadow-sm space-y-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-white/10 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="bg-emerald-500 text-slate-950 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-xs">
+                    B2B Relationship Ecosystem
+                  </span>
+                  <span className="text-xs font-bold text-indigo-200">
+                    ত্ৰিপাক্ষিক শৃংখল: প্ৰধান নিয়োগকাৰী (Industry/Owner) ⇄ শ্ৰম ঠিকাদাৰ/এজেন্সি ⇄ শ্ৰমিক আৰু সুৰক্ষা কৰ্মী
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-300 font-mono">
+                  CLRA Act 1970 Sec 21 & Factories Act 1948
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                {/* Step 1: Industry */}
+                <div className="bg-white/10 border border-white/10 rounded-xl p-3.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-indigo-300 font-bold uppercase">১. প্ৰধান নিয়োগকাৰী (Principal Employer)</span>
+                    <Building2 className="h-4 w-4 text-indigo-300" />
+                  </div>
+                  {industries.length > 0 && activeIndustry?.id ? (
+                    <>
+                      <h4 className="font-black text-white text-sm truncate">{activeIndustry.name}</h4>
+                      <p className="text-[10px] text-slate-300">
+                        LIN: {activeIndustry.lin} • শ্ৰেণী: {activeIndustry.category || 'Industry HR'}
+                      </p>
+                      <span className="inline-block text-[9px] bg-indigo-500/30 text-indigo-200 px-2 py-0.5 rounded-md font-bold mt-1">
+                        প্ৰতিষ্ঠান স্ব-পঞ্জীভুক্ত ও সক্ৰিয়
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <h4 className="font-bold text-slate-400 text-sm italic">কোনো প্ৰতিষ্ঠান পঞ্জীভুক্ত নাই</h4>
+                      <p className="text-[10px] text-slate-400">
+                        পঞ্জীয়ন কৰিলে প্ৰতিষ্ঠানৰ তথ্য ওলাব
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {/* Step 2: Contractor Connections */}
+                <div className="bg-white/10 border border-white/10 rounded-xl p-3.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-sky-300 font-bold uppercase">২. অনুজ্ঞাপ্ৰাপ্ত ঠিকাদাৰ ও এজেন্সী</span>
+                    <Users className="h-4 w-4 text-sky-300" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-black text-emerald-400">
+                      {industryContractorConnections.filter(c => c.industryId === activeIndustry.id && c.status === 'Connected').length}
+                    </span>
+                    <span className="text-[11px] text-slate-200">অনুমোদিত সংস্থা সংযুক্ত</span>
+                  </div>
+                  {industryContractorConnections.filter(c => c.industryId === activeIndustry.id && c.status === 'Pending').length > 0 ? (
+                    <span className="inline-block text-[9px] bg-amber-500/30 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-md font-bold">
+                      ⚠️ {industryContractorConnections.filter(c => c.industryId === activeIndustry.id && c.status === 'Pending').length} টা নতুন সংযোগৰ আবেদন অপেক্ষমান
+                    </span>
+                  ) : (
+                    <span className="inline-block text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-bold">
+                      সকলো আবেদন পৰ্যালোচনা সম্পূৰ্ণ
+                    </span>
+                  )}
+                </div>
+
+                {/* Step 3: Deployed Workers */}
+                <div className="bg-white/10 border border-white/10 rounded-xl p-3.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-amber-300 font-bold uppercase">৩. নিয়োজিত শ্ৰমিক & সুৰক্ষা কৰ্মী</span>
+                    <HardHat className="h-4 w-4 text-amber-300" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-black text-amber-400">
+                      {attendance.filter(a => a.industryId === selectedIndustryId && a.date === new Date().toISOString().split('T')[0]).length}
+                    </span>
+                    <span className="text-[11px] text-slate-200">উপস্থিতি (Form XVI)</span>
+                  </div>
+                  <span className="inline-block text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-bold">
+                    EPF/ESI চালন নিৰীক্ষণ সুৰক্ষিত
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -6350,18 +6552,10 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                   <button
                     onClick={() => setIsAddContractorModalOpen(true)}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer hover:scale-105"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>+ নতুন সংস্থা যোগ কৰক (Add Agency)</span>
-                  </button>
-
-                  <button
-                    onClick={handleCleanSlateKeepOnlyRegisteredContractors}
-                    title="কেৱল আপোনাৰ পঞ্জীভুক্ত বাস্তৱ সংস্থা সংৰক্ষণ কৰক আৰু ডেমো তথ্য আঁতৰাওক"
-                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
-                  >
-                    <span>🧹 কেৱল মোৰ পঞ্জীভুক্ত সংস্থা ৰাখক (Production Mode)</span>
+                    <span>+ নিজৰ সংস্থা / ঠিকাদাৰ পঞ্জীয়ন কৰক (Self-Register)</span>
                   </button>
 
                   <button 
@@ -6421,68 +6615,169 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
               {/* Contractor Selection & Live Metadata Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
                 
-                {/* Contractor Dropdown */}
+                {/* Contractor Dropdown / Empty State */}
                 <div className="lg:col-span-5">
                   <label className="block text-xs font-bold text-slate-500 tracking-wider uppercase mb-1.5 flex items-center justify-between">
-                    <span>সক্ৰিয় সংস্থা বাছক (Active Agency Account)</span>
+                    <span>সক্ৰিয় সংস্থা বাছক (Active Agency)</span>
                     <span className="text-[10px] text-indigo-600 font-bold lowercase">
-                      {contractorRoleFilter !== 'All' ? `filter: ${contractorRoleFilter}` : 'all agencies'}
+                      {contractorRoleFilter !== 'All' ? `filter: ${contractorRoleFilter}` : `${contractors.length} agencies`}
                     </span>
                   </label>
-                  <select 
-                    value={selectedContractorId} 
-                    onChange={(e) => setSelectedContractorId(e.target.value)}
-                    className="font-bold text-slate-800 text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors w-full shadow-xs"
-                  >
-                    {filteredContractors.map(con => (
-                      <option key={con.id} value={con.id}>
-                        {con.contractorType === 'Security Agency' ? '🛡️ [Security Agency]' : '👷 [Labour Contractor]'} {con.name}
-                      </option>
-                    ))}
-                  </select>
+                  {filteredContractors.length === 0 ? (
+                    <div className="bg-amber-50/80 border border-amber-300 rounded-xl p-3.5 space-y-2">
+                      <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
+                        <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                        <span>কোনো ঠিকাদাৰ বা সংস্থা এতিয়ালৈকে পঞ্জীভুক্ত হোৱা নাই</span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 leading-snug">
+                        অনুগ্ৰহ কৰি আপোনাৰ নিজৰ শ্ৰম ঠিকাদাৰ বা নিৰাপত্তা সংস্থা পঞ্জীয়ন কৰক।
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddContractorModalOpen(true)}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>+ নিজৰ সংস্থা / ঠিকাদাৰ পঞ্জীয়ন কৰক</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <select 
+                      value={selectedContractorId} 
+                      onChange={(e) => setSelectedContractorId(e.target.value)}
+                      className="font-bold text-slate-800 text-sm bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors w-full shadow-xs"
+                    >
+                      {filteredContractors.map(con => (
+                        <option key={con.id} value={con.id}>
+                          {con.contractorType === 'Security Agency' ? '🛡️ [Security Agency]' : '👷 [Labour Contractor]'} {con.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 {/* Role Badge and Metadata */}
-                <div className="lg:col-span-7 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                  
-                  {/* Workforce / Guard Capacity */}
-                  <div className="bg-indigo-50 border border-indigo-200 p-2.5 rounded-xl">
-                    <span className="text-indigo-700 block mb-0.5 text-[10px] font-extrabold uppercase">
-                      {activeContractor.contractorType === 'Security Agency' ? 'নিৰাপত্তা ৰক্ষী (Guards)' : 'শ্ৰমিক ক্ষমতা (Workers)'}
-                    </span>
-                    <span className="font-mono font-black text-indigo-950 text-sm">
-                      {workers.filter(w => w.contractorId === activeContractor.id).length} জন {activeContractor.contractorType === 'Security Agency' ? 'Guards' : 'Labourers'}
-                    </span>
-                  </div>
+                <div className="lg:col-span-7">
+                  {contractors.length > 0 && activeContractor?.id ? (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                      {/* Workforce / Guard Capacity */}
+                      <div className="bg-indigo-50 border border-indigo-200 p-2.5 rounded-xl">
+                        <span className="text-indigo-700 block mb-0.5 text-[10px] font-extrabold uppercase">
+                          {activeContractor.contractorType === 'Security Agency' ? 'নিৰাপত্তা ৰক্ষী (Guards)' : 'শ্ৰমিক ক্ষমতা (Workers)'}
+                        </span>
+                        <span className="font-mono font-black text-indigo-950 text-sm">
+                          {workers.filter(w => w.contractorId === activeContractor.id).length} জন {activeContractor.contractorType === 'Security Agency' ? 'Guards' : 'Labourers'}
+                        </span>
+                      </div>
 
-                  {/* License No (CLRA / PSARA) */}
-                  <div className="bg-slate-50 p-2.5 border border-slate-200 rounded-xl">
-                    <span className="text-slate-400 block mb-0.5 font-semibold text-[10px] uppercase">
-                      {activeContractor.contractorType === 'Security Agency' ? 'PSARA Lic No' : 'CLRA Lic No'}
-                    </span>
-                    <span className="font-mono font-bold text-slate-800 truncate block" title={activeContractor.licenseNo}>
-                      {activeContractor.licenseNo}
-                    </span>
-                  </div>
+                      {/* License No (CLRA / PSARA) */}
+                      <div className="bg-slate-50 p-2.5 border border-slate-200 rounded-xl">
+                        <span className="text-slate-400 block mb-0.5 font-semibold text-[10px] uppercase">
+                          {activeContractor.contractorType === 'Security Agency' ? 'PSARA Lic No' : 'CLRA Lic No'}
+                        </span>
+                        <span className="font-mono font-bold text-slate-800 truncate block" title={activeContractor.licenseNo}>
+                          {activeContractor.licenseNo}
+                        </span>
+                      </div>
 
-                  {/* EPF & ESI Codes */}
-                  <div className="bg-slate-50 p-2.5 border border-slate-200 rounded-xl">
-                    <span className="text-slate-400 block mb-0.5 font-semibold text-[10px] uppercase">EPF / ESI</span>
-                    <span className="font-mono font-bold text-slate-800 text-[11px] truncate block" title={`${activeContractor.epfCode} • ${activeContractor.esiCode}`}>
-                      {activeContractor.epfCode}
-                    </span>
-                  </div>
+                      {/* EPF & ESI Codes */}
+                      <div className="bg-slate-50 p-2.5 border border-slate-200 rounded-xl">
+                        <span className="text-slate-400 block mb-0.5 font-semibold text-[10px] uppercase">EPF / ESI</span>
+                        <span className="font-mono font-bold text-slate-800 text-[11px] truncate block" title={`${activeContractor.epfCode} • ${activeContractor.esiCode}`}>
+                          {activeContractor.epfCode}
+                        </span>
+                      </div>
 
-                  {/* Rating & Category */}
-                  <div className="bg-slate-50 p-2.5 border border-slate-200 rounded-xl flex flex-col justify-between">
-                    <span className="text-slate-400 block mb-0.5 font-semibold text-[10px] uppercase">Agency Rating</span>
-                    <span className="font-semibold text-amber-600 flex items-center gap-1 text-xs">
-                      <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" /> {activeContractor.rating || 4.8}
-                    </span>
-                  </div>
-
+                      {/* Rating & Category */}
+                      <div className="bg-slate-50 p-2.5 border border-slate-200 rounded-xl flex flex-col justify-between">
+                        <span className="text-slate-400 block mb-0.5 font-semibold text-[10px] uppercase">Agency Rating</span>
+                        <span className="font-semibold text-amber-600 flex items-center gap-1 text-xs">
+                          <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" /> {activeContractor.rating || 4.8}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-4 text-center text-slate-500 text-xs">
+                      <span className="font-bold text-slate-700 block">কোনো সংস্থাৰ তথ্য নাই</span>
+                      <span className="text-[11px] text-slate-400 mt-0.5 block">সংস্থা পঞ্জীয়ন কৰিলে অনুজ্ঞাপত্ৰ আৰু EPF/ESIC তথ্য ইয়াত দেখা পাব।</span>
+                    </div>
+                  )}
                 </div>
 
+              </div>
+            </div>
+
+            {/* ==================== TRIPARTITE ECOSYSTEM: CONTRACTOR ⇄ INDUSTRY ⇄ WORKER ==================== */}
+            <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-2xl p-5 shadow-sm space-y-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-white/10 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="bg-blue-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full shadow-xs">
+                    Agency Relationship Ecosystem
+                  </span>
+                  <span className="text-xs font-bold text-blue-200">
+                    ত্ৰিপাক্ষিক শৃংখল: আপোনাৰ সংস্থা ⇄ গ্ৰাহক উদ্যোগ/প্ৰতিষ্ঠান ⇄ শ্ৰমিক আৰু সুৰক্ষা কৰ্মী
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-300 font-mono">
+                  CLRA Form VI & PSARA Licensed
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                {/* Step 1: Contractor */}
+                <div className="bg-white/10 border border-white/10 rounded-xl p-3.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-blue-300 font-bold uppercase">১. আপোনাৰ সংস্থা (Your Agency)</span>
+                    <Users className="h-3.5 w-3.5 text-blue-300" />
+                  </div>
+                  <h4 className="font-black text-white text-sm truncate">{activeContractor.name}</h4>
+                  <p className="text-[10px] text-slate-300">
+                    অনুমোদন: {activeContractor.licenseNo} • PAN: {activeContractor.pan}
+                  </p>
+                  <span className="inline-block text-[9px] bg-blue-500/30 text-blue-200 px-2 py-0.5 rounded-md font-bold mt-1">
+                    {activeContractor.contractorType || 'Labour Contractor'}
+                  </span>
+                </div>
+
+                {/* Step 2: Industry Connections */}
+                <div className="bg-white/10 border border-white/10 rounded-xl p-3.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-emerald-300 font-bold uppercase">২. অনুমোদিত উদ্যোগ/প্ৰতিষ্ঠান</span>
+                    <Building2 className="h-3.5 w-3.5 text-emerald-300" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-black text-emerald-400">
+                      {industryContractorConnections.filter(c => c.contractorId === activeContractor.id && c.status === 'Connected').length}
+                    </span>
+                    <span className="text-[11px] text-slate-200">উদ্যোগত শ্ৰমিক যোগানৰ আইনী অনুমতি প্ৰাপ্ত</span>
+                  </div>
+                  <button
+                    onClick={() => setContractorTab('client_connections')}
+                    className="text-[10px] text-sky-300 hover:text-white underline font-bold cursor-pointer block mt-1"
+                  >
+                    + নতুন উদ্যোগলৈ শ্ৰমিক যোগানৰ আবেদন কৰক ➔
+                  </button>
+                </div>
+
+                {/* Step 3: Managed Workers */}
+                <div className="bg-white/10 border border-white/10 rounded-xl p-3.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-amber-300 font-bold uppercase">৩. আপোনাৰ কৰ্মীদল & গাৰ্ড</span>
+                    <HardHat className="h-3.5 w-3.5 text-amber-300" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-black text-amber-400">
+                      {workers.filter(w => w.contractorId === activeContractor.id).length}
+                    </span>
+                    <span className="text-[11px] text-slate-200">সংস্থাত পঞ্জীভুক্ত কৰ্মী</span>
+                  </div>
+                  <button
+                    onClick={() => setContractorTab('workforce')}
+                    className="text-[10px] text-amber-300 hover:text-white underline font-bold cursor-pointer block mt-1"
+                  >
+                    কৰ্মীদল পৰিচালনা & নতুন শ্ৰমিক অন্তৰ্ভুক্ত ➔
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -9096,19 +9391,35 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
                 
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">Select Registered Labor Identity</label>
-                  <select 
-                    value={selectedWorkerId}
-                    onChange={(e) => {
-                      setSelectedWorkerId(e.target.value);
-                      setOtpGenerated(null);
-                      setOtpInput('');
-                    }}
-                    className="font-bold text-white text-lg bg-slate-800 border border-slate-700 rounded px-3 py-1.5 outline-none focus:border-indigo-500 w-full"
-                  >
-                    {workers.map(w => (
-                      <option key={w.id} value={w.id} className="text-slate-800">{w.name} (অদক্ষ শ্ৰমিক)</option>
-                    ))}
-                  </select>
+                  {workers.length === 0 ? (
+                    <div className="bg-slate-800/90 border border-slate-700 rounded-xl p-3 space-y-2">
+                      <p className="text-xs text-amber-300">
+                        কোনো শ্ৰমিক এতিয়ালৈকে পঞ্জীভুক্ত হোৱা নাই।
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => window.dispatchEvent(new CustomEvent('icwl-open-register', { detail: { role: 'worker' } }))}
+                        className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-1.5 px-3 rounded-lg transition-all flex items-center gap-1.5"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>+ নতুন শ্ৰমিক পঞ্জীয়ন কৰক</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <select 
+                      value={selectedWorkerId} 
+                      onChange={(e) => {
+                        setSelectedWorkerId(e.target.value);
+                        setOtpGenerated(null);
+                        setOtpInput('');
+                      }}
+                      className="font-bold text-white text-lg bg-slate-800 border border-slate-700 rounded px-3 py-1.5 outline-none focus:border-indigo-500 w-full"
+                    >
+                      {workers.map(w => (
+                        <option key={w.id} value={w.id} className="text-slate-800">{w.name} (অদক্ষ শ্ৰমিক)</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
 
@@ -9130,7 +9441,7 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
 
                 <div className="pt-1">
                   <select
-                    value={targetCheckInIndustry || assignments.find(a => a.workerId === selectedWorkerId && a.status === 'Active')?.industryId || 'ind-1'}
+                    value={targetCheckInIndustry || assignments.find(a => a.workerId === selectedWorkerId && a.status === 'Active')?.industryId || industries[0]?.id || ''}
                     onChange={(e) => setTargetCheckInIndustry(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-600 text-white rounded px-3 py-1.5 text-xs font-semibold outline-none focus:border-emerald-500"
                   >
