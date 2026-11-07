@@ -271,6 +271,11 @@ export default function PlatformAdminPanel({
         contactEmail: newEmail || `${newName.toLowerCase().replace(/[^a-z0-9]/g, '')}@icwl.in`
       };
       if (onAddNewIndustry) onAddNewIndustry(newInd);
+      fetch('/api/industries/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newInd)
+      }).catch(err => console.error('Failed to sync industry to Neon:', err));
       showNotice(`নতুন প্ৰতিষ্ঠান সফলতাৰে যুক্ত কৰা হ'ল: ${newName} (${newCategory})`, 'success');
     } else if (addEntityType === 'contractor') {
       const newCon: Contractor = {
@@ -286,6 +291,11 @@ export default function PlatformAdminPanel({
         rating: 4.8
       };
       if (onAddNewContractor) onAddNewContractor(newCon);
+      fetch('/api/contractors/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCon)
+      }).catch(err => console.error('Failed to sync contractor to Neon:', err));
       showNotice(`নতুন সংস্থা/ঠিকাদাৰ যুক্ত কৰা হ'ল: ${newName} (${newCategory})`, 'success');
     } else {
       const newWrk: Worker = {
@@ -301,6 +311,18 @@ export default function PlatformAdminPanel({
         onboardingDate: new Date().toISOString().split('T')[0]
       };
       if (onAddNewWorker) onAddNewWorker(newWrk);
+      fetch('/api/workers/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newWrk.name,
+          phone: newWrk.phone,
+          aadhaarHash: newWrk.aadhaarHash,
+          contractorId: newWrk.contractorId,
+          skillType: newWrk.skillType,
+          dailyWageRate: newWrk.dailyWageRate
+        })
+      }).catch(err => console.error('Failed to sync worker to Neon:', err));
       showNotice(`নতুন শ্ৰমিক/নিৰাপত্তাৰক্ষী যুক্ত কৰা হ'ল: ${newName}`, 'success');
     }
 

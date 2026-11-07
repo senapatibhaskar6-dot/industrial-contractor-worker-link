@@ -35,11 +35,19 @@ export const createPool = (customConnectionString?: string) => {
     return newPool;
   }
 
+  const isCloudHost = process.env.SQL_HOST && (
+    process.env.SQL_HOST.includes('neon.tech') || 
+    process.env.SQL_HOST.includes('aws') ||
+    process.env.SQL_HOST.includes('azure') ||
+    process.env.SQL_HOST.includes('cloud')
+  );
+
   const newPool = new Pool({
     host: process.env.SQL_HOST,
     user: process.env.SQL_USER,
     password: process.env.SQL_PASSWORD,
     database: process.env.SQL_DB_NAME,
+    ssl: isCloudHost ? { rejectUnauthorized: false } : undefined,
     max: 10,
     connectionTimeoutMillis: 15000,
   });

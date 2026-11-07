@@ -424,6 +424,13 @@ export default function PortalAuthModal({
         localStorage.setItem('s_authenticated_persona', 'industry_admin');
       } catch {}
 
+      // Persist to Neon Postgres database
+      fetch('/api/industries/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newInd)
+      }).catch(err => console.error('Failed to sync industry to Neon:', err));
+
       showNotice(`অভিনন্দন! নতুন প্ৰতিষ্ঠান "${newInd.name}" সফলতাৰে পঞ্জীভুক্ত হ'ল আৰু সক্ৰিয় কৰা হ'ল।`, 'success');
     } 
     // 2. Contractor / Security Agency Registration
@@ -455,6 +462,13 @@ export default function PortalAuthModal({
         localStorage.setItem('s_authenticated_persona', 'contractor');
       } catch {}
 
+      // Persist to Neon Postgres database
+      fetch('/api/contractors/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCon)
+      }).catch(err => console.error('Failed to sync contractor to Neon:', err));
+
       showNotice(`অভিনন্দন! সংস্থা "${newCon.name}" সফলতাৰে পঞ্জীভুক্ত হ'ল আৰু সক্ৰিয় কৰা হ'ল।`, 'success');
     } 
     // 3. Worker / Security Guard Registration
@@ -485,6 +499,20 @@ export default function PortalAuthModal({
         const stored = JSON.parse(localStorage.getItem('s_workers_list') || '[]');
         localStorage.setItem('s_workers_list', JSON.stringify([newWrk, ...stored]));
       } catch {}
+
+      // Persist to Neon Postgres database
+      fetch('/api/workers/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newWrk.name,
+          phone: newWrk.phone,
+          aadhaarHash: newWrk.aadhaarHash,
+          contractorId: newWrk.contractorId,
+          skillType: newWrk.skillType,
+          dailyWageRate: newWrk.dailyWageRate
+        })
+      }).catch(err => console.error('Failed to sync worker to Neon:', err));
 
       showNotice(`অভিনন্দন! শ্ৰমিক/গাৰ্ড "${cleanName}" সফলতাৰে পঞ্জীভুক্ত হ'ল।`, 'success');
     }

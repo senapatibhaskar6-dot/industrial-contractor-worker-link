@@ -1971,6 +1971,13 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       localStorage.setItem('s_authenticated_persona', 'industry_admin');
     } catch {}
 
+    // Persist to Neon Postgres database
+    fetch('/api/industries/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(created)
+    }).catch(err => console.error('Failed to sync new industry to Neon DB:', err));
+
     setNewEstablishmentForm({
       name: '',
       location: 'Guwahati, Assam',
@@ -2027,6 +2034,13 @@ export default function SaaSApp({ externalLang, onLanguageChange }: SaaSAppProps
       localStorage.setItem('s_my_registered_contractor_id', newId);
       localStorage.setItem('s_authenticated_persona', 'contractor');
     } catch {}
+
+    // Persist to Neon Postgres database
+    fetch('/api/contractors/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(created)
+    }).catch(err => console.error('Failed to sync new contractor to Neon DB:', err));
 
     setNewContractorForm({
       name: '',
